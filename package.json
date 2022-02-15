@@ -1,4 +1,24 @@
 {
+  "name": "float-js-client",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "rescript build -with-deps",
+    "start": "rescript build -with-deps -w",
+    "clean": "rescript clean -with-deps",
+    "refmt": "rescript format -all"
+  },
+  "author": "Float DAO",
+  "license": "MIT",
+  "description": "API for Float DAO smart contracts",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/float-capital/rescript-recharts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/float-capital/float-dao-js-client/issues"
+  },
+  "homepage": "https://github.com/float-capital/float-dao-js-client#readme",
+  "dependencies": {},
   "devDependencies": {
     "rescript": "^9.1.4"
   }
