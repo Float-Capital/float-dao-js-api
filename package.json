@@ -18,7 +18,14 @@
     "url": "https://github.com/float-capital/float-dao-js-client/issues"
   },
   "homepage": "https://github.com/float-capital/float-dao-js-client#readme",
-  "dependencies": {},
+  "keywords": [
+    "bucklescript",
+    "rescript"
+  ],
+  "dependencies": {
+    "@ryyppy/rescript-promise": "^2.1.0",
+    "ethers": "^5.5.4"
+  },
   "devDependencies": {
     "rescript": "^9.1.4"
   }
