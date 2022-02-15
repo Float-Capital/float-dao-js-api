@@ -1,6 +1,6 @@
 {
   "name": "float-js-client",
-  "namespace": false,
+  "namespace": true,
   "sources": {
     "dir" : "src",
     "subdirs" : true
@@ -9,6 +9,8 @@
     "module": "commonjs",
     "in-source": true
   },
-  "bs-dependencies": [],
+  "bs-dependencies": [
+    "@ryyppy/rescript-promise"
+  ],
   "suffix": ".js"
 }
