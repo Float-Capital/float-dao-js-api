@@ -2,7 +2,7 @@ let ethers = require("ethers");
 
 module.exports = {
   polygon: {
-    longShortAddress: "0x168a5d1217AEcd258b03018d5bF1A1677A07b733",
+    longShortContractAddress: "0x168a5d1217AEcd258b03018d5bF1A1677A07b733",
     daiAddress: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
     pairAddress: "",
     uniswapV2RouterAddress: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506", // sushiswap router
@@ -17,7 +17,7 @@ module.exports = {
     defaultOptions: { gasPrice: 7000000000, gasLimit: 1000000 },
   },
   avalanche: {
-    longShortAddress: "0x0db3c59c187ecfa36a9C9f6CFa3664D06c2B5556",
+    longShortContractAddress: "0x0db3c59c187ecfa36a9C9f6CFa3664D06c2B5556",
     daiAddress: "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70",
     pairAddress: "0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd", // JOE token
     uniswapV2RouterAddress: "0x60aE616a2155Ee3d9A68541Ba4544862310933d4", // Trader joe router
@@ -32,7 +32,7 @@ module.exports = {
     defaultOptions: { gasPrice: 7000000000, gasLimit: 1000000 },
   },
   mumbai: {
-    longShortAddress: "0x4E95db55dbF56ebfebB58090b968b118491800A8",
+    longShortContractAddress: "0x4E95db55dbF56ebfebB58090b968b118491800A8",
     daiAddress: "0x001B3B4d0F3714Ca98ba10F6042DaEbF0B1B7b6F",
     pairAddress: "0x16daf830354eb3e496b610dfbe3562f84cd5b50e",
     uniswapV2RouterAddress: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506", // sushiswap router

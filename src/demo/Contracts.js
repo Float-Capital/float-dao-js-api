@@ -13,7 +13,10 @@ var abi = Ethers$FloatJsClient.makeAbi([
       "function updateSystemState()",
       "function updateSystemStateMulti(uint32[] marketIndexes)",
       "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
-      "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)"
+      "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
+      "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
+      "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
+      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)"
     ]);
 
 function make(address, providerOrSigner) {
@@ -63,7 +66,8 @@ var abi$3 = Ethers$FloatJsClient.makeAbi([
       "function approve(address spender, uint256 amount)",
       "function balanceOf(address owner) public view returns (uint256 balance)",
       "function allowance(address owner, address spender) public view returns (uint256 remaining)",
-      "function stake(uint256 amount) external"
+      "function stake(uint256 amount) external",
+      "function totalSupply() external view returns (uint256 total)"
     ]);
 
 function make$3(address, providerOrSigner) {
