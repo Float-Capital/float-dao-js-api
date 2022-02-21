@@ -3,6 +3,12 @@
 module LongShort = {
   type t = Ethers.Contract.t
 
+  type marketSideValue = {
+    long: Ethers.BigNumber.t,
+    short: Ethers.BigNumber.t,
+  }
+
+  // TODO add function modifier keywords
   let abi =
     [
       "function mintLongNextPrice(uint32 marketIndex,uint256 amount)",
@@ -15,6 +21,9 @@ module LongShort = {
       "function updateSystemStateMulti(uint32[] marketIndexes)",
       "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
       "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
+      "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
+      "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
+      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)",
     ]->Ethers.makeAbi
 
   let make = (~address, ~providerOrSigner): t =>
@@ -86,6 +95,24 @@ module LongShort = {
     ~amountSyntheticTokensToShift: Ethers.BigNumber.t,
     'txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "shiftPositionFromShortNextPrice"
+  @send
+  external get_syntheticToken_priceSnapshot_side: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~isLong: bool,
+    ~priceSnapshotIndex: Ethers.BigNumber.t,
+  ) => Promise.t<Ethers.BigNumber.t> = "get_syntheticToken_priceSnapshot_side"
+  @send
+  external syntheticTokens: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~isLong: bool,
+  ) => Promise.t<Ethers.ethAddress> = "syntheticTokens"
+  @send
+  external marketSideValueInPaymentToken: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+  ) => Promise.t<marketSideValue> = "marketSideValueInPaymentToken"
 }
 
 module Staker = {
@@ -207,9 +234,10 @@ module Synth = {
       "function balanceOf(address owner) public view returns (uint256 balance)",
       "function allowance(address owner, address spender) public view returns (uint256 remaining)",
       "function stake(uint256 amount) external",
+      "function totalSupply() external view returns (uint256 total)",
     ]->Ethers.makeAbi
 
-  let make = (~address, ~providerOrSigner): t =>
+  let make = (address, ~providerOrSigner): t =>
     Ethers.Contract.make(address, abi, providerOrSigner)
 
   @send
@@ -237,4 +265,9 @@ module Synth = {
     ~amount: Ethers.BigNumber.t,
     'txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "stake"
+
+  @send
+  external totalSupply: (
+    t,
+  ) => Promise.t<Ethers.BigNumber.t> = "totalSupply"
 }
