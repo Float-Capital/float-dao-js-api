@@ -1,31 +1,10 @@
 open Ethers
-open Contracts
 
 @val external process: 'a = "process"
 let env = process["env"]
 
 @module("../secretsManager.js") external mnemonic: string = "mnemonic"
 @module("../secretsManager.js") external providerUrl: string = "providerUrl"
-
-type market = {
-  index: int,
-  leverage: int,
-  longTokenAddress: string,
-  shortTokenAddress: string,
-}
-
-type gas = { gasPrice: ethersBigNumber, gasLimit: ethersBigNumber}
-
-type configType = {
-  longShortContractAddress: string,
-  daiAddress: string,
-  pairAddress: string,
-  uniswapV2RouterAddress: string,
-  markets: array<market>,
-  defaultOptions: gas,
-}
-
-@module("./config.js") external polygonConfig: configType = "polygon"
 
 //type s = {
 //  providerUrl: string,
@@ -46,29 +25,30 @@ type configType = {
 //    }
 //  }
 //}
-// 
+//
 //let {providerUrl, mnemonic} = getSecrets
 
 let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
 
 let run = () => {
-  let chainId = 137
-
-  providerUrl
-  ->Providers.JsonRpcProvider.make(~chainId)
+  let float = providerUrl
+  ->Providers.JsonRpcProvider.make(~chainId=137)
   ->connectToNewWallet(~mnemonic)
-  ->Wallet.getBalance
-  ->Promise.thenResolve(balance => {
-    Js.log2("Account balance:", balance->Utils.formatEther)
-  })
-  ->ignore
+  ->getSigner
+  ->MarketSide.MarketSide.newFloatMarketSide(BigNumber.fromInt(1), true)
 
-  //let longShortContract =
-  //  LongShort.make(
-  //    ~address=polygonConfig.longShortContractAddress->Utils.getAddressUnsafe,
-  //    ~providerOrSigner=defaultWallet.contents->getSigner,
-  //  )
+  float.getSyntheticTokenPrice()
+  ->Promise.thenResolve(a => a->BigNumber.toString->Js.log)
+
+  //providerUrl
+  //->Providers.JsonRpcProvider.make(~chainId)
+  //->connectToNewWallet(~mnemonic)
+  //->Wallet.getBalance
+  //->Promise.thenResolve(balance => {
+  //  Js.log2("Account balance:", balance->Utils.formatEther)
+  //})
+  //->ignore
 }
 
 let _ = run()
