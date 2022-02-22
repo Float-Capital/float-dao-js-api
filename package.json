@@ -2,9 +2,10 @@
   "name": "float-js-client",
   "version": "0.1.0",
   "scripts": {
-    "build": "rescript build -with-deps",
-    "start": "rescript build -with-deps -w",
-    "clean": "rescript clean -with-deps",
+    "res:build": "rescript build -with-deps",
+    "res:clean": "rescript clean -with-deps",
+    "start": "node src/demo.js",
+    "dev": "nodemon src/demo.js",
     "refmt": "rescript format -all"
   },
   "author": "Float DAO",
