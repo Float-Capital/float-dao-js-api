@@ -237,8 +237,7 @@ module Synth = {
       "function totalSupply() external view returns (uint256 total)",
     ]->Ethers.makeAbi
 
-  let make = (address, ~providerOrSigner): t =>
-    Ethers.Contract.make(address, abi, providerOrSigner)
+  let make = (address, ~providerOrSigner): t => Ethers.Contract.make(address, abi, providerOrSigner)
 
   @send
   external approve: (
@@ -267,9 +266,7 @@ module Synth = {
   ) => Promise.t<Ethers.txSubmitted> = "stake"
 
   @send
-  external totalSupply: (
-    t,
-  ) => Promise.t<Ethers.BigNumber.t> = "totalSupply"
+  external totalSupply: t => Promise.t<Ethers.BigNumber.t> = "totalSupply"
 }
 
 module GemCollectorNFT = {

@@ -32,14 +32,14 @@ let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
 
 let run = () => {
-  let float = providerUrl
-  ->Providers.JsonRpcProvider.make(~chainId=137)
-  ->connectToNewWallet(~mnemonic)
-  ->getSigner
-  ->MarketSide.MarketSide.newFloatMarketSide(BigNumber.fromInt(1), true)
+  let float =
+    providerUrl
+    ->Providers.JsonRpcProvider.make(~chainId=137)
+    ->connectToNewWallet(~mnemonic)
+    ->getSigner
+    ->MarketSide.MarketSide.newFloatMarketSide(BigNumber.fromInt(1), true)
 
-  float.getSyntheticTokenPrice()
-  ->Promise.thenResolve(a => a->BigNumber.toString->Js.log)
+  float.getSyntheticTokenPrice()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)
 
   //providerUrl
   //->Providers.JsonRpcProvider.make(~chainId)
