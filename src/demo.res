@@ -11,6 +11,7 @@ let env = process["env"]
 //  mnemonic: string,
 //}
 //
+
 //let getSecrets = {
 //  switch (env["PROVIDER_URL"], env["MNEMONIC"]) {
 //  | (Some(providerUrl), Some(mnemonic)) => {
