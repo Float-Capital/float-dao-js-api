@@ -9,7 +9,7 @@ type market = {
   shortTokenAddress: string,
 }
 
-type gas = { gasPrice: ethersBigNumber, gasLimit: ethersBigNumber}
+type gas = {gasPrice: ethersBigNumber, gasLimit: ethersBigNumber}
 
 type configType = {
   longShortContractAddress: string,
