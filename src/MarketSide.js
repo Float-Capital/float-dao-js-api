@@ -2,9 +2,24 @@
 'use strict';
 
 var Ethers = require("ethers");
+var Ethers$FloatJsClient = require("./demo/Ethers.js");
 var CONSTANTS$FloatJsClient = require("./demo/CONSTANTS.js");
 var Contracts$FloatJsClient = require("./demo/Contracts.js");
 var ConfigMain$FloatJsClient = require("./ConfigMain.js");
+
+var min = Ethers$FloatJsClient.BigNumber.min;
+
+function div(prim0, prim1) {
+  return prim0.div(prim1);
+}
+
+function mul(prim0, prim1) {
+  return prim0.mul(prim1);
+}
+
+function add(prim0, prim1) {
+  return prim0.add(prim1);
+}
 
 function makeLongShortContract(providerOrSigner) {
   return Contracts$FloatJsClient.LongShort.make(Ethers.utils.getAddress(ConfigMain$FloatJsClient.polygonConfig.longShortContractAddress), providerOrSigner);
@@ -24,6 +39,10 @@ function syntheticTokenTotalSupply(providerOrSigner, marketIndex, isLong) {
             });
 }
 
+function marketSideValues(providerOrSigner, marketIndex) {
+  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex);
+}
+
 function marketSideValue(providerOrSigner, marketIndex, isLong) {
   return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex).then(function (marketSideValue) {
               if (isLong) {
@@ -32,6 +51,10 @@ function marketSideValue(providerOrSigner, marketIndex, isLong) {
                 return marketSideValue.short;
               }
             });
+}
+
+function marketSideUnconfirmedValues(providerOrSigner, marketIndex, isLong) {
+  return makeLongShortContract(providerOrSigner).batched_amountPaymentToken_deposit(marketIndex, isLong);
 }
 
 function getSyntheticTokenPrice(providerOrSigner, marketIndex, isLong) {
@@ -43,10 +66,45 @@ function getSyntheticTokenPrice(providerOrSigner, marketIndex, isLong) {
             });
 }
 
+function getExposure(providerOrSigner, marketIndex, isLong) {
+  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex).then(function (values) {
+              var numerator = min(values.long, values.short).mul(CONSTANTS$FloatJsClient.tenToThe18);
+              if (isLong) {
+                return numerator.div(values.long);
+              } else {
+                return numerator.div(values.short);
+              }
+            });
+}
+
+function getUnconfirmedExposure(providerOrSigner, marketIndex, isLong) {
+  return Promise.all([
+                makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex),
+                marketSideUnconfirmedValues(providerOrSigner, marketIndex, true),
+                marketSideUnconfirmedValues(providerOrSigner, marketIndex, false)
+              ]).then(function (param) {
+              var values = param[0];
+              var valueLong = values.long.add(param[1]);
+              var valueShort = values.short.add(param[2]);
+              var numerator = min(valueLong, valueShort).mul(CONSTANTS$FloatJsClient.tenToThe18);
+              if (isLong) {
+                return numerator.div(valueLong);
+              } else {
+                return numerator.div(valueShort);
+              }
+            });
+}
+
 function newFloatMarketSide(p, marketIndex, isLong) {
   return {
           getSyntheticTokenPrice: (function (param) {
               return getSyntheticTokenPrice(p, marketIndex, isLong);
+            }),
+          getExposure: (function (param) {
+              return getExposure(p, marketIndex, isLong);
+            }),
+          getUnconfirmedExposure: (function (param) {
+              return getUnconfirmedExposure(p, marketIndex, isLong);
             })
         };
 }
@@ -55,10 +113,18 @@ var MarketSide = {
   makeLongShortContract: makeLongShortContract,
   syntheticTokenAddress: syntheticTokenAddress,
   syntheticTokenTotalSupply: syntheticTokenTotalSupply,
+  marketSideValues: marketSideValues,
   marketSideValue: marketSideValue,
+  marketSideUnconfirmedValues: marketSideUnconfirmedValues,
   getSyntheticTokenPrice: getSyntheticTokenPrice,
+  getExposure: getExposure,
+  getUnconfirmedExposure: getUnconfirmedExposure,
   newFloatMarketSide: newFloatMarketSide
 };
 
+exports.min = min;
+exports.div = div;
+exports.mul = mul;
+exports.add = add;
 exports.MarketSide = MarketSide;
 /* ethers Not a pure module */

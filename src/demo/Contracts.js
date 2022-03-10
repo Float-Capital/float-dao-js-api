@@ -16,7 +16,8 @@ var abi = Ethers$FloatJsClient.makeAbi([
       "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
       "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
       "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
-      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)"
+      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)",
+      "function batched_amountPaymentToken_deposit(uint32 marketIndex, bool isLong) view returns (uint256 amount)"
     ]);
 
 function make(address, providerOrSigner) {

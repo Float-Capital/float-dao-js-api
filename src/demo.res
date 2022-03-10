@@ -38,9 +38,10 @@ let run = () => {
     ->Providers.JsonRpcProvider.make(~chainId=137)
     ->connectToNewWallet(~mnemonic)
     ->getSigner
-    ->MarketSide.MarketSide.newFloatMarketSide(BigNumber.fromInt(1), true)
+    ->MarketSide.MarketSide.newFloatMarketSide(BigNumber.fromInt(1), false)
 
-  float.getSyntheticTokenPrice()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)
+  float.getUnconfirmedExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
+  float.getExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
 
   //providerUrl
   //->Providers.JsonRpcProvider.make(~chainId)

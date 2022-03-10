@@ -18,11 +18,16 @@ function connectToNewWallet(provider, mnemonic) {
 }
 
 function run(param) {
-  var $$float = MarketSide$FloatJsClient.MarketSide.newFloatMarketSide(Ethers$FloatJsClient.getSigner(connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), mnemonic)), Ethers.BigNumber.from(1), true);
-  return Curry._1($$float.getSyntheticTokenPrice, undefined).then(function (a) {
-              console.log(a.toString());
-              
-            });
+  var $$float = MarketSide$FloatJsClient.MarketSide.newFloatMarketSide(Ethers$FloatJsClient.getSigner(connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), mnemonic)), Ethers.BigNumber.from(1), false);
+  Curry._1($$float.getUnconfirmedExposure, undefined).then(function (a) {
+        console.log(a.toString());
+        
+      });
+  Curry._1($$float.getExposure, undefined).then(function (a) {
+        console.log(a.toString());
+        
+      });
+  
 }
 
 run(undefined);
