@@ -26,17 +26,17 @@ function sub(prim0, prim1) {
   return prim0.sub(prim1);
 }
 
-function makeLongShortContract(providerOrSigner) {
-  return Contracts$FloatJsClient.LongShort.make(Ethers.utils.getAddress(ConfigMain$FloatJsClient.polygonConfig.longShortContractAddress), providerOrSigner);
+function makeLongShortContract(p) {
+  return Contracts$FloatJsClient.LongShort.make(Ethers.utils.getAddress(ConfigMain$FloatJsClient.polygonConfig.longShortContractAddress), p);
 }
 
-function syntheticTokenAddress(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).syntheticTokens(marketIndex, isLong);
+function syntheticTokenAddress(p, marketIndex, isLong) {
+  return makeLongShortContract(p).syntheticTokens(marketIndex, isLong);
 }
 
-function syntheticTokenTotalSupply(providerOrSigner, marketIndex, isLong) {
-  return syntheticTokenAddress(providerOrSigner, marketIndex, isLong).then(function (address) {
-                  return Promise.resolve(Contracts$FloatJsClient.Synth.make(address, providerOrSigner));
+function syntheticTokenTotalSupply(p, marketIndex, isLong) {
+  return syntheticTokenAddress(p, marketIndex, isLong).then(function (address) {
+                  return Promise.resolve(Contracts$FloatJsClient.Synth.make(address, p));
                 }).then(function (synth) {
                 return synth.totalSupply();
               }).then(function (supply) {
@@ -44,12 +44,12 @@ function syntheticTokenTotalSupply(providerOrSigner, marketIndex, isLong) {
             });
 }
 
-function marketSideValues(providerOrSigner, marketIndex) {
-  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex);
+function marketSideValues(p, marketIndex) {
+  return makeLongShortContract(p).marketSideValueInPaymentToken(marketIndex);
 }
 
-function marketSideValue(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex).then(function (marketSideValue) {
+function marketSideValue(p, marketIndex, isLong) {
+  return makeLongShortContract(p).marketSideValueInPaymentToken(marketIndex).then(function (marketSideValue) {
               if (isLong) {
                 return marketSideValue.long;
               } else {
@@ -58,29 +58,29 @@ function marketSideValue(providerOrSigner, marketIndex, isLong) {
             });
 }
 
-function marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).batched_amountPaymentToken_deposit(marketIndex, isLong);
+function marketSideUnconfirmedDeposits(p, marketIndex, isLong) {
+  return makeLongShortContract(p).batched_amountPaymentToken_deposit(marketIndex, isLong);
 }
 
-function marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).batched_amountSyntheticToken_redeem(marketIndex, isLong);
+function marketSideUnconfirmedRedeems(p, marketIndex, isLong) {
+  return makeLongShortContract(p).batched_amountSyntheticToken_redeem(marketIndex, isLong);
 }
 
-function marketSideUnconfirmedShifts(providerOrSigner, marketIndex, isShiftFromLong) {
-  return makeLongShortContract(providerOrSigner).batched_amountSyntheticToken_toShiftAwayFrom_marketSide(marketIndex, isShiftFromLong);
+function marketSideUnconfirmedShifts(p, marketIndex, isShiftFromLong) {
+  return makeLongShortContract(p).batched_amountSyntheticToken_toShiftAwayFrom_marketSide(marketIndex, isShiftFromLong);
 }
 
-function getSyntheticTokenPrice(providerOrSigner, marketIndex, isLong) {
+function getSyntheticTokenPrice(p, marketIndex, isLong) {
   return Promise.all([
-                marketSideValue(providerOrSigner, marketIndex, isLong),
-                syntheticTokenTotalSupply(providerOrSigner, marketIndex, isLong)
+                marketSideValue(p, marketIndex, isLong),
+                syntheticTokenTotalSupply(p, marketIndex, isLong)
               ]).then(function (param) {
               return param[0].mul(CONSTANTS$FloatJsClient.tenToThe18).div(param[1]);
             });
 }
 
-function getExposure(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex).then(function (values) {
+function getExposure(p, marketIndex, isLong) {
+  return makeLongShortContract(p).marketSideValueInPaymentToken(marketIndex).then(function (values) {
               var numerator = min(values.long, values.short).mul(CONSTANTS$FloatJsClient.tenToThe18);
               if (isLong) {
                 return numerator.div(values.long);
@@ -90,18 +90,18 @@ function getExposure(providerOrSigner, marketIndex, isLong) {
             });
 }
 
-function getUnconfirmedExposure(providerOrSigner, marketIndex, isLong) {
+function getUnconfirmedExposure(p, marketIndex, isLong) {
   return Promise.all([
-                getSyntheticTokenPrice(providerOrSigner, marketIndex, true),
-                getSyntheticTokenPrice(providerOrSigner, marketIndex, false),
-                marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, true),
-                marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, false),
-                marketSideUnconfirmedShifts(providerOrSigner, marketIndex, true),
-                marketSideUnconfirmedShifts(providerOrSigner, marketIndex, false),
-                marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, true),
-                marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, false),
-                marketSideValue(providerOrSigner, marketIndex, true),
-                marketSideValue(providerOrSigner, marketIndex, false)
+                getSyntheticTokenPrice(p, marketIndex, true),
+                getSyntheticTokenPrice(p, marketIndex, false),
+                marketSideUnconfirmedRedeems(p, marketIndex, true),
+                marketSideUnconfirmedRedeems(p, marketIndex, false),
+                marketSideUnconfirmedShifts(p, marketIndex, true),
+                marketSideUnconfirmedShifts(p, marketIndex, false),
+                marketSideUnconfirmedDeposits(p, marketIndex, true),
+                marketSideUnconfirmedDeposits(p, marketIndex, false),
+                marketSideValue(p, marketIndex, true),
+                marketSideValue(p, marketIndex, false)
               ]).then(function (results) {
               var priceLong = Caml_array.get(results, 0);
               var priceShort = Caml_array.get(results, 1);

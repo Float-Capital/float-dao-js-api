@@ -12,27 +12,28 @@ module MarketSide = {
     getUnconfirmedExposure: unit => Promise.t<Ethers.BigNumber.t>,
   }
 
-  let makeLongShortContract = providerOrSigner =>
+  let makeLongShortContract = (p: providerOrSigner) =>
     LongShort.make(
       ~address=polygonConfig.longShortContractAddress->Utils.getAddressUnsafe,
-      ~providerOrSigner,
+      ~providerOrSigner=p,
     )
 
-  let syntheticTokenAddress = (providerOrSigner, marketIndex, isLong) =>
-    makeLongShortContract(providerOrSigner)->LongShort.syntheticTokens(~marketIndex, ~isLong)
+  let syntheticTokenAddress = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) =>
+    makeLongShortContract(p)->LongShort.syntheticTokens(~marketIndex, ~isLong)
 
-  let syntheticTokenTotalSupply = (providerOrSigner, marketIndex, isLong) =>
-    providerOrSigner
+  let syntheticTokenTotalSupply = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) =>
+    p
     ->syntheticTokenAddress(marketIndex, isLong)
-    ->then(address => resolve(address->Synth.make(~providerOrSigner)))
+    ->then(address => resolve(address->Synth.make(~providerOrSigner=p)))
     ->then(synth => synth->Synth.totalSupply)
     ->thenResolve(supply => supply)
 
-  let marketSideValues = (providerOrSigner, marketIndex): Promise.t<LongShort.marketSideValue> =>
-    makeLongShortContract(providerOrSigner)->LongShort.marketSideValueInPaymentToken(~marketIndex)
+  let marketSideValues = (p: providerOrSigner, marketIndex: BigNumber.t): Promise.t<
+    LongShort.marketSideValue,
+  > => makeLongShortContract(p)->LongShort.marketSideValueInPaymentToken(~marketIndex)
 
-  let marketSideValue = (providerOrSigner, marketIndex, isLong) =>
-    makeLongShortContract(providerOrSigner)
+  let marketSideValue = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) =>
+    makeLongShortContract(p)
     ->LongShort.marketSideValueInPaymentToken(~marketIndex)
     ->thenResolve(marketSideValue =>
       switch isLong {
@@ -41,36 +42,39 @@ module MarketSide = {
       }
     )
 
-  let marketSideUnconfirmedDeposits = (providerOrSigner, marketIndex, isLong) =>
-    makeLongShortContract(providerOrSigner)->LongShort.batched_amountPaymentToken_deposit(
-      ~marketIndex,
-      ~isLong,
-    )
+  let marketSideUnconfirmedDeposits = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+  ) => makeLongShortContract(p)->LongShort.batched_amountPaymentToken_deposit(~marketIndex, ~isLong)
 
-  let marketSideUnconfirmedRedeems = (providerOrSigner, marketIndex, isLong) =>
-    makeLongShortContract(providerOrSigner)->LongShort.batched_amountSyntheticToken_redeem(
-      ~marketIndex,
-      ~isLong,
-    )
+  let marketSideUnconfirmedRedeems = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+  ) =>
+    makeLongShortContract(p)->LongShort.batched_amountSyntheticToken_redeem(~marketIndex, ~isLong)
 
-  let marketSideUnconfirmedShifts = (providerOrSigner, marketIndex, isShiftFromLong) =>
-    makeLongShortContract(
-      providerOrSigner,
-    )->LongShort.batched_amountSyntheticToken_toShiftAwayFrom_marketSide(
+  let marketSideUnconfirmedShifts = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isShiftFromLong: bool,
+  ) =>
+    makeLongShortContract(p)->LongShort.batched_amountSyntheticToken_toShiftAwayFrom_marketSide(
       ~marketIndex,
       ~isLong=isShiftFromLong,
     )
 
-  let getSyntheticTokenPrice = (providerOrSigner, marketIndex, isLong) =>
+  let getSyntheticTokenPrice = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) =>
     all2((
-      marketSideValue(providerOrSigner, marketIndex, isLong),
-      syntheticTokenTotalSupply(providerOrSigner, marketIndex, isLong),
+      marketSideValue(p, marketIndex, isLong),
+      syntheticTokenTotalSupply(p, marketIndex, isLong),
     ))->thenResolve(((value, total)) =>
       value->BigNumber.mul(CONSTANTS.tenToThe18)->BigNumber.div(total)
     )
 
-  let getExposure = (providerOrSigner, marketIndex, isLong) =>
-    marketSideValues(providerOrSigner, marketIndex)->thenResolve(values => {
+  let getExposure = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) =>
+    marketSideValues(p, marketIndex)->thenResolve(values => {
       let numerator = values.long->min(values.short)->mul(CONSTANTS.tenToThe18)
       switch isLong {
       | true => numerator->div(values.long)
@@ -78,18 +82,18 @@ module MarketSide = {
       }
     })
 
-  let getUnconfirmedExposure = (providerOrSigner, marketIndex, isLong) =>
+  let getUnconfirmedExposure = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) =>
     all([
-      getSyntheticTokenPrice(providerOrSigner, marketIndex, true),
-      getSyntheticTokenPrice(providerOrSigner, marketIndex, false),
-      marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, true),
-      marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, false),
-      marketSideUnconfirmedShifts(providerOrSigner, marketIndex, true),
-      marketSideUnconfirmedShifts(providerOrSigner, marketIndex, false),
-      marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, true),
-      marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, false),
-      marketSideValue(providerOrSigner, marketIndex, true),
-      marketSideValue(providerOrSigner, marketIndex, false),
+      getSyntheticTokenPrice(p, marketIndex, true),
+      getSyntheticTokenPrice(p, marketIndex, false),
+      marketSideUnconfirmedRedeems(p, marketIndex, true),
+      marketSideUnconfirmedRedeems(p, marketIndex, false),
+      marketSideUnconfirmedShifts(p, marketIndex, true),
+      marketSideUnconfirmedShifts(p, marketIndex, false),
+      marketSideUnconfirmedDeposits(p, marketIndex, true),
+      marketSideUnconfirmedDeposits(p, marketIndex, false),
+      marketSideValue(p, marketIndex, true),
+      marketSideValue(p, marketIndex, false),
     ])->thenResolve(results => {
       let priceLong = results[0]
       let priceShort = results[1]
@@ -128,7 +132,7 @@ module MarketSide = {
       }
     })
 
-  let newFloatMarketSide = (p: providerOrSigner, marketIndex, isLong) => {
+  let newFloatMarketSide = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) => {
     {
       getSyntheticTokenPrice: _ => getSyntheticTokenPrice(p, marketIndex, isLong),
       getExposure: _ => getExposure(p, marketIndex, isLong),
