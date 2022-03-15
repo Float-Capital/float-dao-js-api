@@ -3,7 +3,7 @@ open Ethers
 open ConfigMain
 open Promise
 
-let {min, div, mul, add} = module(Ethers.BigNumber)
+let {min, div, mul, add, sub} = module(Ethers.BigNumber)
 
 module MarketSide = {
   type a = {
@@ -41,10 +41,24 @@ module MarketSide = {
       }
     )
 
-  let marketSideUnconfirmedValues = (providerOrSigner, marketIndex, isLong) =>
+  let marketSideUnconfirmedDeposits = (providerOrSigner, marketIndex, isLong) =>
     makeLongShortContract(providerOrSigner)->LongShort.batched_amountPaymentToken_deposit(
       ~marketIndex,
       ~isLong,
+    )
+
+  let marketSideUnconfirmedRedeems = (providerOrSigner, marketIndex, isLong) =>
+    makeLongShortContract(providerOrSigner)->LongShort.batched_amountSyntheticToken_redeem(
+      ~marketIndex,
+      ~isLong,
+    )
+
+  let marketSideUnconfirmedShifts = (providerOrSigner, marketIndex, isShiftFromLong) =>
+    makeLongShortContract(
+      providerOrSigner,
+    )->LongShort.batched_amountSyntheticToken_toShiftAwayFrom_marketSide(
+      ~marketIndex,
+      ~isLong=isShiftFromLong,
     )
 
   let getSyntheticTokenPrice = (providerOrSigner, marketIndex, isLong) =>
@@ -65,17 +79,52 @@ module MarketSide = {
     })
 
   let getUnconfirmedExposure = (providerOrSigner, marketIndex, isLong) =>
-    all3((
-      marketSideValues(providerOrSigner, marketIndex),
-      marketSideUnconfirmedValues(providerOrSigner, marketIndex, true),
-      marketSideUnconfirmedValues(providerOrSigner, marketIndex, false),
-    ))->thenResolve(((values, unconfirmedLong, unconfirmedShort)) => {
-      let valueLong = values.long->add(unconfirmedLong)
-      let valueShort = values.short->add(unconfirmedShort)
-      let numerator = valueLong->min(valueShort)->mul(CONSTANTS.tenToThe18)
+    all([
+      getSyntheticTokenPrice(providerOrSigner, marketIndex, true),
+      getSyntheticTokenPrice(providerOrSigner, marketIndex, false),
+      marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, true),
+      marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, false),
+      marketSideUnconfirmedShifts(providerOrSigner, marketIndex, true),
+      marketSideUnconfirmedShifts(providerOrSigner, marketIndex, false),
+      marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, true),
+      marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, false),
+      marketSideValue(providerOrSigner, marketIndex, true),
+      marketSideValue(providerOrSigner, marketIndex, false),
+    ])->thenResolve(results => {
+      let priceLong = results[0]
+      let priceShort = results[1]
+      let redeemsLong = results[2]
+      let redeemsShort = results[3]
+      let shiftsFromLong = results[4]
+      let shiftsFromShort = results[5]
+      let depositsLong = results[6]
+      let depositsShort = results[7]
+      let valueLong = results[8]
+      let valueShort = results[9]
+
+      let unconfirmedValueLong =
+        shiftsFromShort
+        ->sub(shiftsFromLong)
+        ->sub(redeemsLong)
+        ->mul(priceLong)
+        ->div(CONSTANTS.tenToThe18)
+        ->add(depositsLong)
+        ->add(valueLong)
+
+      let unconfirmedValueShort =
+        shiftsFromLong
+        ->sub(shiftsFromShort)
+        ->sub(redeemsShort)
+        ->mul(priceShort)
+        ->div(CONSTANTS.tenToThe18)
+        ->add(depositsShort)
+        ->add(valueShort)
+
+      let numerator = unconfirmedValueLong->min(unconfirmedValueShort)->mul(CONSTANTS.tenToThe18)
+
       switch isLong {
-      | true => numerator->div(valueLong)
-      | false => numerator->div(valueShort)
+      | true => numerator->div(unconfirmedValueLong)
+      | false => numerator->div(unconfirmedValueShort)
       }
     })
 

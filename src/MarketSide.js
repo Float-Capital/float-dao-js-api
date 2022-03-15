@@ -2,6 +2,7 @@
 'use strict';
 
 var Ethers = require("ethers");
+var Caml_array = require("rescript/lib/js/caml_array.js");
 var Ethers$FloatJsClient = require("./demo/Ethers.js");
 var CONSTANTS$FloatJsClient = require("./demo/CONSTANTS.js");
 var Contracts$FloatJsClient = require("./demo/Contracts.js");
@@ -19,6 +20,10 @@ function mul(prim0, prim1) {
 
 function add(prim0, prim1) {
   return prim0.add(prim1);
+}
+
+function sub(prim0, prim1) {
+  return prim0.sub(prim1);
 }
 
 function makeLongShortContract(providerOrSigner) {
@@ -53,8 +58,16 @@ function marketSideValue(providerOrSigner, marketIndex, isLong) {
             });
 }
 
-function marketSideUnconfirmedValues(providerOrSigner, marketIndex, isLong) {
+function marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, isLong) {
   return makeLongShortContract(providerOrSigner).batched_amountPaymentToken_deposit(marketIndex, isLong);
+}
+
+function marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, isLong) {
+  return makeLongShortContract(providerOrSigner).batched_amountSyntheticToken_redeem(marketIndex, isLong);
+}
+
+function marketSideUnconfirmedShifts(providerOrSigner, marketIndex, isShiftFromLong) {
+  return makeLongShortContract(providerOrSigner).batched_amountSyntheticToken_toShiftAwayFrom_marketSide(marketIndex, isShiftFromLong);
 }
 
 function getSyntheticTokenPrice(providerOrSigner, marketIndex, isLong) {
@@ -79,18 +92,34 @@ function getExposure(providerOrSigner, marketIndex, isLong) {
 
 function getUnconfirmedExposure(providerOrSigner, marketIndex, isLong) {
   return Promise.all([
-                makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex),
-                marketSideUnconfirmedValues(providerOrSigner, marketIndex, true),
-                marketSideUnconfirmedValues(providerOrSigner, marketIndex, false)
-              ]).then(function (param) {
-              var values = param[0];
-              var valueLong = values.long.add(param[1]);
-              var valueShort = values.short.add(param[2]);
-              var numerator = min(valueLong, valueShort).mul(CONSTANTS$FloatJsClient.tenToThe18);
+                getSyntheticTokenPrice(providerOrSigner, marketIndex, true),
+                getSyntheticTokenPrice(providerOrSigner, marketIndex, false),
+                marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, true),
+                marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, false),
+                marketSideUnconfirmedShifts(providerOrSigner, marketIndex, true),
+                marketSideUnconfirmedShifts(providerOrSigner, marketIndex, false),
+                marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, true),
+                marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, false),
+                marketSideValue(providerOrSigner, marketIndex, true),
+                marketSideValue(providerOrSigner, marketIndex, false)
+              ]).then(function (results) {
+              var priceLong = Caml_array.get(results, 0);
+              var priceShort = Caml_array.get(results, 1);
+              var redeemsLong = Caml_array.get(results, 2);
+              var redeemsShort = Caml_array.get(results, 3);
+              var shiftsFromLong = Caml_array.get(results, 4);
+              var shiftsFromShort = Caml_array.get(results, 5);
+              var depositsLong = Caml_array.get(results, 6);
+              var depositsShort = Caml_array.get(results, 7);
+              var valueLong = Caml_array.get(results, 8);
+              var valueShort = Caml_array.get(results, 9);
+              var unconfirmedValueLong = shiftsFromShort.sub(shiftsFromLong).sub(redeemsLong).mul(priceLong).div(CONSTANTS$FloatJsClient.tenToThe18).add(depositsLong).add(valueLong);
+              var unconfirmedValueShort = shiftsFromLong.sub(shiftsFromShort).sub(redeemsShort).mul(priceShort).div(CONSTANTS$FloatJsClient.tenToThe18).add(depositsShort).add(valueShort);
+              var numerator = min(unconfirmedValueLong, unconfirmedValueShort).mul(CONSTANTS$FloatJsClient.tenToThe18);
               if (isLong) {
-                return numerator.div(valueLong);
+                return numerator.div(unconfirmedValueLong);
               } else {
-                return numerator.div(valueShort);
+                return numerator.div(unconfirmedValueShort);
               }
             });
 }
@@ -115,7 +144,9 @@ var MarketSide = {
   syntheticTokenTotalSupply: syntheticTokenTotalSupply,
   marketSideValues: marketSideValues,
   marketSideValue: marketSideValue,
-  marketSideUnconfirmedValues: marketSideUnconfirmedValues,
+  marketSideUnconfirmedDeposits: marketSideUnconfirmedDeposits,
+  marketSideUnconfirmedRedeems: marketSideUnconfirmedRedeems,
+  marketSideUnconfirmedShifts: marketSideUnconfirmedShifts,
   getSyntheticTokenPrice: getSyntheticTokenPrice,
   getExposure: getExposure,
   getUnconfirmedExposure: getUnconfirmedExposure,
@@ -126,5 +157,6 @@ exports.min = min;
 exports.div = div;
 exports.mul = mul;
 exports.add = add;
+exports.sub = sub;
 exports.MarketSide = MarketSide;
 /* ethers Not a pure module */
