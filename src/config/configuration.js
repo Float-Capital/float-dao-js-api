@@ -3,6 +3,7 @@ let ethers = require("ethers");
 module.exports = {
   polygon: {
     longShortContractAddress: "0x168a5d1217AEcd258b03018d5bF1A1677A07b733",
+    stakerContractAddress: "0xe7C89eb987c415B4233789E5ceC0eE7407d2C47F",
     daiAddress: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
     pairAddress: "",
     uniswapV2RouterAddress: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506", // sushiswap router
@@ -18,6 +19,7 @@ module.exports = {
   },
   avalanche: {
     longShortContractAddress: "0x0db3c59c187ecfa36a9C9f6CFa3664D06c2B5556",
+    stakerContractAddress: "0xD2EEAafF35281757F87e4d535763c3d4c35b62C1",
     daiAddress: "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70",
     pairAddress: "0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd", // JOE token
     uniswapV2RouterAddress: "0x60aE616a2155Ee3d9A68541Ba4544862310933d4", // Trader joe router

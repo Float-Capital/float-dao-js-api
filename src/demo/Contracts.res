@@ -8,7 +8,6 @@ module LongShort = {
     short: Ethers.BigNumber.t,
   }
 
-  // TODO add function modifier keywords
   let abi =
     [
       "function mintLongNextPrice(uint32 marketIndex,uint256 amount)",
@@ -27,6 +26,8 @@ module LongShort = {
       "function batched_amountPaymentToken_deposit(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function batched_amountSyntheticToken_redeem(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function batched_amountSyntheticToken_toShiftAwayFrom_marketSide(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
+      "function userNextPrice_currentUpdateIndex(uint32 marketIndex, address user) view returns (uint256 amount)",
+      "function getUsersConfirmedButNotSettledSynthBalance(address user, uint32 marketIndex, bool isLong) view returns (uint256 amount)",
     ]->Ethers.makeAbi
 
   let make = (~address, ~providerOrSigner): t =>
@@ -134,6 +135,26 @@ module LongShort = {
     ~marketIndex: Ethers.BigNumber.t,
     ~isLong: bool,
   ) => Promise.t<Ethers.BigNumber.t> = "batched_amountSyntheticToken_toShiftAwayFrom_marketSide"
+  @send
+  external userNextPrice_currentUpdateIndex: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~user: Ethers.ethAddress,
+  ) => Promise.t<Ethers.BigNumber.t> = "userNextPrice_currentUpdateIndex"
+  @send
+  external userNextPrice_paymentToken_depositAmount: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~isLong: bool,
+    ~user: Ethers.ethAddress,
+  ) => Promise.t<Ethers.BigNumber.t> = "userNextPrice_paymentToken_depositAmount"
+  @send
+  external getUsersConfirmedButNotSettledSynthBalance: (
+    t,
+    ~user: Ethers.ethAddress,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~isLong: bool,
+  ) => Promise.t<Ethers.BigNumber.t> = "getUsersConfirmedButNotSettledSynthBalance"
 }
 
 module Staker = {
@@ -199,7 +220,7 @@ module Staker = {
 
   @send
   external userAmountStaked: (
-    ~contract: t,
+    t,
     ~token: Ethers.ethAddress,
     ~owner: Ethers.ethAddress,
   ) => Promise.t<Ethers.BigNumber.t> = "userAmountStaked"
@@ -269,8 +290,7 @@ module Synth = {
   ) => Promise.t<Ethers.txSubmitted> = "approve"
 
   @send
-  external balanceOf: (~contract: t, ~owner: Ethers.ethAddress) => Promise.t<Ethers.BigNumber.t> =
-    "balanceOf"
+  external balanceOf: (t, ~owner: Ethers.ethAddress) => Promise.t<Ethers.BigNumber.t> = "balanceOf"
 
   @send
   external allowance: (
