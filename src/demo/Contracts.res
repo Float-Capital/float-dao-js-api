@@ -24,6 +24,9 @@ module LongShort = {
       "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
       "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
       "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)",
+      "function batched_amountPaymentToken_deposit(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
+      "function batched_amountSyntheticToken_redeem(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
+      "function batched_amountSyntheticToken_toShiftAwayFrom_marketSide(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
     ]->Ethers.makeAbi
 
   let make = (~address, ~providerOrSigner): t =>
@@ -113,6 +116,24 @@ module LongShort = {
     t,
     ~marketIndex: Ethers.BigNumber.t,
   ) => Promise.t<marketSideValue> = "marketSideValueInPaymentToken"
+  @send
+  external batched_amountPaymentToken_deposit: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~isLong: bool,
+  ) => Promise.t<Ethers.BigNumber.t> = "batched_amountPaymentToken_deposit"
+  @send
+  external batched_amountSyntheticToken_redeem: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~isLong: bool,
+  ) => Promise.t<Ethers.BigNumber.t> = "batched_amountSyntheticToken_redeem"
+  @send
+  external batched_amountSyntheticToken_toShiftAwayFrom_marketSide: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    ~isLong: bool,
+  ) => Promise.t<Ethers.BigNumber.t> = "batched_amountSyntheticToken_toShiftAwayFrom_marketSide"
 }
 
 module Staker = {

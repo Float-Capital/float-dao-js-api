@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "scripts": {
     "res:build": "rescript build -with-deps",
+    "res:start": "rescript build -w -with-deps",
     "res:clean": "rescript clean -with-deps",
+    "res:format": "rescript format -all",
     "start": "node src/demo.js",
     "dev": "nodemon src/demo.js",
     "refmt": "rescript format -all"
