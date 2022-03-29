@@ -17,6 +17,8 @@ var zeroBN = Ethers.BigNumber.from(0);
 
 var fourBN = Ethers.BigNumber.from(4);
 
+var tenToThe2 = Ethers.BigNumber.from(100);
+
 var tenToThe4 = Ethers.BigNumber.from(10000);
 
 var tenToThe15 = Ethers.BigNumber.from("1000000000000000");
@@ -30,6 +32,7 @@ exports.fromInt = fromInt;
 exports.oneGweiInWei = oneGweiInWei;
 exports.zeroBN = zeroBN;
 exports.fourBN = fourBN;
+exports.tenToThe2 = tenToThe2;
 exports.tenToThe4 = tenToThe4;
 exports.tenToThe9 = tenToThe9;
 exports.tenToThe15 = tenToThe15;

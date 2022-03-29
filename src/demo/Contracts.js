@@ -4,16 +4,16 @@
 var Ethers$FloatJsClient = require("./Ethers.js");
 
 var abi = Ethers$FloatJsClient.makeAbi([
-      "function mintLongNextPrice(uint32 marketIndex,uint256 amount)",
-      "function mintShortNextPrice(uint32 marketIndex,uint256 amount)",
-      "function mintAndStakeNextPrice(uint32 marketIndex,uint256 amount,bool isLong)",
-      "function redeemLongNextPrice(uint32 marketIndex,uint256 tokensToRedeem)",
-      "function redeemShortNextPrice(uint32 marketIndex,uint256 tokensToRedeem)",
+      "function mintLongNextPrice(uint32 marketIndex,uint256 amountPaymentToken)",
+      "function mintShortNextPrice(uint32 marketIndex,uint256 amountPaymentToken)",
+      "function mintAndStakeNextPrice(uint32 marketIndex,uint256 amountPaymentToken,bool isLong)",
+      "function redeemLongNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
+      "function redeemShortNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
       "function executeOutstandingNextPriceSettlementsUser(address user,uint32 marketIndex)",
       "function updateSystemState()",
       "function updateSystemStateMulti(uint32[] marketIndexes)",
-      "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
-      "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
+      "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
+      "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
       "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
       "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
       "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)",
@@ -34,11 +34,10 @@ var LongShort = {
 };
 
 var abi$1 = Ethers$FloatJsClient.makeAbi([
-      "function stake(address tokenAddress, uint256 amount)",
-      "function withdraw(uint32, bool, uint256 amount)",
+      "function withdraw(uint32 marketIndex, bool isLong, uint256 amountSyntheticToken)",
       "function claimFloatCustom(uint32[] calldata marketIndexes)",
       "function withdrawWithVoucher(uint32 marketIndex, bool isWithdrawFromLong, uint256 withdrawAmount, uint256 expiry, uint256 nonce, uint256 discountWithdrawFee, uint8 v, bytes32 r, bytes32 s)",
-      "function shiftTokens(uint256 amountSyntheticTokensToShift, uint32 marketIndex, bool isShiftFromLong)",
+      "function shiftTokens(uint256 amountSyntheticToken, uint32 marketIndex, bool isShiftFromLong)",
       "function userAmountStaked(address, address) public view returns (uint256)"
     ]);
 
@@ -71,7 +70,7 @@ var abi$3 = Ethers$FloatJsClient.makeAbi([
       "function approve(address spender, uint256 amount)",
       "function balanceOf(address owner) public view returns (uint256 balance)",
       "function allowance(address owner, address spender) public view returns (uint256 remaining)",
-      "function stake(uint256 amount) external",
+      "function stake(uint256 amountSyntheticToken) external",
       "function totalSupply() external view returns (uint256 total)"
     ]);
 

@@ -1,5 +1,11 @@
 // NOTE: since the type of all of these contracts is a generic `Ethers.Contract.t`, this code can runtime error if the wrong functions are called on the wrong contracts.
 
+type txOptions = {
+  maxFeePerGas: string,
+  maxPriorityFeePerGas: string,
+  gasLimit: string,
+}
+
 module LongShort = {
   type t = Ethers.Contract.t
 
@@ -10,16 +16,16 @@ module LongShort = {
 
   let abi =
     [
-      "function mintLongNextPrice(uint32 marketIndex,uint256 amount)",
-      "function mintShortNextPrice(uint32 marketIndex,uint256 amount)",
-      "function mintAndStakeNextPrice(uint32 marketIndex,uint256 amount,bool isLong)",
-      "function redeemLongNextPrice(uint32 marketIndex,uint256 tokensToRedeem)",
-      "function redeemShortNextPrice(uint32 marketIndex,uint256 tokensToRedeem)",
+      "function mintLongNextPrice(uint32 marketIndex,uint256 amountPaymentToken)",
+      "function mintShortNextPrice(uint32 marketIndex,uint256 amountPaymentToken)",
+      "function mintAndStakeNextPrice(uint32 marketIndex,uint256 amountPaymentToken,bool isLong)",
+      "function redeemLongNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
+      "function redeemShortNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
       "function executeOutstandingNextPriceSettlementsUser(address user,uint32 marketIndex)",
       "function updateSystemState()",
       "function updateSystemStateMulti(uint32[] marketIndexes)",
-      "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
-      "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticTokensToShift)",
+      "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
+      "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
       "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
       "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
       "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)",
@@ -35,69 +41,69 @@ module LongShort = {
 
   @send
   external mintLongNextPrice: (
-    ~contract: t,
+    t,
     ~marketIndex: Ethers.BigNumber.t,
-    ~amount: Ethers.BigNumber.t,
-    'txOptions,
+    ~amountPaymentToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "mintLongNextPrice"
   @send
   external mintShortNextPrice: (
-    ~contract: t,
+    t,
     ~marketIndex: Ethers.BigNumber.t,
-    ~amount: Ethers.BigNumber.t,
-    'txOptions,
+    ~amountPaymentToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "mintShortNextPrice"
   @send
   external mintAndStakeNextPrice: (
-    ~contract: t,
+    t,
     ~marketIndex: Ethers.BigNumber.t,
-    ~amount: Ethers.BigNumber.t,
+    ~amountPaymentToken: Ethers.BigNumber.t,
     ~isLong: bool,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "mintAndStakeNextPrice"
   @send
   external redeemLongNextPrice: (
-    ~contract: t,
+    t,
     ~marketIndex: Ethers.BigNumber.t,
-    ~tokensToRedeem: Ethers.BigNumber.t,
-    'txOptions,
+    ~amountSyntheticToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "redeemLongNextPrice"
   @send
   external redeemShortNextPrice: (
-    ~contract: t,
+    t,
     ~marketIndex: Ethers.BigNumber.t,
-    ~tokensToRedeem: Ethers.BigNumber.t,
-    'txOptions,
+    ~amountSyntheticToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "redeemShortNextPrice"
   @send
   external executeOutstandingNextPriceSettlementsUser: (
-    ~contract: t,
+    t,
     ~user: Ethers.ethAddress,
     ~marketIndex: Ethers.BigNumber.t,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "executeOutstandingNextPriceSettlementsUser"
   @send
-  external updateSystemState: (~contract: t, 'txOptions) => Promise.t<Ethers.txSubmitted> =
+  external updateSystemState: (~contract: t, txOptions) => Promise.t<Ethers.txSubmitted> =
     "updateSystemState"
   @send
   external updateSystemStateMulti: (
     ~contract: t,
     ~marketIndexes: array<Ethers.BigNumber.t>,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "updateSystemStateMulti"
   @send
   external shiftPositionFromLongNextPrice: (
-    ~contract: t,
+    t,
     ~marketIndex: Ethers.BigNumber.t,
-    ~amountSyntheticTokensToShift: Ethers.BigNumber.t,
-    'txOptions,
+    ~amountSyntheticToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "shiftPositionFromLongNextPrice"
   @send
   external shiftPositionFromShortNextPrice: (
-    ~contract: t,
+    t,
     ~marketIndex: Ethers.BigNumber.t,
-    ~amountSyntheticTokensToShift: Ethers.BigNumber.t,
-    'txOptions,
+    ~amountSyntheticToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "shiftPositionFromShortNextPrice"
   @send
   external get_syntheticToken_priceSnapshot_side: (
@@ -162,11 +168,10 @@ module Staker = {
 
   let abi =
     [
-      "function stake(address tokenAddress, uint256 amount)",
-      "function withdraw(uint32, bool, uint256 amount)",
+      "function withdraw(uint32 marketIndex, bool isLong, uint256 amountSyntheticToken)",
       "function claimFloatCustom(uint32[] calldata marketIndexes)",
       "function withdrawWithVoucher(uint32 marketIndex, bool isWithdrawFromLong, uint256 withdrawAmount, uint256 expiry, uint256 nonce, uint256 discountWithdrawFee, uint8 v, bytes32 r, bytes32 s)",
-      "function shiftTokens(uint256 amountSyntheticTokensToShift, uint32 marketIndex, bool isShiftFromLong)",
+      "function shiftTokens(uint256 amountSyntheticToken, uint32 marketIndex, bool isShiftFromLong)",
       "function userAmountStaked(address, address) public view returns (uint256)",
     ]->Ethers.makeAbi
 
@@ -174,19 +179,12 @@ module Staker = {
     Ethers.Contract.make(address, abi, providerOrSigner)
 
   @send
-  external stake: (
-    ~contract: t,
-    ~tokenAddress: Ethers.ethAddress,
-    ~amount: Ethers.BigNumber.t,
-    'txOptions,
-  ) => Promise.t<Ethers.txSubmitted> = "stake"
-  @send
   external withdraw: (
-    ~contract: t,
-    ~marketIndex: int,
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
     ~isWithdrawFromLong: bool,
-    ~amount: Ethers.BigNumber.t,
-    'txOptions,
+    ~amountSyntheticToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "withdraw"
   @send
   external withdrawWithVoucher: (
@@ -200,22 +198,22 @@ module Staker = {
     ~v: int,
     ~r: string,
     ~s: string,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "withdrawWithVoucher"
   @send
   external claimFloatCustom: (
     ~contract: t,
     ~marketIndexes: array<int>,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "claimFloatCustom"
 
   @send
   external shiftTokens: (
-    ~contract: t,
-    ~amountSyntheticTokensToShift: Ethers.BigNumber.t,
+    t,
+    ~amountSyntheticToken: Ethers.BigNumber.t,
     ~marketIndex: Ethers.BigNumber.t,
     ~isShiftFromLong: bool,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "shiftTokens"
 
   @send
@@ -245,7 +243,7 @@ module Erc20 = {
     ~contract: t,
     ~spender: Ethers.ethAddress,
     ~amount: Ethers.BigNumber.t,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "approve"
 
   @send
@@ -263,7 +261,7 @@ module Erc20 = {
   external mint: (
     ~contract: t,
     ~amount: Ethers.BigNumber.t,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "mint"
 }
 
@@ -275,7 +273,7 @@ module Synth = {
       "function approve(address spender, uint256 amount)",
       "function balanceOf(address owner) public view returns (uint256 balance)",
       "function allowance(address owner, address spender) public view returns (uint256 remaining)",
-      "function stake(uint256 amount) external",
+      "function stake(uint256 amountSyntheticToken) external",
       "function totalSupply() external view returns (uint256 total)",
     ]->Ethers.makeAbi
 
@@ -286,7 +284,7 @@ module Synth = {
     ~contract: t,
     ~spender: Ethers.ethAddress,
     ~amount: Ethers.BigNumber.t,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "approve"
 
   @send
@@ -301,9 +299,9 @@ module Synth = {
 
   @send
   external stake: (
-    ~contract: t,
-    ~amount: Ethers.BigNumber.t,
-    'txOptions,
+    t,
+    ~amountSyntheticToken: Ethers.BigNumber.t,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "stake"
 
   @send
@@ -323,6 +321,6 @@ module GemCollectorNFT = {
     ~contract: t,
     ~levelId: Ethers.BigNumber.t,
     ~receiver: Ethers.ethAddress,
-    'txOptions,
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "mintNFT"
 }

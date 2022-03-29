@@ -193,6 +193,74 @@ function unsettledPositions(p, marketIndex, isLong, address) {
             });
 }
 
+function mint(p, marketIndex, isLong, amountPaymentToken) {
+  if (isLong) {
+    var partial_arg = makeLongShortContract(p);
+    return function (param) {
+      return partial_arg.mintLongNextPrice(marketIndex, amountPaymentToken, param);
+    };
+  }
+  var partial_arg$1 = makeLongShortContract(p);
+  return function (param) {
+    return partial_arg$1.mintShortNextPrice(marketIndex, amountPaymentToken, param);
+  };
+}
+
+function mintAndStake(p, marketIndex, isLong, amountPaymentToken) {
+  var partial_arg = makeLongShortContract(p);
+  return function (param) {
+    return partial_arg.mintAndStakeNextPrice(marketIndex, amountPaymentToken, isLong, param);
+  };
+}
+
+function stake(p, marketIndex, isLong, amountSyntheticToken, txOptions) {
+  return syntheticTokenAddress(p, marketIndex, isLong).then(function (address) {
+                return Promise.resolve(Contracts$FloatJsClient.Synth.make(address, p));
+              }).then(function (synth) {
+              return synth.stake(amountSyntheticToken, txOptions);
+            });
+}
+
+function unstake(p, marketIndex, isLong, amountSyntheticToken) {
+  var partial_arg = makeStakerContract(p);
+  return function (param) {
+    return partial_arg.withdraw(marketIndex, isLong, amountSyntheticToken, param);
+  };
+}
+
+function redeem(p, marketIndex, isLong, amountSyntheticToken) {
+  if (isLong) {
+    var partial_arg = makeLongShortContract(p);
+    return function (param) {
+      return partial_arg.redeemLongNextPrice(marketIndex, amountSyntheticToken, param);
+    };
+  }
+  var partial_arg$1 = makeLongShortContract(p);
+  return function (param) {
+    return partial_arg$1.redeemShortNextPrice(marketIndex, amountSyntheticToken, param);
+  };
+}
+
+function shift(p, marketIndex, isLong, amountSyntheticToken) {
+  if (isLong) {
+    var partial_arg = makeLongShortContract(p);
+    return function (param) {
+      return partial_arg.shiftPositionFromLongNextPrice(marketIndex, amountSyntheticToken, param);
+    };
+  }
+  var partial_arg$1 = makeLongShortContract(p);
+  return function (param) {
+    return partial_arg$1.shiftPositionFromLongNextPrice(marketIndex, amountSyntheticToken, param);
+  };
+}
+
+function shiftStake(p, marketIndex, isLong, amountSyntheticToken) {
+  var partial_arg = makeStakerContract(p);
+  return function (param) {
+    return partial_arg.shiftTokens(amountSyntheticToken, marketIndex, isLong, param);
+  };
+}
+
 function newFloatMarketSide(p, marketIndex, isLong) {
   return {
           getSyntheticTokenPrice: (function (param) {
@@ -212,6 +280,27 @@ function newFloatMarketSide(p, marketIndex, isLong) {
             }),
           getUnsettledPositions: (function (param) {
               return unsettledPositions(p, marketIndex, isLong, param);
+            }),
+          mint: (function (param) {
+              return mint(p, marketIndex, isLong, param);
+            }),
+          mintAndStake: (function (param) {
+              return mintAndStake(p, marketIndex, isLong, param);
+            }),
+          stake: (function (param, param$1) {
+              return stake(p, marketIndex, isLong, param, param$1);
+            }),
+          unstake: (function (param) {
+              return unstake(p, marketIndex, isLong, param);
+            }),
+          redeem: (function (param) {
+              return redeem(p, marketIndex, isLong, param);
+            }),
+          shift: (function (param) {
+              return shift(p, marketIndex, isLong, param);
+            }),
+          shiftStake: (function (param) {
+              return shiftStake(p, marketIndex, isLong, param);
             })
         };
 }
@@ -237,6 +326,13 @@ var MarketSide = {
   positions: positions,
   stakedPositions: stakedPositions,
   unsettledPositions: unsettledPositions,
+  mint: mint,
+  mintAndStake: mintAndStake,
+  stake: stake,
+  unstake: unstake,
+  redeem: redeem,
+  shift: shift,
+  shiftStake: shiftStake,
   newFloatMarketSide: newFloatMarketSide
 };
 

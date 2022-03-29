@@ -5,6 +5,8 @@ open Promise
 
 let {min, div, mul, add, sub} = module(Ethers.BigNumber)
 
+// TODO wallet: provider VS providerOrSigner
+// We should differentiate, 'cause some actions need a signer and some just a provider
 module MarketSide = {
   type b = {
     paymentToken: BigNumber.t,
@@ -18,6 +20,13 @@ module MarketSide = {
     getPositions: ethAddress => Promise.t<b>,
     getStakedPositions: ethAddress => Promise.t<b>,
     getUnsettledPositions: ethAddress => Promise.t<b>,
+    mint: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
+    mintAndStake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
+    stake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
+    unstake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
+    redeem: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
+    shift: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
+    shiftStake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
   }
 
   let makeLongShortContract = (p: providerOrSigner) =>
@@ -247,6 +256,91 @@ module MarketSide = {
       synthToken: balance,
     })
 
+  let mint = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+    amountPaymentToken: BigNumber.t,
+  ) =>
+    switch isLong {
+    | true =>
+      p->makeLongShortContract->LongShort.mintLongNextPrice(~marketIndex, ~amountPaymentToken)
+    | false =>
+      p->makeLongShortContract->LongShort.mintShortNextPrice(~marketIndex, ~amountPaymentToken)
+    }
+
+  let mintAndStake = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+    amountPaymentToken: BigNumber.t,
+  ) =>
+    p
+    ->makeLongShortContract
+    ->LongShort.mintAndStakeNextPrice(~marketIndex, ~amountPaymentToken, ~isLong)
+
+  let stake = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+    amountSyntheticToken: BigNumber.t,
+    txOptions: txOptions,
+  ) =>
+    p
+    ->syntheticTokenAddress(marketIndex, isLong)
+    ->then(address => resolve(address->Synth.make(~providerOrSigner=p)))
+    ->then(synth => synth->Synth.stake(~amountSyntheticToken, txOptions))
+
+  let unstake = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+    amountSyntheticToken: BigNumber.t,
+  ) =>
+      p
+      ->makeStakerContract
+      ->Staker.withdraw(~marketIndex, ~isWithdrawFromLong=isLong, ~amountSyntheticToken)
+
+  let redeem = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+    amountSyntheticToken: BigNumber.t,
+  ) =>
+    switch isLong {
+    | true =>
+      p->makeLongShortContract->LongShort.redeemLongNextPrice(~marketIndex, ~amountSyntheticToken)
+    | false =>
+      p->makeLongShortContract->LongShort.redeemShortNextPrice(~marketIndex, ~amountSyntheticToken)
+    }
+
+  let shift = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+    amountSyntheticToken: BigNumber.t,
+  ) =>
+    switch isLong {
+    | true =>
+      p
+      ->makeLongShortContract
+      ->LongShort.shiftPositionFromLongNextPrice(~marketIndex, ~amountSyntheticToken)
+    | false =>
+      p
+      ->makeLongShortContract
+      ->LongShort.shiftPositionFromLongNextPrice(~marketIndex, ~amountSyntheticToken)
+    }
+
+  let shiftStake = (
+    p: providerOrSigner,
+    marketIndex: BigNumber.t,
+    isLong: bool,
+    amountSyntheticToken: BigNumber.t,
+  ) =>
+    p
+    ->makeStakerContract
+    ->Staker.shiftTokens(~amountSyntheticToken, ~marketIndex, ~isShiftFromLong=isLong)
+
   let newFloatMarketSide = (p: providerOrSigner, marketIndex: BigNumber.t, isLong: bool) => {
     {
       getSyntheticTokenPrice: _ => syntheticTokenPrice(p, marketIndex, isLong),
@@ -255,6 +349,13 @@ module MarketSide = {
       getPositions: positions(p, marketIndex, isLong),
       getStakedPositions: stakedPositions(p, marketIndex, isLong),
       getUnsettledPositions: unsettledPositions(p, marketIndex, isLong),
+      mint: mint(p, marketIndex, isLong),
+      mintAndStake: mintAndStake(p, marketIndex, isLong),
+      stake: stake(p, marketIndex, isLong),
+      unstake: unstake(p, marketIndex, isLong),
+      redeem: redeem(p, marketIndex, isLong),
+      shift: shift(p, marketIndex, isLong),
+      shiftStake: shiftStake(p, marketIndex, isLong),
     }
   }
 }
