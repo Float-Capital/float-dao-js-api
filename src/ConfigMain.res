@@ -13,6 +13,7 @@ type gas = {gasPrice: ethersBigNumber, gasLimit: ethersBigNumber}
 
 type configType = {
   longShortContractAddress: string,
+  stakerContractAddress: string,
   daiAddress: string,
   pairAddress: string,
   uniswapV2RouterAddress: string,

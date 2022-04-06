@@ -26,30 +26,46 @@ function sub(prim0, prim1) {
   return prim0.sub(prim1);
 }
 
-function makeLongShortContract(providerOrSigner) {
-  return Contracts$FloatJsClient.LongShort.make(Ethers.utils.getAddress(ConfigMain$FloatJsClient.polygonConfig.longShortContractAddress), providerOrSigner);
+function makeLongShortContract(p) {
+  return Contracts$FloatJsClient.LongShort.make(Ethers.utils.getAddress(ConfigMain$FloatJsClient.polygonConfig.longShortContractAddress), p);
 }
 
-function syntheticTokenAddress(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).syntheticTokens(marketIndex, isLong);
+function makeStakerContract(p) {
+  return Contracts$FloatJsClient.Staker.make(Ethers.utils.getAddress(ConfigMain$FloatJsClient.polygonConfig.stakerContractAddress), p);
 }
 
-function syntheticTokenTotalSupply(providerOrSigner, marketIndex, isLong) {
-  return syntheticTokenAddress(providerOrSigner, marketIndex, isLong).then(function (address) {
-                  return Promise.resolve(Contracts$FloatJsClient.Synth.make(address, providerOrSigner));
-                }).then(function (synth) {
-                return synth.totalSupply();
-              }).then(function (supply) {
-              return supply;
+function syntheticTokenAddress(p, marketIndex, isLong) {
+  return makeLongShortContract(p).syntheticTokens(marketIndex, isLong);
+}
+
+function syntheticTokenTotalSupply(p, marketIndex, isLong) {
+  return syntheticTokenAddress(p, marketIndex, isLong).then(function (address) {
+                return Promise.resolve(Contracts$FloatJsClient.Synth.make(address, p));
+              }).then(function (synth) {
+              return synth.totalSupply();
             });
 }
 
-function marketSideValues(providerOrSigner, marketIndex) {
-  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex);
+function syntheticTokenBalance(p, marketIndex, isLong, owner) {
+  return syntheticTokenAddress(p, marketIndex, isLong).then(function (address) {
+                return Promise.resolve(Contracts$FloatJsClient.Synth.make(address, p));
+              }).then(function (synth) {
+              return synth.balanceOf(owner);
+            });
 }
 
-function marketSideValue(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex).then(function (marketSideValue) {
+function stakedSyntheticTokenBalance(p, marketIndex, isLong, owner) {
+  return syntheticTokenAddress(p, marketIndex, isLong).then(function (token) {
+              return makeStakerContract(p).userAmountStaked(token, owner);
+            });
+}
+
+function marketSideValues(p, marketIndex) {
+  return makeLongShortContract(p).marketSideValueInPaymentToken(marketIndex);
+}
+
+function marketSideValue(p, marketIndex, isLong) {
+  return makeLongShortContract(p).marketSideValueInPaymentToken(marketIndex).then(function (marketSideValue) {
               if (isLong) {
                 return marketSideValue.long;
               } else {
@@ -58,29 +74,41 @@ function marketSideValue(providerOrSigner, marketIndex, isLong) {
             });
 }
 
-function marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).batched_amountPaymentToken_deposit(marketIndex, isLong);
+function updateIndex(p, marketIndex, user) {
+  return makeLongShortContract(p).userNextPrice_currentUpdateIndex(marketIndex, user);
 }
 
-function marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).batched_amountSyntheticToken_redeem(marketIndex, isLong);
+function unsettledSynthBalance(p, marketIndex, isLong, user) {
+  return makeLongShortContract(p).getUsersConfirmedButNotSettledSynthBalance(user, marketIndex, isLong);
 }
 
-function marketSideUnconfirmedShifts(providerOrSigner, marketIndex, isShiftFromLong) {
-  return makeLongShortContract(providerOrSigner).batched_amountSyntheticToken_toShiftAwayFrom_marketSide(marketIndex, isShiftFromLong);
+function marketSideUnconfirmedDeposits(p, marketIndex, isLong) {
+  return makeLongShortContract(p).batched_amountPaymentToken_deposit(marketIndex, isLong);
 }
 
-function getSyntheticTokenPrice(providerOrSigner, marketIndex, isLong) {
+function marketSideUnconfirmedRedeems(p, marketIndex, isLong) {
+  return makeLongShortContract(p).batched_amountSyntheticToken_redeem(marketIndex, isLong);
+}
+
+function marketSideUnconfirmedShifts(p, marketIndex, isShiftFromLong) {
+  return makeLongShortContract(p).batched_amountSyntheticToken_toShiftAwayFrom_marketSide(marketIndex, isShiftFromLong);
+}
+
+function syntheticTokenPrice(p, marketIndex, isLong) {
   return Promise.all([
-                marketSideValue(providerOrSigner, marketIndex, isLong),
-                syntheticTokenTotalSupply(providerOrSigner, marketIndex, isLong)
+                marketSideValue(p, marketIndex, isLong),
+                syntheticTokenTotalSupply(p, marketIndex, isLong)
               ]).then(function (param) {
               return param[0].mul(CONSTANTS$FloatJsClient.tenToThe18).div(param[1]);
             });
 }
 
-function getExposure(providerOrSigner, marketIndex, isLong) {
-  return makeLongShortContract(providerOrSigner).marketSideValueInPaymentToken(marketIndex).then(function (values) {
+function syntheticTokenPriceSnapshot(p, marketIndex, isLong, priceSnapshotIndex) {
+  return makeLongShortContract(p).get_syntheticToken_priceSnapshot_side(marketIndex, isLong, priceSnapshotIndex);
+}
+
+function exposure(p, marketIndex, isLong) {
+  return makeLongShortContract(p).marketSideValueInPaymentToken(marketIndex).then(function (values) {
               var numerator = min(values.long, values.short).mul(CONSTANTS$FloatJsClient.tenToThe18);
               if (isLong) {
                 return numerator.div(values.long);
@@ -90,18 +118,18 @@ function getExposure(providerOrSigner, marketIndex, isLong) {
             });
 }
 
-function getUnconfirmedExposure(providerOrSigner, marketIndex, isLong) {
+function unconfirmedExposure(p, marketIndex, isLong) {
   return Promise.all([
-                getSyntheticTokenPrice(providerOrSigner, marketIndex, true),
-                getSyntheticTokenPrice(providerOrSigner, marketIndex, false),
-                marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, true),
-                marketSideUnconfirmedRedeems(providerOrSigner, marketIndex, false),
-                marketSideUnconfirmedShifts(providerOrSigner, marketIndex, true),
-                marketSideUnconfirmedShifts(providerOrSigner, marketIndex, false),
-                marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, true),
-                marketSideUnconfirmedDeposits(providerOrSigner, marketIndex, false),
-                marketSideValue(providerOrSigner, marketIndex, true),
-                marketSideValue(providerOrSigner, marketIndex, false)
+                syntheticTokenPrice(p, marketIndex, true),
+                syntheticTokenPrice(p, marketIndex, false),
+                marketSideUnconfirmedRedeems(p, marketIndex, true),
+                marketSideUnconfirmedRedeems(p, marketIndex, false),
+                marketSideUnconfirmedShifts(p, marketIndex, true),
+                marketSideUnconfirmedShifts(p, marketIndex, false),
+                marketSideUnconfirmedDeposits(p, marketIndex, true),
+                marketSideUnconfirmedDeposits(p, marketIndex, false),
+                marketSideValue(p, marketIndex, true),
+                marketSideValue(p, marketIndex, false)
               ]).then(function (results) {
               var priceLong = Caml_array.get(results, 0);
               var priceShort = Caml_array.get(results, 1);
@@ -124,32 +152,91 @@ function getUnconfirmedExposure(providerOrSigner, marketIndex, isLong) {
             });
 }
 
+function positions(p, marketIndex, isLong, address) {
+  return Promise.all([
+                syntheticTokenBalance(p, marketIndex, isLong, address),
+                syntheticTokenPrice(p, marketIndex, isLong)
+              ]).then(function (param) {
+              var balance = param[0];
+              return {
+                      paymentToken: balance.mul(param[1]),
+                      synthToken: balance
+                    };
+            });
+}
+
+function stakedPositions(p, marketIndex, isLong, address) {
+  return Promise.all([
+                stakedSyntheticTokenBalance(p, marketIndex, isLong, address),
+                syntheticTokenPrice(p, marketIndex, isLong)
+              ]).then(function (param) {
+              var balance = param[0];
+              return {
+                      paymentToken: balance.mul(param[1]),
+                      synthToken: balance
+                    };
+            });
+}
+
+function unsettledPositions(p, marketIndex, isLong, address) {
+  return updateIndex(p, marketIndex, address).then(function (index) {
+                return Promise.all([
+                            syntheticTokenPriceSnapshot(p, marketIndex, isLong, index),
+                            unsettledSynthBalance(p, marketIndex, isLong, address)
+                          ]);
+              }).then(function (param) {
+              var balance = param[1];
+              return {
+                      paymentToken: balance.mul(param[0]),
+                      synthToken: balance
+                    };
+            });
+}
+
 function newFloatMarketSide(p, marketIndex, isLong) {
   return {
           getSyntheticTokenPrice: (function (param) {
-              return getSyntheticTokenPrice(p, marketIndex, isLong);
+              return syntheticTokenPrice(p, marketIndex, isLong);
             }),
           getExposure: (function (param) {
-              return getExposure(p, marketIndex, isLong);
+              return exposure(p, marketIndex, isLong);
             }),
           getUnconfirmedExposure: (function (param) {
-              return getUnconfirmedExposure(p, marketIndex, isLong);
+              return unconfirmedExposure(p, marketIndex, isLong);
+            }),
+          getPositions: (function (param) {
+              return positions(p, marketIndex, isLong, param);
+            }),
+          getStakedPositions: (function (param) {
+              return stakedPositions(p, marketIndex, isLong, param);
+            }),
+          getUnsettledPositions: (function (param) {
+              return unsettledPositions(p, marketIndex, isLong, param);
             })
         };
 }
 
 var MarketSide = {
   makeLongShortContract: makeLongShortContract,
+  makeStakerContract: makeStakerContract,
   syntheticTokenAddress: syntheticTokenAddress,
   syntheticTokenTotalSupply: syntheticTokenTotalSupply,
+  syntheticTokenBalance: syntheticTokenBalance,
+  stakedSyntheticTokenBalance: stakedSyntheticTokenBalance,
   marketSideValues: marketSideValues,
   marketSideValue: marketSideValue,
+  updateIndex: updateIndex,
+  unsettledSynthBalance: unsettledSynthBalance,
   marketSideUnconfirmedDeposits: marketSideUnconfirmedDeposits,
   marketSideUnconfirmedRedeems: marketSideUnconfirmedRedeems,
   marketSideUnconfirmedShifts: marketSideUnconfirmedShifts,
-  getSyntheticTokenPrice: getSyntheticTokenPrice,
-  getExposure: getExposure,
-  getUnconfirmedExposure: getUnconfirmedExposure,
+  syntheticTokenPrice: syntheticTokenPrice,
+  syntheticTokenPriceSnapshot: syntheticTokenPriceSnapshot,
+  exposure: exposure,
+  unconfirmedExposure: unconfirmedExposure,
+  positions: positions,
+  stakedPositions: stakedPositions,
+  unsettledPositions: unsettledPositions,
   newFloatMarketSide: newFloatMarketSide
 };
 
