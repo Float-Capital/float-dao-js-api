@@ -24,8 +24,8 @@ var abi = Ethers$FloatJsClient.makeAbi([
       "function getUsersConfirmedButNotSettledSynthBalance(address user, uint32 marketIndex, bool isLong) view returns (uint256 amount)"
     ]);
 
-function make(address, providerOrSigner) {
-  return Ethers$FloatJsClient.Contract.make(address, abi, providerOrSigner);
+function make(address, providerOrWallet) {
+  return Ethers$FloatJsClient.Contract.make(address, abi, providerOrWallet);
 }
 
 var LongShort = {
@@ -41,8 +41,8 @@ var abi$1 = Ethers$FloatJsClient.makeAbi([
       "function userAmountStaked(address, address) public view returns (uint256)"
     ]);
 
-function make$1(address, providerOrSigner) {
-  return Ethers$FloatJsClient.Contract.make(address, abi$1, providerOrSigner);
+function make$1(address, providerOrWallet) {
+  return Ethers$FloatJsClient.Contract.make(address, abi$1, providerOrWallet);
 }
 
 var Staker = {
@@ -57,8 +57,8 @@ var abi$2 = Ethers$FloatJsClient.makeAbi([
       "function mint(uint256 value) public returns (bool)"
     ]);
 
-function make$2(address, providerOrSigner) {
-  return Ethers$FloatJsClient.Contract.make(address, abi$2, providerOrSigner);
+function make$2(address, providerOrWallet) {
+  return Ethers$FloatJsClient.Contract.make(address, abi$2, providerOrWallet);
 }
 
 var Erc20 = {
@@ -74,8 +74,8 @@ var abi$3 = Ethers$FloatJsClient.makeAbi([
       "function totalSupply() external view returns (uint256 total)"
     ]);
 
-function make$3(address, providerOrSigner) {
-  return Ethers$FloatJsClient.Contract.make(address, abi$3, providerOrSigner);
+function make$3(address, providerOrWallet) {
+  return Ethers$FloatJsClient.Contract.make(address, abi$3, providerOrWallet);
 }
 
 var Synth = {
@@ -85,8 +85,8 @@ var Synth = {
 
 var abi$4 = Ethers$FloatJsClient.makeAbi(["function mintNFT(uint256 levelId, address receiver) external"]);
 
-function make$4(address, providerOrSigner) {
-  return Ethers$FloatJsClient.Contract.make(address, abi$4, providerOrSigner);
+function make$4(address, providerOrWallet) {
+  return Ethers$FloatJsClient.Contract.make(address, abi$4, providerOrWallet);
 }
 
 var GemCollectorNFT = {

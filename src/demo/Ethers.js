@@ -55,16 +55,23 @@ var JsonRpcProvider = {};
 
 var FallbackProvider = {};
 
-var Providers = {
+var Provider = {
   JsonRpcProvider: JsonRpcProvider,
   FallbackProvider: FallbackProvider
 };
 
 var Wallet = {};
 
-function getSigner(w) {
+function wrapProvider(p) {
   return {
-          TAG: /* Signer */1,
+          TAG: /* ProviderWrap */0,
+          _0: p
+        };
+}
+
+function wrapWallet(w) {
+  return {
+          TAG: /* WalletWrap */1,
           _0: w
         };
 }
@@ -154,9 +161,10 @@ var Utils = {
 exports.Misc = Misc;
 exports.makeAbi = makeAbi;
 exports.BigNumber = BigNumber;
-exports.Providers = Providers;
+exports.Provider = Provider;
 exports.Wallet = Wallet;
-exports.getSigner = getSigner;
+exports.wrapProvider = wrapProvider;
+exports.wrapWallet = wrapWallet;
 exports.Contract = Contract;
 exports.Utils = Utils;
 /* tenBN Not a pure module */

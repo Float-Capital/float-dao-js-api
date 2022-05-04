@@ -36,8 +36,8 @@ module LongShort = {
       "function getUsersConfirmedButNotSettledSynthBalance(address user, uint32 marketIndex, bool isLong) view returns (uint256 amount)",
     ]->Ethers.makeAbi
 
-  let make = (~address, ~providerOrSigner): t =>
-    Ethers.Contract.make(address, abi, providerOrSigner)
+  let make = (~address, ~providerOrWallet): t =>
+    Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external mintLongNextPrice: (
@@ -175,8 +175,8 @@ module Staker = {
       "function userAmountStaked(address, address) public view returns (uint256)",
     ]->Ethers.makeAbi
 
-  let make = (~address, ~providerOrSigner): t =>
-    Ethers.Contract.make(address, abi, providerOrSigner)
+  let make = (~address, ~providerOrWallet): t =>
+    Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external withdraw: (
@@ -235,8 +235,8 @@ module Erc20 = {
       "function mint(uint256 value) public returns (bool)",
     ]->Ethers.makeAbi
 
-  let make = (~address, ~providerOrSigner): t =>
-    Ethers.Contract.make(address, abi, providerOrSigner)
+  let make = (~address, ~providerOrWallet): t =>
+    Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external approve: (
@@ -277,7 +277,7 @@ module Synth = {
       "function totalSupply() external view returns (uint256 total)",
     ]->Ethers.makeAbi
 
-  let make = (address, ~providerOrSigner): t => Ethers.Contract.make(address, abi, providerOrSigner)
+  let make = (address, ~providerOrWallet): t => Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external approve: (
@@ -313,8 +313,8 @@ module GemCollectorNFT = {
 
   let abi = ["function mintNFT(uint256 levelId, address receiver) external"]->Ethers.makeAbi
 
-  let make = (~address, ~providerOrSigner): t =>
-    Ethers.Contract.make(address, abi, providerOrSigner)
+  let make = (~address, ~providerOrWallet): t =>
+    Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external mintNFT: (

@@ -35,16 +35,21 @@ let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
 
 let run = () => {
-  let float =
+  //let marketSideConnected =
+  //  providerUrl
+  //  ->Provider.JsonRpcProvider.make(~chainId=137)
+  //  ->connectToNewWallet(~mnemonic)
+  //  ->MarketSide.makeWithWallet(BigNumber.fromInt(1), false)
+
+  let marketSide =
     providerUrl
-    ->Providers.JsonRpcProvider.make(~chainId=137)
-    ->connectToNewWallet(~mnemonic)
-    ->getSigner
-    ->MarketSide.MarketSide.newFloatMarketSide(BigNumber.fromInt(1), true)
+    ->Provider.JsonRpcProvider.make(~chainId=137)
+    //->connectToNewWallet(~mnemonic)
+    ->MarketSide.makeWithProvider(BigNumber.fromInt(1), false)
 
   let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(CONSTANTS.oneGweiInWei)
   let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(CONSTANTS.oneGweiInWei)
-  let gasLimit = BigNumber.fromInt(600000)
+  let gasLimit = BigNumber.fromInt(1000000)
 
   let txOptions: Contracts.txOptions = {
     maxFeePerGas: maxFeePerGas->BigNumber.toString,
@@ -52,17 +57,24 @@ let run = () => {
     gasLimit: gasLimit->BigNumber.toString,
   }
 
-  //float.getUnconfirmedExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
-  //float.getExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
-  //float.getStakedPositions("0x5b7a3a14D0488eaC9c1A1f943A80ECD983711797"->Utils.getAddressUnsafe)
-  //->Promise.thenResolve(a => a.paymentToken->BigNumber.toString->Js.log)
+  marketSide.getUnconfirmedExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
+  marketSide.getExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
+  marketSide.getPositions("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"->Utils.getAddressUnsafe)
+  ->Promise.thenResolve(a => a.synthToken->BigNumber.toString->Js.log)->ignore
 
-  // TODO is just the shift that is not working
-  float.shift(BigNumber.fromInt(22)->BigNumber.mul(CONSTANTS.tenToThe18)->BigNumber.div(CONSTANTS.tenToThe2), txOptions)
-  ->Promise.thenResolve(tx => tx.hash->Js.log)
+  let marketSideConnected =
+    providerUrl
+    ->Provider.JsonRpcProvider.make(~chainId=137)
+    ->connectToNewWallet(~mnemonic)
+    ->marketSide.connect
+
+  marketSideConnected.shift(
+    BigNumber.fromInt(1)->BigNumber.mul(CONSTANTS.tenToThe18),//->BigNumber.div(CONSTANTS.tenToThe2),
+    txOptions,
+  )->Promise.thenResolve(tx => tx.hash->Js.log)
 
   //providerUrl
-  //->Providers.JsonRpcProvider.make(~chainId)
+  //->Provider.JsonRpcProvider.make(~chainId)
   //->connectToNewWallet(~mnemonic)
   //->Wallet.getBalance
   //->Promise.thenResolve(balance => {
