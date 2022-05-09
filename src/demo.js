@@ -4,7 +4,6 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Ethers = require("ethers");
 var SecretsManagerJs = require("../secretsManager.js");
-var Ethers$FloatJsClient = require("./demo/Ethers.js");
 var CONSTANTS$FloatJsClient = require("./demo/CONSTANTS.js");
 var MarketSide$FloatJsClient = require("./MarketSide.js");
 
@@ -19,10 +18,10 @@ function connectToNewWallet(provider, mnemonic) {
 }
 
 function run(param) {
-  var $$float = MarketSide$FloatJsClient.MarketSide.newFloatMarketSide(Ethers$FloatJsClient.getSigner(connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), mnemonic)), Ethers.BigNumber.from(1), true);
+  var marketSide = MarketSide$FloatJsClient.makeWithProvider(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), Ethers.BigNumber.from(1), false);
   var maxFeePerGas = Ethers.BigNumber.from(62).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
   var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
-  var gasLimit = Ethers.BigNumber.from(600000);
+  var gasLimit = Ethers.BigNumber.from(1000000);
   var txOptions_maxFeePerGas = maxFeePerGas.toString();
   var txOptions_maxPriorityFeePerGas = maxPriorityFeePerGas.toString();
   var txOptions_gasLimit = gasLimit.toString();
@@ -31,7 +30,20 @@ function run(param) {
     maxPriorityFeePerGas: txOptions_maxPriorityFeePerGas,
     gasLimit: txOptions_gasLimit
   };
-  return Curry._2($$float.shiftStake, Ethers.BigNumber.from(22).mul(CONSTANTS$FloatJsClient.tenToThe18).div(CONSTANTS$FloatJsClient.tenToThe2), txOptions).then(function (tx) {
+  Curry._1(marketSide.getUnconfirmedExposure, undefined).then(function (a) {
+        console.log(a.toString());
+        
+      });
+  Curry._1(marketSide.getExposure, undefined).then(function (a) {
+        console.log(a.toString());
+        
+      });
+  Curry._1(marketSide.getPositions, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
+        console.log(a.synthToken.toString());
+        
+      });
+  var marketSideConnected = Curry._1(marketSide.connect, connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), mnemonic));
+  return Curry._2(marketSideConnected.shift, Ethers.BigNumber.from(1).mul(CONSTANTS$FloatJsClient.tenToThe18), txOptions).then(function (tx) {
               console.log(tx.hash);
               
             });

@@ -82,7 +82,7 @@ module BigNumber = {
 
 type providerType
 
-module Providers = {
+module Provider = {
   type t = providerType
 
   module JsonRpcProvider = {
@@ -113,7 +113,7 @@ module Providers = {
   external removeAllListeners: (t, string) => unit = "removeAllListeners"
 
   @send
-  external waitForTransaction: (providerType, string) => Promise.t<txResult> = "waitForTransaction"
+  external waitForTransaction: (providerType, txHash) => Promise.t<txResult> = "waitForTransaction"
 
   type feeData = {
     gasPrice: ethersBigNumber,
@@ -133,27 +133,29 @@ module Wallet = {
   external makePrivKeyWallet: (string, providerType) => t = "Wallet"
 
   @new @module("ethers") @scope("Wallet")
-  external fromMnemonicWithPath: (~mnemonic: string, ~path: string) => t = "fromMnemonic"
+  external fromMnemonic: string => t = "fromMnemonic"
 
   @new @module("ethers") @scope("Wallet")
-  external fromMnemonic: string => t = "fromMnemonic"
+  external fromMnemonicWithPath: (~mnemonic: string, ~path: string) => t = "fromMnemonic"
 
   type rawSignature
   @send
   external signMessage: (t, string) => Promise.t<rawSignature> = "signMessage"
 
-  @send external connect: (t, Providers.t) => t = "connect"
+  @send external connect: (t, Provider.t) => t = "connect"
 
   @send external getBalance: t => Promise.t<BigNumber.t> = "getBalance"
 
   @send external getTransactionCount: t => Promise.t<BigNumber.t> = "getTransactionCount"
 }
 
-type providerOrSigner =
-  | Provider(Providers.t)
-  | Signer(Wallet.t)
+type providerOrWallet =
+  | ProviderWrap(Provider.t)
+  | WalletWrap(Wallet.t)
 
-let getSigner: Wallet.t => providerOrSigner = w => Signer(w)
+let wrapProvider: providerType => providerOrWallet = p => ProviderWrap(p)
+
+let wrapWallet: walletType => providerOrWallet = w => WalletWrap(w)
 
 module Contract = {
   type t
@@ -171,12 +173,12 @@ module Contract = {
   @new @module("ethers")
   external getContractSigner: (ethAddress, abi, Wallet.t) => t = "Contract"
   @new @module("ethers")
-  external getContractProvider: (ethAddress, abi, Providers.t) => t = "Contract"
+  external getContractProvider: (ethAddress, abi, Provider.t) => t = "Contract"
 
-  let make: (ethAddress, abi, providerOrSigner) => t = (address, abi, providerSigner) => {
+  let make: (ethAddress, abi, providerOrWallet) => t = (address, abi, providerSigner) => {
     switch providerSigner {
-    | Provider(provider) => getContractProvider(address, abi, provider)
-    | Signer(signer) => getContractSigner(address, abi, signer)
+    | ProviderWrap(provider) => getContractProvider(address, abi, provider)
+    | WalletWrap(signer) => getContractSigner(address, abi, signer)
     }
   }
 }
@@ -204,6 +206,7 @@ module Utils = {
 
   @module("ethers") @scope("utils")
   external getAddressUnsafe: string => ethAddress = "getAddress"
+
   let getAddress: string => option<ethAddress> = addressString =>
     Misc.unsafeToOption(() => getAddressUnsafe(addressString))
 
