@@ -22,7 +22,7 @@ module LongShort = {
       "function redeemLongNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
       "function redeemShortNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
       "function executeOutstandingNextPriceSettlementsUser(address user,uint32 marketIndex)",
-      "function updateSystemState()",
+      "function updateSystemState(uint32 marketIndex)",
       "function updateSystemStateMulti(uint32[] marketIndexes)",
       "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
       "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
@@ -85,12 +85,15 @@ module LongShort = {
     txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "executeOutstandingNextPriceSettlementsUser"
   @send
-  external updateSystemState: (~contract: t, txOptions) => Promise.t<Ethers.txSubmitted> =
-    "updateSystemState"
+  external updateSystemState: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+    txOptions
+  ) => Promise.t<Ethers.txSubmitted> = "updateSystemState"
   @send
   external updateSystemStateMulti: (
-    ~contract: t,
-    ~marketIndexes: array<Ethers.BigNumber.t>,
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
     txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "updateSystemStateMulti"
   @send

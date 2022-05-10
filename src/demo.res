@@ -87,6 +87,14 @@ let run = () => {
   //  Js.log2("Account balance:", balance->Utils.formatEther)
   //})
   //->ignore
+
+  let market =
+    providerUrl
+    ->Provider.JsonRpcProvider.make(~chainId=137)
+    //->connectToNewWallet(~mnemonic)
+    ->Market.makeWithProvider(BigNumber.fromInt(1))
+
+  //market.getFundingRateMultiplier()->Promise.thenResolve(a => a->Js.log)->ignore
 }
 
 let _ = run()

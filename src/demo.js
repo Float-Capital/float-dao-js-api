@@ -4,6 +4,7 @@
 var Curry = require("rescript/lib/js/curry.js");
 var Ethers = require("ethers");
 var SecretsManagerJs = require("../secretsManager.js");
+var Market$FloatJsClient = require("./Market.js");
 var CONSTANTS$FloatJsClient = require("./demo/CONSTANTS.js");
 var MarketSide$FloatJsClient = require("./MarketSide.js");
 
@@ -29,6 +30,7 @@ function run(param) {
         console.log(a);
         
       });
+  Market$FloatJsClient.makeWithProvider(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), Ethers.BigNumber.from(1));
   
 }
 
