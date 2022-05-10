@@ -28,12 +28,14 @@ module LongShort = {
       "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
       "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
       "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
-      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)",
+      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 long, uint128 short)",
       "function batched_amountPaymentToken_deposit(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function batched_amountSyntheticToken_redeem(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function batched_amountSyntheticToken_toShiftAwayFrom_marketSide(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function userNextPrice_currentUpdateIndex(uint32 marketIndex, address user) view returns (uint256 amount)",
       "function getUsersConfirmedButNotSettledSynthBalance(address user, uint32 marketIndex, bool isLong) view returns (uint256 amount)",
+      "function fundingRateMultiplier_e18(uint32 marketIndex) view returns (uint256 value)",
+      "function marketLeverage_e18(uint32 marketIndex) view returns (uint256 leverage)",
     ]->Ethers.makeAbi
 
   let make = (~address, ~providerOrWallet): t =>
@@ -161,6 +163,16 @@ module LongShort = {
     ~marketIndex: Ethers.BigNumber.t,
     ~isLong: bool,
   ) => Promise.t<Ethers.BigNumber.t> = "getUsersConfirmedButNotSettledSynthBalance"
+  @send
+  external fundingRateMultiplier_e18: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+  ) => Promise.t<Ethers.BigNumber.t> = "fundingRateMultiplier_e18"
+  @send
+  external marketLeverage_e18: (
+    t,
+    ~marketIndex: Ethers.BigNumber.t,
+  ) => Promise.t<Ethers.BigNumber.t> = "marketLeverage_e18"
 }
 
 module Staker = {
@@ -170,6 +182,7 @@ module Staker = {
     [
       "function withdraw(uint32 marketIndex, bool isLong, uint256 amountSyntheticToken)",
       "function claimFloatCustom(uint32[] calldata marketIndexes)",
+      "function claimFloatCustomFor(uint32[] calldata marketIndexes, address user)",
       "function withdrawWithVoucher(uint32 marketIndex, bool isWithdrawFromLong, uint256 withdrawAmount, uint256 expiry, uint256 nonce, uint256 discountWithdrawFee, uint8 v, bytes32 r, bytes32 s)",
       "function shiftTokens(uint256 amountSyntheticToken, uint32 marketIndex, bool isShiftFromLong)",
       "function userAmountStaked(address, address) public view returns (uint256)",
@@ -202,11 +215,17 @@ module Staker = {
   ) => Promise.t<Ethers.txSubmitted> = "withdrawWithVoucher"
   @send
   external claimFloatCustom: (
-    ~contract: t,
+    t,
     ~marketIndexes: array<int>,
     txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "claimFloatCustom"
-
+  @send
+  external claimFloatCustomFor: (
+    t,
+    ~marketIndexes: array<Ethers.BigNumber.t>,
+    ~user: Ethers.ethAddress,
+    txOptions,
+  ) => Promise.t<Ethers.txSubmitted> = "claimFloatCustomFor"
   @send
   external shiftTokens: (
     t,
@@ -215,7 +234,6 @@ module Staker = {
     ~isShiftFromLong: bool,
     txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "shiftTokens"
-
   @send
   external userAmountStaked: (
     t,
