@@ -3,20 +3,24 @@ open Ethers
 open ConfigMain
 open Promise
 
-let {min, div, mul, add, sub} = module(Ethers.BigNumber)
+let {min, max, div, mul, add, sub, fromInt, fromFloat, toNumber, toNumberFloat} = module(
+  Ethers.BigNumber
+)
 
-type b = {
+type positions = {
   paymentToken: BigNumber.t,
   synthToken: BigNumber.t,
 }
 
 type marketSideWithWallet = {
+  getValue: unit => Promise.t<Ethers.BigNumber.t>,
   getSyntheticTokenPrice: unit => Promise.t<Ethers.BigNumber.t>,
   getExposure: unit => Promise.t<Ethers.BigNumber.t>,
   getUnconfirmedExposure: unit => Promise.t<Ethers.BigNumber.t>,
-  getPositions: unit => Promise.t<b>,
-  getStakedPositions: unit => Promise.t<b>,
-  getUnsettledPositions: unit => Promise.t<b>,
+  getFundingRateApr: unit => Promise.t<float>,
+  getPositions: unit => Promise.t<positions>,
+  getStakedPositions: unit => Promise.t<positions>,
+  getUnsettledPositions: unit => Promise.t<positions>,
   mint: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
   mintAndStake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
   stake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
@@ -27,12 +31,14 @@ type marketSideWithWallet = {
 }
 
 type marketSideWithProvider = {
+  getValue: unit => Promise.t<Ethers.BigNumber.t>,
   getSyntheticTokenPrice: unit => Promise.t<Ethers.BigNumber.t>,
   getExposure: unit => Promise.t<Ethers.BigNumber.t>,
   getUnconfirmedExposure: unit => Promise.t<Ethers.BigNumber.t>,
-  getPositions: ethAddress => Promise.t<b>,
-  getStakedPositions: ethAddress => Promise.t<b>,
-  getUnsettledPositions: ethAddress => Promise.t<b>,
+  getFundingRateApr: unit => Promise.t<float>,
+  getPositions: ethAddress => Promise.t<positions>,
+  getStakedPositions: ethAddress => Promise.t<positions>,
+  getUnsettledPositions: ethAddress => Promise.t<positions>,
   connect: walletType => marketSideWithWallet,
 }
 
@@ -81,10 +87,6 @@ let stakedSyntheticTokenBalance = (
   p
   ->syntheticTokenAddress(marketIndex, isLong)
   ->then(token => p->wrapProvider->makeStakerContract->Staker.userAmountStaked(~token, ~owner))
-
-let marketSideValues = (p: providerType, marketIndex: BigNumber.t): Promise.t<
-  LongShort.marketSideValue,
-> => p->wrapProvider->makeLongShortContract->LongShort.marketSideValueInPaymentToken(~marketIndex)
 
 let marketSideValue = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
   p
@@ -159,6 +161,10 @@ let syntheticTokenPriceSnapshot = (
   ->makeLongShortContract
   ->LongShort.get_syntheticToken_priceSnapshot_side(~marketIndex, ~isLong, ~priceSnapshotIndex)
 
+let marketSideValues = (p: providerType, marketIndex: BigNumber.t): Promise.t<
+  LongShort.marketSideValue,
+> => p->wrapProvider->makeLongShortContract->LongShort.marketSideValueInPaymentToken(~marketIndex)
+
 let exposure = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
   marketSideValues(p, marketIndex)->thenResolve(values => {
     let numerator = values.long->min(values.short)->mul(CONSTANTS.tenToThe18)
@@ -218,6 +224,55 @@ let unconfirmedExposure = (p: providerType, marketIndex: BigNumber.t, isLong: bo
     }
   })
 
+let longOrShort = (long, short, isLong) =>
+  switch isLong {
+  | true => long
+  | false => short
+  }
+
+let toSign = isLong =>
+  switch isLong {
+  | true => 1
+  | false => -1
+  }
+
+// This should really be in the Market.res file but the compiler complains about a dependency cycle
+let fundingRateMultiplier = (p: providerType, marketIndex: BigNumber.t): Promise.t<float> =>
+  p
+  ->wrapProvider
+  ->makeLongShortContract
+  ->LongShort.fundingRateMultiplier_e18(~marketIndex)
+  ->thenResolve(m => m->div(CONSTANTS.tenToThe18)->toNumberFloat)
+
+let divFloat = (a: float, b: float) => a /. b
+
+/*
+Returns percentage APR.
+
++ve when
+- isLong AND long < short
+- !isLong AND long > short
+
+-ve when
+- !isLong AND long < short
+- isLong AND long > short
+*/
+let fundingRateApr = (p: providerType, marketIndex: BigNumber.t, isLong: bool): Promise.t<float> =>
+  all2((fundingRateMultiplier(p, marketIndex), marketSideValues(p, marketIndex)))->thenResolve(((
+    m,
+    {long, short},
+  )) =>
+    short
+    ->sub(long)
+    ->mul(isLong->toSign->fromInt)
+    ->mul(m->fromFloat)
+    ->mul(CONSTANTS.tenToThe18)
+    ->div(longOrShort(long, short, isLong))
+    ->div(CONSTANTS.tenToThe14)
+    ->toNumberFloat
+    ->divFloat(100.0)
+  )
+
 let positions = (p: providerType, marketIndex: BigNumber.t, isLong: bool, address: ethAddress) =>
   all2((
     syntheticTokenBalance(p, marketIndex, isLong, address),
@@ -262,103 +317,103 @@ let unsettledPositions = (
   })
 
 let mint = (
-  p: walletType,
+  w: walletType,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountPaymentToken: BigNumber.t,
 ) =>
   switch isLong {
   | true =>
-    p
+    w
     ->wrapWallet
     ->makeLongShortContract
     ->LongShort.mintLongNextPrice(~marketIndex, ~amountPaymentToken)
   | false =>
-    p
+    w
     ->wrapWallet
     ->makeLongShortContract
     ->LongShort.mintShortNextPrice(~marketIndex, ~amountPaymentToken)
   }
 
 let mintAndStake = (
-  p: walletType,
+  w: walletType,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountPaymentToken: BigNumber.t,
 ) =>
-  p
+  w
   ->wrapWallet
   ->makeLongShortContract
   ->LongShort.mintAndStakeNextPrice(~marketIndex, ~amountPaymentToken, ~isLong)
 
 let stake = (
-  p: walletType,
+  w: walletType,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
   txOptions: txOptions,
 ) =>
-  p.provider
+  w.provider
   ->syntheticTokenAddress(marketIndex, isLong)
-  ->then(address => resolve(address->Synth.make(~providerOrWallet=p->wrapWallet)))
+  ->then(address => resolve(address->Synth.make(~providerOrWallet=w->wrapWallet)))
   ->then(synth => synth->Synth.stake(~amountSyntheticToken, txOptions))
 
 let unstake = (
-  p: walletType,
+  w: walletType,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
 ) =>
-  p
+  w
   ->wrapWallet
   ->makeStakerContract
   ->Staker.withdraw(~marketIndex, ~isWithdrawFromLong=isLong, ~amountSyntheticToken)
 
 let redeem = (
-  p: walletType,
+  w: walletType,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
 ) =>
   switch isLong {
   | true =>
-    p
+    w
     ->wrapWallet
     ->makeLongShortContract
     ->LongShort.redeemLongNextPrice(~marketIndex, ~amountSyntheticToken)
   | false =>
-    p
+    w
     ->wrapWallet
     ->makeLongShortContract
     ->LongShort.redeemShortNextPrice(~marketIndex, ~amountSyntheticToken)
   }
 
 let shift = (
-  p: walletType,
+  w: walletType,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
 ) =>
   switch isLong {
   | true =>
-    p
+    w
     ->wrapWallet
     ->makeLongShortContract
     ->LongShort.shiftPositionFromLongNextPrice(~marketIndex, ~amountSyntheticToken)
   | false =>
-    p
+    w
     ->wrapWallet
     ->makeLongShortContract
     ->LongShort.shiftPositionFromShortNextPrice(~marketIndex, ~amountSyntheticToken)
   }
 
 let shiftStake = (
-  p: walletType,
+  w: walletType,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
 ) =>
-  p
+  w
   ->wrapWallet
   ->makeStakerContract
   ->Staker.shiftTokens(~amountSyntheticToken, ~marketIndex, ~isShiftFromLong=isLong)
@@ -367,12 +422,17 @@ let shiftStake = (
 //   rather we should do error handling properly
 let makeWithWallet = (w: walletType, marketIndex: BigNumber.t, isLong: bool) => {
   {
+    getValue: _ => marketSideValue(w.provider, marketIndex, isLong),
     getSyntheticTokenPrice: _ => syntheticTokenPrice(w.provider, marketIndex, isLong),
     getExposure: _ => exposure(w.provider, marketIndex, isLong),
     getUnconfirmedExposure: _ => unconfirmedExposure(w.provider, marketIndex, isLong),
-    getPositions: _ => positions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
-    getStakedPositions: _ => stakedPositions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
-    getUnsettledPositions: _ => unsettledPositions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
+    getFundingRateApr: _ => fundingRateApr(w.provider, marketIndex, isLong),
+    getPositions: _ =>
+      positions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
+    getStakedPositions: _ =>
+      stakedPositions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
+    getUnsettledPositions: _ =>
+      unsettledPositions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
     mint: mint(w, marketIndex, isLong),
     mintAndStake: mintAndStake(w, marketIndex, isLong),
     stake: stake(w, marketIndex, isLong),
@@ -385,9 +445,11 @@ let makeWithWallet = (w: walletType, marketIndex: BigNumber.t, isLong: bool) => 
 
 let makeWithProvider = (p: providerType, marketIndex: BigNumber.t, isLong: bool) => {
   {
+    getValue: _ => marketSideValue(p, marketIndex, isLong),
     getSyntheticTokenPrice: _ => syntheticTokenPrice(p, marketIndex, isLong),
     getExposure: _ => exposure(p, marketIndex, isLong),
     getUnconfirmedExposure: _ => unconfirmedExposure(p, marketIndex, isLong),
+    getFundingRateApr: _ => fundingRateApr(p, marketIndex, isLong),
     getPositions: positions(p, marketIndex, isLong),
     getStakedPositions: stakedPositions(p, marketIndex, isLong),
     getUnsettledPositions: unsettledPositions(p, marketIndex, isLong),

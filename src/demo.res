@@ -57,21 +57,27 @@ let run = () => {
     gasLimit: gasLimit->BigNumber.toString,
   }
 
-  marketSide.getUnconfirmedExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
-  marketSide.getExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
-  marketSide.getPositions("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"->Utils.getAddressUnsafe)
-  ->Promise.thenResolve(a => a.synthToken->BigNumber.toString->Js.log)->ignore
+  //marketSide.getUnconfirmedExposure()
+  //->Promise.thenResolve(a => a->BigNumber.toString->Js.log)
+  //->ignore
+  //marketSide.getExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
+  //marketSide.getPositions("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"->Utils.getAddressUnsafe)
+  //->Promise.thenResolve(a => a.synthToken->BigNumber.toString->Js.log)
+  //->ignore
 
-  let marketSideConnected =
-    providerUrl
-    ->Provider.JsonRpcProvider.make(~chainId=137)
-    ->connectToNewWallet(~mnemonic)
-    ->marketSide.connect
+  marketSide.getFundingRateApr()->Promise.thenResolve(a => a->Js.log)->ignore
+  //marketSide.getValue()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
 
-  marketSideConnected.shift(
-    BigNumber.fromInt(1)->BigNumber.mul(CONSTANTS.tenToThe18),//->BigNumber.div(CONSTANTS.tenToThe2),
-    txOptions,
-  )->Promise.thenResolve(tx => tx.hash->Js.log)
+  //let marketSideConnected =
+  //  providerUrl
+  //  ->Provider.JsonRpcProvider.make(~chainId=137)
+  //  ->connectToNewWallet(~mnemonic)
+  //  ->marketSide.connect
+
+  //marketSideConnected.shift(
+  //  BigNumber.fromInt(1)->BigNumber.mul(CONSTANTS.tenToThe18), //->BigNumber.div(CONSTANTS.tenToThe2),
+  //  txOptions,
+  //)->Promise.thenResolve(tx => tx.hash->Js.log)->ignore
 
   //providerUrl
   //->Provider.JsonRpcProvider.make(~chainId)

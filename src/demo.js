@@ -22,31 +22,14 @@ function run(param) {
   var maxFeePerGas = Ethers.BigNumber.from(62).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
   var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
   var gasLimit = Ethers.BigNumber.from(1000000);
-  var txOptions_maxFeePerGas = maxFeePerGas.toString();
-  var txOptions_maxPriorityFeePerGas = maxPriorityFeePerGas.toString();
-  var txOptions_gasLimit = gasLimit.toString();
-  var txOptions = {
-    maxFeePerGas: txOptions_maxFeePerGas,
-    maxPriorityFeePerGas: txOptions_maxPriorityFeePerGas,
-    gasLimit: txOptions_gasLimit
-  };
-  Curry._1(marketSide.getUnconfirmedExposure, undefined).then(function (a) {
-        console.log(a.toString());
+  maxFeePerGas.toString();
+  maxPriorityFeePerGas.toString();
+  gasLimit.toString();
+  Curry._1(marketSide.getFundingRateApr, undefined).then(function (a) {
+        console.log(a);
         
       });
-  Curry._1(marketSide.getExposure, undefined).then(function (a) {
-        console.log(a.toString());
-        
-      });
-  Curry._1(marketSide.getPositions, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
-        console.log(a.synthToken.toString());
-        
-      });
-  var marketSideConnected = Curry._1(marketSide.connect, connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), mnemonic));
-  return Curry._2(marketSideConnected.shift, Ethers.BigNumber.from(1).mul(CONSTANTS$FloatJsClient.tenToThe18), txOptions).then(function (tx) {
-              console.log(tx.hash);
-              
-            });
+  
 }
 
 run(undefined);
