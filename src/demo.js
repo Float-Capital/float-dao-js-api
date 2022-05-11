@@ -30,7 +30,7 @@ function run(param) {
         console.log(a);
         
       });
-  Market$FloatJsClient.makeWithProvider(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), Ethers.BigNumber.from(1));
+  Market$FloatJsClient.makeWithProvider(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), 1);
   
 }
 

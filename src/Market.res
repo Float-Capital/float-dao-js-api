@@ -3,6 +3,10 @@ open Ethers
 open ConfigMain
 open Promise
 
+let {fromInt} = module(
+  Ethers.BigNumber
+)
+
 type bigNumbers = {
   long: Ethers.BigNumber.t,
   short: Ethers.BigNumber.t,
@@ -143,36 +147,36 @@ let settleOutstandingActions = (w: walletType, marketIndex: BigNumber.t, address
 let updateSystemState = (w: walletType, marketIndex: BigNumber.t) =>
     w->wrapWallet->makeLongShortContract->LongShort.updateSystemState(~marketIndex)
 
-let makeWithWallet = (w: walletType, marketIndex: BigNumber.t): marketWithWallet => {
+let makeWithWallet = (w: walletType, marketIndex: int): marketWithWallet => {
   {
-    getLeverage: _ => leverage(w.provider, marketIndex),
-    getFundingRateMultiplier: _ => MarketSide.fundingRateMultiplier(w.provider, marketIndex),
-    getSyntheticTokenPrices: _ => syntheticTokenPrices(w.provider, marketIndex),
-    getExposures: _ => exposures(w.provider, marketIndex),
-    getUnconfirmedExposures: _ => unconfirmedExposures(w.provider, marketIndex),
-    getFundingRateAprs: _ => fundingRateAprs(w.provider, marketIndex),
-    getPositions: positions(w.provider, marketIndex),
-    getStakedPositions: stakedPositions(w.provider, marketIndex),
-    getUnsettledPositions: unsettledPositions(w.provider, marketIndex),
-    claimFloatCustomFor: claimFloatCustomFor(w, [marketIndex]),
-    settleOutstandingActions: settleOutstandingActions(w, marketIndex),
-    updateSystemState: updateSystemState(w, marketIndex),
-    getSide: isLong => MarketSide.makeWithWallet(w, marketIndex, isLong),
+    getLeverage: _ => leverage(w.provider, marketIndex->fromInt),
+    getFundingRateMultiplier: _ => MarketSide.fundingRateMultiplier(w.provider, marketIndex->BigNumber.fromInt),
+    getSyntheticTokenPrices: _ => syntheticTokenPrices(w.provider, marketIndex->BigNumber.fromInt),
+    getExposures: _ => exposures(w.provider, marketIndex->BigNumber.fromInt),
+    getUnconfirmedExposures: _ => unconfirmedExposures(w.provider, marketIndex->BigNumber.fromInt),
+    getFundingRateAprs: _ => fundingRateAprs(w.provider, marketIndex->BigNumber.fromInt),
+    getPositions: positions(w.provider, marketIndex->BigNumber.fromInt),
+    getStakedPositions: stakedPositions(w.provider, marketIndex->BigNumber.fromInt),
+    getUnsettledPositions: unsettledPositions(w.provider, marketIndex->BigNumber.fromInt),
+    claimFloatCustomFor: claimFloatCustomFor(w, [marketIndex->BigNumber.fromInt]),
+    settleOutstandingActions: settleOutstandingActions(w, marketIndex->BigNumber.fromInt),
+    updateSystemState: updateSystemState(w, marketIndex->BigNumber.fromInt),
+    getSide: isLong => MarketSide.makeWithWallet(w, marketIndex->BigNumber.fromInt, isLong),
   }
 }
 
-let makeWithProvider = (p: providerType, marketIndex: BigNumber.t): marketWithProvider => {
+let makeWithProvider = (p: providerType, marketIndex: int): marketWithProvider => {
   {
-    getLeverage: _ => leverage(p, marketIndex),
-    getFundingRateMultiplier: _ => MarketSide.fundingRateMultiplier(p, marketIndex),
-    getSyntheticTokenPrices: _ => syntheticTokenPrices(p, marketIndex),
-    getExposures: _ => exposures(p, marketIndex),
-    getUnconfirmedExposures: _ => unconfirmedExposures(p, marketIndex),
-    getFundingRateAprs: _ => fundingRateAprs(p, marketIndex),
-    getPositions: positions(p, marketIndex),
-    getStakedPositions: stakedPositions(p, marketIndex),
-    getUnsettledPositions: unsettledPositions(p, marketIndex),
-    getSide: isLong => MarketSide.makeWithProvider(p, marketIndex, isLong),
+    getLeverage: _ => leverage(p, marketIndex->BigNumber.fromInt),
+    getFundingRateMultiplier: _ => MarketSide.fundingRateMultiplier(p, marketIndex->BigNumber.fromInt),
+    getSyntheticTokenPrices: _ => syntheticTokenPrices(p, marketIndex->BigNumber.fromInt),
+    getExposures: _ => exposures(p, marketIndex->BigNumber.fromInt),
+    getUnconfirmedExposures: _ => unconfirmedExposures(p, marketIndex->BigNumber.fromInt),
+    getFundingRateAprs: _ => fundingRateAprs(p, marketIndex->BigNumber.fromInt),
+    getPositions: positions(p, marketIndex->BigNumber.fromInt),
+    getStakedPositions: stakedPositions(p, marketIndex->BigNumber.fromInt),
+    getUnsettledPositions: unsettledPositions(p, marketIndex->BigNumber.fromInt),
+    getSide: isLong => MarketSide.makeWithProvider(p, marketIndex->BigNumber.fromInt, isLong),
     connect: w => makeWithWallet(w, marketIndex),
   }
 }

@@ -7,6 +7,10 @@ var Contracts$FloatJsClient = require("./demo/Contracts.js");
 var ConfigMain$FloatJsClient = require("./ConfigMain.js");
 var MarketSide$FloatJsClient = require("./MarketSide.js");
 
+function fromInt(prim) {
+  return Ethers.BigNumber.from(prim);
+}
+
 function makeLongShortContract(p) {
   return Contracts$FloatJsClient.LongShort.make(Ethers.utils.getAddress(ConfigMain$FloatJsClient.polygonConfig.longShortContractAddress), p);
 }
@@ -125,82 +129,89 @@ function updateSystemState(w, marketIndex) {
 }
 
 function makeWithWallet(w, marketIndex) {
-  var partial_arg = w.provider;
+  var partial_arg = Ethers.BigNumber.from(marketIndex);
   var partial_arg$1 = w.provider;
-  var partial_arg$2 = w.provider;
-  var partial_arg$3 = [marketIndex];
+  var partial_arg$2 = Ethers.BigNumber.from(marketIndex);
+  var partial_arg$3 = w.provider;
+  var partial_arg$4 = Ethers.BigNumber.from(marketIndex);
+  var partial_arg$5 = w.provider;
+  var partial_arg$6 = [Ethers.BigNumber.from(marketIndex)];
+  var partial_arg$7 = Ethers.BigNumber.from(marketIndex);
   return {
           getLeverage: (function (param) {
-              return leverage(w.provider, marketIndex);
+              return leverage(w.provider, Ethers.BigNumber.from(marketIndex));
             }),
           getFundingRateMultiplier: (function (param) {
-              return MarketSide$FloatJsClient.fundingRateMultiplier(w.provider, marketIndex);
+              return MarketSide$FloatJsClient.fundingRateMultiplier(w.provider, Ethers.BigNumber.from(marketIndex));
             }),
           getSyntheticTokenPrices: (function (param) {
-              return syntheticTokenPrices(w.provider, marketIndex);
+              return syntheticTokenPrices(w.provider, Ethers.BigNumber.from(marketIndex));
             }),
           getExposures: (function (param) {
-              return exposures(w.provider, marketIndex);
+              return exposures(w.provider, Ethers.BigNumber.from(marketIndex));
             }),
           getUnconfirmedExposures: (function (param) {
-              return unconfirmedExposures(w.provider, marketIndex);
+              return unconfirmedExposures(w.provider, Ethers.BigNumber.from(marketIndex));
             }),
           getFundingRateAprs: (function (param) {
-              return fundingRateAprs(w.provider, marketIndex);
+              return fundingRateAprs(w.provider, Ethers.BigNumber.from(marketIndex));
             }),
           getPositions: (function (param) {
-              return positions(partial_arg, marketIndex, param);
+              return positions(partial_arg$1, partial_arg, param);
             }),
           getStakedPositions: (function (param) {
-              return stakedPositions(partial_arg$1, marketIndex, param);
+              return stakedPositions(partial_arg$3, partial_arg$2, param);
             }),
           getUnsettledPositions: (function (param) {
-              return unsettledPositions(partial_arg$2, marketIndex, param);
+              return unsettledPositions(partial_arg$5, partial_arg$4, param);
             }),
           claimFloatCustomFor: (function (param) {
-              return claimFloatCustomFor(w, partial_arg$3, param);
+              return claimFloatCustomFor(w, partial_arg$6, param);
             }),
           settleOutstandingActions: (function (param) {
-              return settleOutstandingActions(w, marketIndex, param);
+              return settleOutstandingActions(w, partial_arg$7, param);
             }),
-          updateSystemState: updateSystemState(w, marketIndex),
+          updateSystemState: updateSystemState(w, Ethers.BigNumber.from(marketIndex)),
           getSide: (function (isLong) {
-              return MarketSide$FloatJsClient.makeWithWallet(w, marketIndex, isLong);
+              return MarketSide$FloatJsClient.makeWithWallet(w, Ethers.BigNumber.from(marketIndex), isLong);
             })
         };
 }
 
 function makeWithProvider(p, marketIndex) {
+  var partial_arg = Ethers.BigNumber.from(marketIndex);
+  var partial_arg$1 = Ethers.BigNumber.from(marketIndex);
+  var partial_arg$2 = Ethers.BigNumber.from(marketIndex);
   return {
           getLeverage: (function (param) {
-              return leverage(p, marketIndex);
+              return leverage(p, Ethers.BigNumber.from(marketIndex));
             }),
           getFundingRateMultiplier: (function (param) {
-              return MarketSide$FloatJsClient.fundingRateMultiplier(p, marketIndex);
+              return MarketSide$FloatJsClient.fundingRateMultiplier(p, Ethers.BigNumber.from(marketIndex));
             }),
           getSyntheticTokenPrices: (function (param) {
-              return syntheticTokenPrices(p, marketIndex);
+              return syntheticTokenPrices(p, Ethers.BigNumber.from(marketIndex));
             }),
           getExposures: (function (param) {
-              return exposures(p, marketIndex);
+              return exposures(p, Ethers.BigNumber.from(marketIndex));
             }),
           getUnconfirmedExposures: (function (param) {
-              return unconfirmedExposures(p, marketIndex);
+              return unconfirmedExposures(p, Ethers.BigNumber.from(marketIndex));
             }),
           getFundingRateAprs: (function (param) {
-              return fundingRateAprs(p, marketIndex);
+              return fundingRateAprs(p, Ethers.BigNumber.from(marketIndex));
             }),
           getPositions: (function (param) {
-              return positions(p, marketIndex, param);
+              return positions(p, partial_arg, param);
             }),
           getStakedPositions: (function (param) {
-              return stakedPositions(p, marketIndex, param);
+              return stakedPositions(p, partial_arg$1, param);
             }),
           getUnsettledPositions: (function (param) {
-              return unsettledPositions(p, marketIndex, param);
+              return unsettledPositions(p, partial_arg$2, param);
             }),
           getSide: (function (isLong) {
-              return MarketSide$FloatJsClient.makeWithProvider(p, marketIndex, isLong);
+              return MarketSide$FloatJsClient.makeWithProvider(p, Ethers.BigNumber.from(marketIndex), isLong);
             }),
           connect: (function (w) {
               return makeWithWallet(w, marketIndex);
@@ -208,6 +219,7 @@ function makeWithProvider(p, marketIndex) {
         };
 }
 
+exports.fromInt = fromInt;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.leverage = leverage;
