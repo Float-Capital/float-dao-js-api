@@ -4,9 +4,9 @@
 var Js_exn = require("rescript/lib/js/js_exn.js");
 var Ethers = require("ethers");
 var Belt_Int = require("rescript/lib/js/belt_Int.js");
+var CONSTANTS = require("./CONSTANTS.js");
 var Belt_Option = require("rescript/lib/js/belt_Option.js");
 var Caml_option = require("rescript/lib/js/caml_option.js");
-var CONSTANTS$FloatJsClient = require("./CONSTANTS.js");
 
 var env = process.env;
 
@@ -54,19 +54,19 @@ var minGasPrice = Belt_Option.mapWithDefault(process.env.MIN_GAS_PRICE, Ethers.B
       }));
 
 var minimumMaxPriorityFee = Belt_Option.mapWithDefault(process.env.MIN_MAX_PRIORITY_FEE, Ethers.BigNumber.from(2), (function (gasPriceString) {
-        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
+        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS.oneGweiInWei);
       }));
 
 var maxFeePerGas = Belt_Option.map(process.env.MAX_FEE_PER_GAS, (function (gasPriceString) {
-        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
+        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS.oneGweiInWei);
       }));
 
-var maxPayableGasFee = Belt_Option.mapWithDefault(process.env.MAX_PAYABLE_GAS_FEE, Ethers.BigNumber.from(10000).mul(CONSTANTS$FloatJsClient.oneGweiInWei), (function (gasPriceString) {
-        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
+var maxPayableGasFee = Belt_Option.mapWithDefault(process.env.MAX_PAYABLE_GAS_FEE, Ethers.BigNumber.from(10000).mul(CONSTANTS.oneGweiInWei), (function (gasPriceString) {
+        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS.oneGweiInWei);
       }));
 
-var maxPriorityFeeIncrement = Belt_Option.mapWithDefault(process.env.MAX_PRIORITY_FEE_INCREMENT, Ethers.BigNumber.from(10).mul(CONSTANTS$FloatJsClient.oneGweiInWei), (function (gasPriceString) {
-        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
+var maxPriorityFeeIncrement = Belt_Option.mapWithDefault(process.env.MAX_PRIORITY_FEE_INCREMENT, Ethers.BigNumber.from(10).mul(CONSTANTS.oneGweiInWei), (function (gasPriceString) {
+        return Ethers.BigNumber.from(gasPriceString).mul(CONSTANTS.oneGweiInWei);
       }));
 
 var logLevel = Belt_Option.getWithDefault(process.env.MSG_LOG_LEVEL, "info");
