@@ -3,34 +3,35 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Ethers = require("ethers");
+var CONSTANTS = require("./demo/CONSTANTS.js");
+var MarketSide = require("./MarketSide.js");
+var FloatConfig = require("@float-dao/config/src/FloatConfig.js");
 var SecretsManagerJs = require("../secretsManager.js");
-var Market$FloatJsClient = require("./Market.js");
-var CONSTANTS$FloatJsClient = require("./demo/CONSTANTS.js");
-var MarketSide$FloatJsClient = require("./MarketSide.js");
 
 var env = process.env;
 
 var mnemonic = SecretsManagerJs.mnemonic;
 
-var providerUrl = SecretsManagerJs.providerUrl;
+var providerUrlOther = SecretsManagerJs.providerUrl;
 
 function connectToNewWallet(provider, mnemonic) {
   return new (Ethers.Wallet.fromMnemonic)(mnemonic, "m/44'/60'/0'/0/0").connect(provider);
 }
 
 function run(param) {
-  var marketSide = MarketSide$FloatJsClient.makeWithProvider(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), Ethers.BigNumber.from(1), false);
-  var maxFeePerGas = Ethers.BigNumber.from(62).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
-  var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(CONSTANTS$FloatJsClient.oneGweiInWei);
+  var providerUrl = FloatConfig.avalanche.rpcEndopint;
+  var chainId = FloatConfig.avalanche.networkId;
+  var marketSide = MarketSide.makeWithProvider(new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId), 1, false);
+  var maxFeePerGas = Ethers.BigNumber.from(62).mul(CONSTANTS.oneGweiInWei);
+  var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(CONSTANTS.oneGweiInWei);
   var gasLimit = Ethers.BigNumber.from(1000000);
   maxFeePerGas.toString();
   maxPriorityFeePerGas.toString();
   gasLimit.toString();
-  Curry._1(marketSide.getFundingRateApr, undefined).then(function (a) {
-        console.log(a);
+  Curry._1(marketSide.getValue, undefined).then(function (a) {
+        console.log(a.toString());
         
       });
-  Market$FloatJsClient.makeWithProvider(new (Ethers.providers.JsonRpcProvider)(providerUrl, 137), 1);
   
 }
 
@@ -38,7 +39,7 @@ run(undefined);
 
 exports.env = env;
 exports.mnemonic = mnemonic;
-exports.providerUrl = providerUrl;
+exports.providerUrlOther = providerUrlOther;
 exports.connectToNewWallet = connectToNewWallet;
 exports.run = run;
 /* env Not a pure module */

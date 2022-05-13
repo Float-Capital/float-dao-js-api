@@ -1,7 +1,8 @@
 open Contracts
 open Ethers
-open ConfigMain
+open Config
 open Promise
+open FloatConfig
 
 let {min, max, div, mul, add, sub, fromInt, fromFloat, toNumber, toNumberFloat} = module(
   Ethers.BigNumber
@@ -13,6 +14,8 @@ type positions = {
 }
 
 type marketSideWithWallet = {
+  token: Promise.t<FloatConfig.erc20>,
+  name: Promise.t<string>,
   getValue: unit => Promise.t<Ethers.BigNumber.t>,
   getSyntheticTokenPrice: unit => Promise.t<Ethers.BigNumber.t>,
   getExposure: unit => Promise.t<Ethers.BigNumber.t>,
@@ -31,6 +34,8 @@ type marketSideWithWallet = {
 }
 
 type marketSideWithProvider = {
+  token: Promise.t<FloatConfig.erc20>,
+  name: Promise.t<string>,
   getValue: unit => Promise.t<Ethers.BigNumber.t>,
   getSyntheticTokenPrice: unit => Promise.t<Ethers.BigNumber.t>,
   getExposure: unit => Promise.t<Ethers.BigNumber.t>,
@@ -42,9 +47,9 @@ type marketSideWithProvider = {
   connect: walletType => marketSideWithWallet,
 }
 
-let makeLongShortContract = (p: providerOrWallet) =>
+let makeLongShortContract = (p: providerOrWallet, c: chainConfigShape) =>
   LongShort.make(
-    ~address=polygonConfig.longShortContractAddress->Utils.getAddressUnsafe,
+    ~address=c.contracts.longShort.address->Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
 
@@ -52,121 +57,158 @@ let makeLongShortContract = (p: providerOrWallet) =>
 //let makeSynth = (p: providerOrWallet, address: ethAddress) =>
 //    Synth.make(~address, ~providerOrWallet=p)
 
-let makeStakerContract = (p: providerOrWallet) =>
-  Staker.make(
-    ~address=polygonConfig.stakerContractAddress->Utils.getAddressUnsafe,
-    ~providerOrWallet=p,
-  )
+let makeStakerContract = (p: providerOrWallet, c: chainConfigShape) =>
+  Staker.make(~address=c.contracts.longShort.address->Utils.getAddressUnsafe, ~providerOrWallet=p)
 
-let syntheticTokenAddress = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
-  p->wrapProvider->makeLongShortContract->LongShort.syntheticTokens(~marketIndex, ~isLong)
+let syntheticTokenAddress = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) => p->wrapProvider->makeLongShortContract(c)->LongShort.syntheticTokens(~marketIndex, ~isLong)
 
-let syntheticTokenTotalSupply = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
+let syntheticTokenTotalSupply = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) =>
   p
-  ->syntheticTokenAddress(marketIndex, isLong)
+  ->syntheticTokenAddress(c, marketIndex, isLong)
   ->then(address => resolve(address->Synth.make(~providerOrWallet=p->wrapProvider)))
   ->then(synth => synth->Synth.totalSupply)
 
 let syntheticTokenBalance = (
   p: providerType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   owner: ethAddress,
 ) =>
   p
-  ->syntheticTokenAddress(marketIndex, isLong)
+  ->syntheticTokenAddress(c, marketIndex, isLong)
   ->then(address => resolve(address->Synth.make(~providerOrWallet=p->wrapProvider)))
   ->then(synth => synth->Synth.balanceOf(~owner))
 
 let stakedSyntheticTokenBalance = (
   p: providerType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   owner: ethAddress,
 ) =>
   p
-  ->syntheticTokenAddress(marketIndex, isLong)
-  ->then(token => p->wrapProvider->makeStakerContract->Staker.userAmountStaked(~token, ~owner))
+  ->syntheticTokenAddress(c, marketIndex, isLong)
+  ->then(token => p->wrapProvider->makeStakerContract(c)->Staker.userAmountStaked(~token, ~owner))
 
-let marketSideValue = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
+let marketSideValue = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.marketSideValueInPaymentToken(~marketIndex)
-  ->thenResolve(marketSideValue =>
+  ->thenResolve(value =>
     switch isLong {
-    | true => marketSideValue.long
-    | false => marketSideValue.short
+    | true => value.long
+    | false => value.short
     }
   )
 
-let updateIndex = (p: providerType, marketIndex: BigNumber.t, user: ethAddress) =>
+let updateIndex = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  user: ethAddress,
+) =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.userNextPrice_currentUpdateIndex(~marketIndex, ~user)
 
 let unsettledSynthBalance = (
   p: providerType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   user: ethAddress,
 ) =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.getUsersConfirmedButNotSettledSynthBalance(~marketIndex, ~isLong, ~user)
 
-let marketSideUnconfirmedDeposits = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
+let marketSideUnconfirmedDeposits = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.batched_amountPaymentToken_deposit(~marketIndex, ~isLong)
 
-let marketSideUnconfirmedRedeems = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
+let marketSideUnconfirmedRedeems = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.batched_amountSyntheticToken_redeem(~marketIndex, ~isLong)
 
 let marketSideUnconfirmedShifts = (
   p: providerType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isShiftFromLong: bool,
 ) =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.batched_amountSyntheticToken_toShiftAwayFrom_marketSide(
     ~marketIndex,
     ~isLong=isShiftFromLong,
   )
 
-let syntheticTokenPrice = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
+let syntheticTokenPrice = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) =>
   all2((
-    marketSideValue(p, marketIndex, isLong),
-    syntheticTokenTotalSupply(p, marketIndex, isLong),
+    marketSideValue(p, c, marketIndex, isLong),
+    syntheticTokenTotalSupply(p, c, marketIndex, isLong),
   ))->thenResolve(((value, total)) =>
     value->BigNumber.mul(CONSTANTS.tenToThe18)->BigNumber.div(total)
   )
 
 let syntheticTokenPriceSnapshot = (
   p: providerType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   priceSnapshotIndex: BigNumber.t,
 ) =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.get_syntheticToken_priceSnapshot_side(~marketIndex, ~isLong, ~priceSnapshotIndex)
 
-let marketSideValues = (p: providerType, marketIndex: BigNumber.t): Promise.t<
+let marketSideValues = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t): Promise.t<
   LongShort.marketSideValue,
-> => p->wrapProvider->makeLongShortContract->LongShort.marketSideValueInPaymentToken(~marketIndex)
+> =>
+  p->wrapProvider->makeLongShortContract(c)->LongShort.marketSideValueInPaymentToken(~marketIndex)
 
-let exposure = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
-  marketSideValues(p, marketIndex)->thenResolve(values => {
+let exposure = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t, isLong: bool) =>
+  marketSideValues(p, c, marketIndex)->thenResolve(values => {
     let numerator = values.long->min(values.short)->mul(CONSTANTS.tenToThe18)
     switch isLong {
     | true => numerator->div(values.long)
@@ -174,18 +216,23 @@ let exposure = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
     }
   })
 
-let unconfirmedExposure = (p: providerType, marketIndex: BigNumber.t, isLong: bool) =>
+let unconfirmedExposure = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) =>
   all([
-    syntheticTokenPrice(p, marketIndex, true),
-    syntheticTokenPrice(p, marketIndex, false),
-    marketSideUnconfirmedRedeems(p, marketIndex, true),
-    marketSideUnconfirmedRedeems(p, marketIndex, false),
-    marketSideUnconfirmedShifts(p, marketIndex, true),
-    marketSideUnconfirmedShifts(p, marketIndex, false),
-    marketSideUnconfirmedDeposits(p, marketIndex, true),
-    marketSideUnconfirmedDeposits(p, marketIndex, false),
-    marketSideValue(p, marketIndex, true),
-    marketSideValue(p, marketIndex, false),
+    syntheticTokenPrice(p, c, marketIndex, true),
+    syntheticTokenPrice(p, c, marketIndex, false),
+    marketSideUnconfirmedRedeems(p, c, marketIndex, true),
+    marketSideUnconfirmedRedeems(p, c, marketIndex, false),
+    marketSideUnconfirmedShifts(p, c, marketIndex, true),
+    marketSideUnconfirmedShifts(p, c, marketIndex, false),
+    marketSideUnconfirmedDeposits(p, c, marketIndex, true),
+    marketSideUnconfirmedDeposits(p, c, marketIndex, false),
+    marketSideValue(p, c, marketIndex, true),
+    marketSideValue(p, c, marketIndex, false),
   ])->thenResolve(results => {
     let priceLong = results[0]
     let priceShort = results[1]
@@ -237,10 +284,14 @@ let toSign = isLong =>
   }
 
 // This should really be in the Market.res file but the compiler complains about a dependency cycle
-let fundingRateMultiplier = (p: providerType, marketIndex: BigNumber.t): Promise.t<float> =>
+let fundingRateMultiplier = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+): Promise.t<float> =>
   p
   ->wrapProvider
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.fundingRateMultiplier_e18(~marketIndex)
   ->thenResolve(m => m->div(CONSTANTS.tenToThe18)->toNumberFloat)
 
@@ -257,11 +308,16 @@ Returns percentage APR.
 - !isLong AND long < short
 - isLong AND long > short
 */
-let fundingRateApr = (p: providerType, marketIndex: BigNumber.t, isLong: bool): Promise.t<float> =>
-  all2((fundingRateMultiplier(p, marketIndex), marketSideValues(p, marketIndex)))->thenResolve(((
-    m,
-    {long, short},
-  )) =>
+let fundingRateApr = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+): Promise.t<float> =>
+  all2((
+    fundingRateMultiplier(p, c, marketIndex),
+    marketSideValues(p, c, marketIndex),
+  ))->thenResolve(((m, {long, short})) =>
     short
     ->sub(long)
     ->mul(isLong->toSign->fromInt)
@@ -273,10 +329,16 @@ let fundingRateApr = (p: providerType, marketIndex: BigNumber.t, isLong: bool): 
     ->divFloat(100.0)
   )
 
-let positions = (p: providerType, marketIndex: BigNumber.t, isLong: bool, address: ethAddress) =>
+let positions = (
+  p: providerType,
+  c: chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+  address: ethAddress,
+) =>
   all2((
-    syntheticTokenBalance(p, marketIndex, isLong, address),
-    syntheticTokenPrice(p, marketIndex, isLong),
+    syntheticTokenBalance(p, c, marketIndex, isLong, address),
+    syntheticTokenPrice(p, c, marketIndex, isLong),
   ))->thenResolve(((balance, price)) => {
     paymentToken: balance->mul(price),
     synthToken: balance,
@@ -284,13 +346,14 @@ let positions = (p: providerType, marketIndex: BigNumber.t, isLong: bool, addres
 
 let stakedPositions = (
   p: providerType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   address: ethAddress,
 ) =>
   all2((
-    stakedSyntheticTokenBalance(p, marketIndex, isLong, address),
-    syntheticTokenPrice(p, marketIndex, isLong),
+    stakedSyntheticTokenBalance(p, c, marketIndex, isLong, address),
+    syntheticTokenPrice(p, c, marketIndex, isLong),
   ))->thenResolve(((balance, price)) => {
     paymentToken: balance->mul(price),
     synthToken: balance,
@@ -300,15 +363,16 @@ let stakedPositions = (
 
 let unsettledPositions = (
   p: providerType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   address: ethAddress,
 ) =>
-  updateIndex(p, marketIndex, address)
+  updateIndex(p, c, marketIndex, address)
   ->then(index =>
     all2((
-      syntheticTokenPriceSnapshot(p, marketIndex, isLong, index),
-      unsettledSynthBalance(p, marketIndex, isLong, address),
+      syntheticTokenPriceSnapshot(p, c, marketIndex, isLong, index),
+      unsettledSynthBalance(p, c, marketIndex, isLong, address),
     ))
   )
   ->thenResolve(((price, balance)) => {
@@ -318,6 +382,7 @@ let unsettledPositions = (
 
 let mint = (
   w: walletType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountPaymentToken: BigNumber.t,
@@ -326,51 +391,55 @@ let mint = (
   | true =>
     w
     ->wrapWallet
-    ->makeLongShortContract
+    ->makeLongShortContract(c)
     ->LongShort.mintLongNextPrice(~marketIndex, ~amountPaymentToken)
   | false =>
     w
     ->wrapWallet
-    ->makeLongShortContract
+    ->makeLongShortContract(c)
     ->LongShort.mintShortNextPrice(~marketIndex, ~amountPaymentToken)
   }
 
 let mintAndStake = (
   w: walletType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountPaymentToken: BigNumber.t,
 ) =>
   w
   ->wrapWallet
-  ->makeLongShortContract
+  ->makeLongShortContract(c)
   ->LongShort.mintAndStakeNextPrice(~marketIndex, ~amountPaymentToken, ~isLong)
 
 let stake = (
   w: walletType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
   txOptions: txOptions,
 ) =>
   w.provider
-  ->syntheticTokenAddress(marketIndex, isLong)
+  ->syntheticTokenAddress(c, marketIndex, isLong)
   ->then(address => resolve(address->Synth.make(~providerOrWallet=w->wrapWallet)))
   ->then(synth => synth->Synth.stake(~amountSyntheticToken, txOptions))
 
 let unstake = (
   w: walletType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
 ) =>
   w
   ->wrapWallet
-  ->makeStakerContract
+  ->makeStakerContract(c)
   ->Staker.withdraw(~marketIndex, ~isWithdrawFromLong=isLong, ~amountSyntheticToken)
 
 let redeem = (
   w: walletType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
@@ -379,17 +448,18 @@ let redeem = (
   | true =>
     w
     ->wrapWallet
-    ->makeLongShortContract
+    ->makeLongShortContract(c)
     ->LongShort.redeemLongNextPrice(~marketIndex, ~amountSyntheticToken)
   | false =>
     w
     ->wrapWallet
-    ->makeLongShortContract
+    ->makeLongShortContract(c)
     ->LongShort.redeemShortNextPrice(~marketIndex, ~amountSyntheticToken)
   }
 
 let shift = (
   w: walletType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
@@ -398,61 +468,225 @@ let shift = (
   | true =>
     w
     ->wrapWallet
-    ->makeLongShortContract
+    ->makeLongShortContract(c)
     ->LongShort.shiftPositionFromLongNextPrice(~marketIndex, ~amountSyntheticToken)
   | false =>
     w
     ->wrapWallet
-    ->makeLongShortContract
+    ->makeLongShortContract(c)
     ->LongShort.shiftPositionFromShortNextPrice(~marketIndex, ~amountSyntheticToken)
   }
 
 let shiftStake = (
   w: walletType,
+  c: chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
 ) =>
   w
   ->wrapWallet
-  ->makeStakerContract
+  ->makeStakerContract(c)
   ->Staker.shiftTokens(~amountSyntheticToken, ~marketIndex, ~isShiftFromLong=isLong)
 
 // TODO we should not be using getAddressUnsafe
 //   rather we should do error handling properly
-let makeWithWallet = (w: walletType, marketIndex: BigNumber.t, isLong: bool) => {
+let makeWithWallet = (w: walletType, marketIndex: int, isLong: bool) => {
   {
-    getValue: _ => marketSideValue(w.provider, marketIndex, isLong),
-    getSyntheticTokenPrice: _ => syntheticTokenPrice(w.provider, marketIndex, isLong),
-    getExposure: _ => exposure(w.provider, marketIndex, isLong),
-    getUnconfirmedExposure: _ => unconfirmedExposure(w.provider, marketIndex, isLong),
-    getFundingRateApr: _ => fundingRateApr(w.provider, marketIndex, isLong),
+    token: w
+    ->wrapWallet
+    ->getChainConfig
+    ->thenResolve(c =>
+      switch isLong {
+      | true => c.markets[marketIndex].longToken
+      | false => c.markets[marketIndex].shortToken
+      }
+    ),
+    name: w
+    ->wrapWallet
+    ->getChainConfig
+    ->thenResolve(c =>
+      switch isLong {
+      | true => "long"
+      | false => "short"
+      }
+    ),
+    getValue: _ =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c => marketSideValue(w.provider, c, marketIndex->BigNumber.fromInt, isLong)),
+    getSyntheticTokenPrice: _ =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c => syntheticTokenPrice(w.provider, c, marketIndex->BigNumber.fromInt, isLong)),
+    getExposure: _ =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c => exposure(w.provider, c, marketIndex->BigNumber.fromInt, isLong)),
+    getUnconfirmedExposure: _ =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c => unconfirmedExposure(w.provider, c, marketIndex->BigNumber.fromInt, isLong)),
+    getFundingRateApr: _ =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c => fundingRateApr(w.provider, c, marketIndex->BigNumber.fromInt, isLong)),
     getPositions: _ =>
-      positions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        positions(
+          w.provider,
+          c,
+          marketIndex->BigNumber.fromInt,
+          isLong,
+          w.address->Utils.getAddressUnsafe,
+        )
+      ),
     getStakedPositions: _ =>
-      stakedPositions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        stakedPositions(
+          w.provider,
+          c,
+          marketIndex->BigNumber.fromInt,
+          isLong,
+          w.address->Utils.getAddressUnsafe,
+        )
+      ),
     getUnsettledPositions: _ =>
-      unsettledPositions(w.provider, marketIndex, isLong, w.address->Utils.getAddressUnsafe),
-    mint: mint(w, marketIndex, isLong),
-    mintAndStake: mintAndStake(w, marketIndex, isLong),
-    stake: stake(w, marketIndex, isLong),
-    unstake: unstake(w, marketIndex, isLong),
-    redeem: redeem(w, marketIndex, isLong),
-    shift: shift(w, marketIndex, isLong),
-    shiftStake: shiftStake(w, marketIndex, isLong),
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        unsettledPositions(
+          w.provider,
+          c,
+          marketIndex->BigNumber.fromInt,
+          isLong,
+          w.address->Utils.getAddressUnsafe,
+        )
+      ),
+    mint: (amountPaymentToken, txOptions) =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        mint(w, c, marketIndex->BigNumber.fromInt, isLong, amountPaymentToken, txOptions)
+      ),
+    mintAndStake: (amountPaymentToken, txOptions) =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        mintAndStake(w, c, marketIndex->BigNumber.fromInt, isLong, amountPaymentToken, txOptions)
+      ),
+    stake: (amountSyntheticToken, txOptions) =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        stake(w, c, marketIndex->BigNumber.fromInt, isLong, amountSyntheticToken, txOptions)
+      ),
+    unstake: (amountSyntheticToken, txOptions) =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        unstake(w, c, marketIndex->BigNumber.fromInt, isLong, amountSyntheticToken, txOptions)
+      ),
+    redeem: (amountSyntheticToken, txOptions) =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        redeem(w, c, marketIndex->BigNumber.fromInt, isLong, amountSyntheticToken, txOptions)
+      ),
+    shift: (amountSyntheticToken, txOptions) =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        shift(w, c, marketIndex->BigNumber.fromInt, isLong, amountSyntheticToken, txOptions)
+      ),
+    shiftStake: (amountSyntheticToken, txOptions) =>
+      w
+      ->wrapWallet
+      ->getChainConfig
+      ->then(c =>
+        shiftStake(w, c, marketIndex->BigNumber.fromInt, isLong, amountSyntheticToken, txOptions)
+      ),
   }
 }
 
-let makeWithProvider = (p: providerType, marketIndex: BigNumber.t, isLong: bool) => {
+let makeWithProvider = (p: providerType, marketIndex: int, isLong: bool) => {
   {
-    getValue: _ => marketSideValue(p, marketIndex, isLong),
-    getSyntheticTokenPrice: _ => syntheticTokenPrice(p, marketIndex, isLong),
-    getExposure: _ => exposure(p, marketIndex, isLong),
-    getUnconfirmedExposure: _ => unconfirmedExposure(p, marketIndex, isLong),
-    getFundingRateApr: _ => fundingRateApr(p, marketIndex, isLong),
-    getPositions: positions(p, marketIndex, isLong),
-    getStakedPositions: stakedPositions(p, marketIndex, isLong),
-    getUnsettledPositions: unsettledPositions(p, marketIndex, isLong),
+    token: p
+    ->wrapProvider
+    ->getChainConfig
+    ->thenResolve(c =>
+      switch isLong {
+      | true => c.markets[marketIndex].longToken
+      | false => c.markets[marketIndex].shortToken
+      }
+    ),
+    name: p
+    ->wrapProvider
+    ->getChainConfig
+    ->thenResolve(c =>
+      switch isLong {
+      | true => "long"
+      | false => "short"
+      }
+    ),
+    getValue: _ =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => marketSideValue(p, c, marketIndex->BigNumber.fromInt, isLong)),
+    getSyntheticTokenPrice: _ =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => syntheticTokenPrice(p, c, marketIndex->BigNumber.fromInt, isLong)),
+    getExposure: _ =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => exposure(p, c, marketIndex->BigNumber.fromInt, isLong)),
+    getUnconfirmedExposure: _ =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => unconfirmedExposure(p, c, marketIndex->BigNumber.fromInt, isLong)),
+    getFundingRateApr: _ =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => fundingRateApr(p, c, marketIndex->BigNumber.fromInt, isLong)),
+    getPositions: ethAddress =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => positions(p, c, marketIndex->BigNumber.fromInt, isLong, ethAddress)),
+    getStakedPositions: ethAddress =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => stakedPositions(p, c, marketIndex->BigNumber.fromInt, isLong, ethAddress)),
+    getUnsettledPositions: ethAddress =>
+      p
+      ->wrapProvider
+      ->getChainConfig
+      ->then(c => unsettledPositions(p, c, marketIndex->BigNumber.fromInt, isLong, ethAddress)),
     connect: w => makeWithWallet(w, marketIndex, isLong),
   }
 }
