@@ -88,12 +88,12 @@ module LongShort = {
   external updateSystemState: (
     t,
     ~marketIndex: Ethers.BigNumber.t,
-    txOptions
+    txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "updateSystemState"
   @send
   external updateSystemStateMulti: (
     t,
-    ~marketIndex: Ethers.BigNumber.t,
+    ~marketIndexes: array<Ethers.BigNumber.t>,
     txOptions,
   ) => Promise.t<Ethers.txSubmitted> = "updateSystemStateMulti"
   @send

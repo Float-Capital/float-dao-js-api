@@ -102,28 +102,34 @@ module Provider = {
     topics: array<string>,
   }
 
-  @send external getBalance: (t, ethAddress) => Promise.t<option<BigNumber.t>> = "getBalance"
-  @send
-  external getBlockNumber: t => Promise.t<int> = "getBlockNumber"
-
-  @send
-  external lookupAddress: (t, ethAddress) => Promise.t<option<string>> = "lookupAddress"
-
-  @send
-  external on: (t, string, 'a) => unit = "on"
-  @send
-  external removeAllListeners: (t, string) => unit = "removeAllListeners"
-
-  @send
-  external waitForTransaction: (providerType, txHash) => Promise.t<txResult> = "waitForTransaction"
+  type network = {
+    chainId: int,
+    name: string,
+    ensAddress: string,
+  }
 
   type feeData = {
     gasPrice: ethersBigNumber,
     maxFeePerGas: ethersBigNumber,
     maxPriorityFeePerGas: ethersBigNumber,
   }
+
+  @send
+  external getBalance: (t, ethAddress) => Promise.t<option<BigNumber.t>> = "getBalance"
+  @send
+  external getBlockNumber: t => Promise.t<int> = "getBlockNumber"
+  @send
+  external lookupAddress: (t, ethAddress) => Promise.t<option<string>> = "lookupAddress"
+  @send
+  external on: (t, string, 'a) => unit = "on"
+  @send
+  external removeAllListeners: (t, string) => unit = "removeAllListeners"
+  @send
+  external waitForTransaction: (providerType, txHash) => Promise.t<txResult> = "waitForTransaction"
   @send
   external getFeeData: providerType => Promise.t<feeData> = "getFeeData"
+  @send
+  external getNetwork: providerType => Promise.t<network> = "getNetwork"
 }
 
 type walletType = {@as("_address") address: string, provider: providerType}
