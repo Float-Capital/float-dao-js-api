@@ -7,6 +7,20 @@ var Market = require("./Market.js");
 var Ethers$1 = require("ethers");
 var Contracts = require("./demo/Contracts.js");
 
+function wrapChainWithProvider(p) {
+  return {
+          TAG: /* ChainPWrap */0,
+          _0: p
+        };
+}
+
+function wrapChainWithWallet(p) {
+  return {
+          TAG: /* ChainWWrap */1,
+          _0: p
+        };
+}
+
 function makeLongShortContract(p, c) {
   return Contracts.LongShort.make(Ethers$1.utils.getAddress(c.contracts.longShort.address), p);
 }
@@ -59,9 +73,26 @@ function makeWithDefaultProvider(chainId) {
         };
 }
 
+function make(pw) {
+  if (pw.TAG === /* ProviderWrap */0) {
+    return {
+            TAG: /* ChainPWrap */0,
+            _0: makeWithProvider(pw._0)
+          };
+  } else {
+    return {
+            TAG: /* ChainWWrap */1,
+            _0: makeWithWallet(pw._0)
+          };
+  }
+}
+
+exports.wrapChainWithProvider = wrapChainWithProvider;
+exports.wrapChainWithWallet = wrapChainWithWallet;
 exports.makeLongShortContract = makeLongShortContract;
 exports.updateSystemStateMulti = updateSystemStateMulti;
 exports.makeWithWallet = makeWithWallet;
 exports.makeWithProvider = makeWithProvider;
 exports.makeWithDefaultProvider = makeWithDefaultProvider;
+exports.make = make;
 /* Config Not a pure module */
