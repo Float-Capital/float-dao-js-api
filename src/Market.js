@@ -4,12 +4,21 @@
 var Config = require("./Config.js");
 var Ethers = require("./demo/Ethers.js");
 var Ethers$1 = require("ethers");
+var CONSTANTS = require("./demo/CONSTANTS.js");
 var Contracts = require("./demo/Contracts.js");
 var Caml_array = require("rescript/lib/js/caml_array.js");
 var MarketSide = require("./MarketSide.js");
 
+function div(prim0, prim1) {
+  return prim0.div(prim1);
+}
+
 function fromInt(prim) {
   return Ethers$1.BigNumber.from(prim);
+}
+
+function toNumber(prim) {
+  return prim.toNumber();
 }
 
 function makeLongShortContract(p, c) {
@@ -21,7 +30,9 @@ function makeStakerContract(p, c) {
 }
 
 function leverage(p, c, marketIndex) {
-  return makeLongShortContract(Ethers.wrapProvider(p), c).marketLeverage_e18(marketIndex);
+  return makeLongShortContract(Ethers.wrapProvider(p), c).marketLeverage_e18(marketIndex).then(function (m) {
+              return m.div(CONSTANTS.tenToThe18).toNumber();
+            });
 }
 
 function syntheticTokenPrices(p, c, marketIndex) {
@@ -267,7 +278,9 @@ function makeWithProvider(p, marketIndex) {
         };
 }
 
+exports.div = div;
 exports.fromInt = fromInt;
+exports.toNumber = toNumber;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.leverage = leverage;
