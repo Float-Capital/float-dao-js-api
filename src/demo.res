@@ -69,7 +69,7 @@ let run = () => {
   //->ignore
 
   //marketSide.getFundingRateApr()->Promise.thenResolve(a => a->Js.log)->ignore
-  marketSide.getValue()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
+  //marketSide.getValue()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
 
   //let marketSideConnected =
   //  providerUrl
@@ -98,6 +98,18 @@ let run = () => {
   //  ->Market.makeWithProvider(1)
 
   //market.getFundingRateMultiplier()->Promise.thenResolve(a => a->Js.log)->ignore
+
+  let chain = 43114->Chain.makeWithDefaultProvider
+
+  //chain.getMarket(1).getFundingRateMultiplier()->Promise.thenResolve(m => m->Js.log)->ignore
+
+  let connectedChain =
+      providerUrl
+    ->Provider.JsonRpcProvider.make(~chainId=43114)
+    ->connectToNewWallet(~mnemonic)
+    ->chain.connect
+
+  connectedChain.getMarket(1).getLeverage()->Promise.thenResolve(m => m->Js.log)->ignore
 }
 
 let _ = run()
