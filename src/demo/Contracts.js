@@ -10,7 +10,7 @@ var abi = Ethers$FloatJsClient.makeAbi([
       "function redeemLongNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
       "function redeemShortNextPrice(uint32 marketIndex,uint256 amountSyntheticToken)",
       "function executeOutstandingNextPriceSettlementsUser(address user,uint32 marketIndex)",
-      "function updateSystemState()",
+      "function updateSystemState(uint32 marketIndex)",
       "function updateSystemStateMulti(uint32[] marketIndexes)",
       "function shiftPositionFromLongNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
       "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
