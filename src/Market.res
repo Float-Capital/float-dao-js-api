@@ -70,10 +70,12 @@ let makeLongShortContract = (p: providerOrWallet, c: chainConfigShape) =>
 let makeStakerContract = (p: providerOrWallet, c: chainConfigShape) =>
   Staker.make(~address=c.contracts.longShort.address->Utils.getAddressUnsafe, ~providerOrWallet=p)
 
-let leverage = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t): Promise.t<
-  int,
-> => p->wrapProvider->makeLongShortContract(c)->LongShort.marketLeverage_e18(~marketIndex)
-    ->thenResolve(m => m->div(CONSTANTS.tenToThe18)->toNumber)
+let leverage = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t): Promise.t<int> =>
+  p
+  ->wrapProvider
+  ->makeLongShortContract(c)
+  ->LongShort.marketLeverage_e18(~marketIndex)
+  ->thenResolve(m => m->div(CONSTANTS.tenToThe18)->toNumber)
 
 let syntheticTokenPrices = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t) =>
   all2((

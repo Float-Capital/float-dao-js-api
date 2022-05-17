@@ -6,49 +6,15 @@ let env = process["env"]
 @module("../secretsManager.js") external mnemonic: string = "mnemonic"
 @module("../secretsManager.js") external providerUrlOther: string = "providerUrl"
 
-//type s = {
-//  providerUrl: string,
-//  mnemonic: string,
-//}
-//
-
-//let getSecrets = {
-//  switch (env["PROVIDER_URL"], env["MNEMONIC"]) {
-//  | (Some(providerUrl), Some(mnemonic)) => {
-//      providerUrl: providerUrl,
-//      mnemonic: mnemonic,
-//    }
-//  | _ =>
-//    let _ = Js.Exn.raiseError("`PROVIDER_URL` & `MNEMONIC` must be specified in your environment")
-//    {
-//      providerUrl: "",
-//      mnemonic: "mnemonic not configured",
-//    }
-//  }
-//}
-//
-//let {providerUrl, mnemonic} = getSecrets
-
-// TODO remember to add an approval function for longshort to spend DAI
-
 let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
 
 let run = () => {
-  //let marketSideConnected =
-  //  providerUrl
-  //  ->Provider.JsonRpcProvider.make(~chainId=137)
-  //  ->connectToNewWallet(~mnemonic)
-  //  ->MarketSide.makeWithWallet(BigNumber.fromInt(1), false)
-
   let providerUrl = FloatConfig.avalanche.rpcEndopint
   let chainId = FloatConfig.avalanche.networkId // 137
 
-  let marketSide =
-    providerUrl
-    ->Provider.JsonRpcProvider.make(~chainId)
-    //->connectToNewWallet(~mnemonic)
-    ->MarketSide.makeWithProvider(1, false)
+  let provider = providerUrl->Provider.JsonRpcProvider.make(~chainId)
+  let wallet = providerUrl->Provider.JsonRpcProvider.make(~chainId)->connectToNewWallet(~mnemonic)
 
   let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(CONSTANTS.oneGweiInWei)
   let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(CONSTANTS.oneGweiInWei)
@@ -60,56 +26,118 @@ let run = () => {
     gasLimit: gasLimit->BigNumber.toString,
   }
 
-  //marketSide.getUnconfirmedExposure()
-  //->Promise.thenResolve(a => a->BigNumber.toString->Js.log)
-  //->ignore
-  //marketSide.getExposure()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
-  //marketSide.getPositions("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"->Utils.getAddressUnsafe)
-  //->Promise.thenResolve(a => a.synthToken->BigNumber.toString->Js.log)
-  //->ignore
+  let floatClient = FloatClient.make()
 
-  //marketSide.getFundingRateApr()->Promise.thenResolve(a => a->Js.log)->ignore
-  //marketSide.getValue()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
+  let chain = floatClient.getChain(chainId)
+  chain.contracts
+  ->Promise.thenResolve(c => "LongShort address:"->Js.log2(c.longShort.address))
+  ->ignore
+
+  let marketIndex = 1
+  let market = marketIndex->chain.getMarket
+
+  market.getFundingRateMultiplier()
+  ->Promise.thenResolve(a =>
+    "Funding rate multiplier for market "
+    ->Js.String2.concat(marketIndex->Js.Int.toString)
+    ->Js.String2.concat(":")
+    ->Js.log2(a)
+  )
+  ->ignore
+
+  market.getLeverage()
+  ->Promise.thenResolve(m =>
+    "Leverage for market "
+    ->Js.String2.concat(marketIndex->Js.Int.toString)
+    ->Js.String2.concat(":")
+    ->Js.log2(m)
+  )
+  ->ignore
+
+  let isLong = false
+  let sideName = switch isLong {
+  | true => "long"
+  | false => "short"
+  }
+
+  let marketSide = isLong->market.getSide
+
+  marketSide.getFundingRateApr()
+  ->Promise.thenResolve(a =>
+    "Funding rate APR for marketSide "
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a)
+  )
+  ->ignore
+
+  marketSide.getValue()
+  ->Promise.thenResolve(a =>
+    "Value of marketSide "
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a->BigNumber.toString)
+  )
+  ->ignore
+
+  marketSide.getExposure()
+  ->Promise.thenResolve(a =>
+    "Exposure of marketSide"
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a->BigNumber.toString)
+  )
+  ->ignore
+
+  marketSide.getUnconfirmedExposure()
+  ->Promise.thenResolve(a =>
+    "Unconfirmed exposure of marketSide"
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a->BigNumber.toString)
+  )
+  ->ignore
+
+  let address = "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"
+  marketSide.getPositions(address->Utils.getAddressUnsafe)
+  ->Promise.thenResolve(a =>
+    "Synth token amount for 0x38.. in marketSide"
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a.synthToken->BigNumber.toString)
+  )
+  ->ignore
 
   //let marketSideConnected =
   //  providerUrl
   //  ->Provider.JsonRpcProvider.make(~chainId=137)
   //  ->connectToNewWallet(~mnemonic)
-  //  ->marketSide.connect
+  //  ->MarketSide.makeWithWallet(BigNumber.fromInt(1), false)
 
   //marketSideConnected.shift(
   //  BigNumber.fromInt(1)->BigNumber.mul(CONSTANTS.tenToThe18), //->BigNumber.div(CONSTANTS.tenToThe2),
   //  txOptions,
   //)->Promise.thenResolve(tx => tx.hash->Js.log)->ignore
 
-  //providerUrl
-  //->Provider.JsonRpcProvider.make(~chainId)
-  //->connectToNewWallet(~mnemonic)
+  //wallet
   //->Wallet.getBalance
   //->Promise.thenResolve(balance => {
   //  Js.log2("Account balance:", balance->Utils.formatEther)
   //})
   //->ignore
 
-  //let market =
-  //  providerUrl
-  //  ->Provider.JsonRpcProvider.make(~chainId=137)
-  //  //->connectToNewWallet(~mnemonic)
-  //  ->Market.makeWithProvider(1)
-
-  //market.getFundingRateMultiplier()->Promise.thenResolve(a => a->Js.log)->ignore
-
-  let chain = 43114->Chain.makeWithDefaultProvider
+  //let chain = 43114->Chain.makeWithDefaultProvider
 
   //chain.getMarket(1).getFundingRateMultiplier()->Promise.thenResolve(m => m->Js.log)->ignore
 
-  let connectedChain =
-      providerUrl
-    ->Provider.JsonRpcProvider.make(~chainId=43114)
-    ->connectToNewWallet(~mnemonic)
-    ->chain.connect
+  //connectedChain.getMarket(1)
 
-  connectedChain.getMarket(1).getLeverage()->Promise.thenResolve(m => m->Js.log)->ignore
+  //let chainWithProviderOrWallet = Chain.make(wallet->wrapWallet)
+
+  //switch chainWithProviderOrWallet {
+  //    | ChainPWrap(c) => c.getMarket(1).getFundingRateMultiplier()->Promise.thenResolve(m => m->Js.log)->ignore
+  //    | ChainWWrap(c) => c.getMarket(1).getLeverage()->Promise.thenResolve(m => m->Js.log)->ignore
+  //}
 }
 
 let _ = run()
