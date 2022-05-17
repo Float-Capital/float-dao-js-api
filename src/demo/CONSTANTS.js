@@ -21,6 +21,8 @@ var tenToThe2 = Ethers.BigNumber.from(100);
 
 var tenToThe4 = Ethers.BigNumber.from(10000);
 
+var tenToThe14 = Ethers.BigNumber.from("100000000000000");
+
 var tenToThe15 = Ethers.BigNumber.from("1000000000000000");
 
 var tenToThe18 = Ethers.BigNumber.from("1000000000000000000");
@@ -35,6 +37,7 @@ exports.fourBN = fourBN;
 exports.tenToThe2 = tenToThe2;
 exports.tenToThe4 = tenToThe4;
 exports.tenToThe9 = tenToThe9;
+exports.tenToThe14 = tenToThe14;
 exports.tenToThe15 = tenToThe15;
 exports.tenToThe18 = tenToThe18;
 /* oneGweiInWei Not a pure module */

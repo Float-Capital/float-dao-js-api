@@ -56,6 +56,8 @@ module BigNumber = {
   external fromUnsafe: string => t = "from"
   @module("ethers") @scope("BigNumber")
   external fromInt: int => t = "from"
+  @module("ethers") @scope("BigNumber")
+  external fromFloat: float => t = "from"
 
   @send external add: (t, t) => t = "add"
   @send external sub: (t, t) => t = "sub"
@@ -194,7 +196,7 @@ module Utils = {
     | #ether
     | #kether
     | #mether
-    | #geher
+    | #gether
     | #tether
   ]
   @module("ethers") @scope("utils")

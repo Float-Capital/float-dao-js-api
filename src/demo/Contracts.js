@@ -16,12 +16,14 @@ var abi = Ethers$FloatJsClient.makeAbi([
       "function shiftPositionFromShortNextPrice(uint32 marketIndex, uint256 amountSyntheticToken)",
       "function get_syntheticToken_priceSnapshot_side(uint32 marketIndex, bool isLong, uint256 priceSnapshotIndex) view returns (uint256 price)",
       "function syntheticTokens(uint32 marketIndex, bool isLong) view returns (address synth)",
-      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 short, uint128 long)",
+      "function marketSideValueInPaymentToken(uint32 marketIndex) view returns (uint128 long, uint128 short)",
       "function batched_amountPaymentToken_deposit(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function batched_amountSyntheticToken_redeem(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function batched_amountSyntheticToken_toShiftAwayFrom_marketSide(uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function userNextPrice_currentUpdateIndex(uint32 marketIndex, address user) view returns (uint256 amount)",
-      "function getUsersConfirmedButNotSettledSynthBalance(address user, uint32 marketIndex, bool isLong) view returns (uint256 amount)"
+      "function getUsersConfirmedButNotSettledSynthBalance(address user, uint32 marketIndex, bool isLong) view returns (uint256 amount)",
+      "function fundingRateMultiplier_e18(uint32 marketIndex) view returns (uint256 value)",
+      "function marketLeverage_e18(uint32 marketIndex) view returns (uint256 leverage)"
     ]);
 
 function make(address, providerOrWallet) {
@@ -36,6 +38,7 @@ var LongShort = {
 var abi$1 = Ethers$FloatJsClient.makeAbi([
       "function withdraw(uint32 marketIndex, bool isLong, uint256 amountSyntheticToken)",
       "function claimFloatCustom(uint32[] calldata marketIndexes)",
+      "function claimFloatCustomFor(uint32[] calldata marketIndexes, address user)",
       "function withdrawWithVoucher(uint32 marketIndex, bool isWithdrawFromLong, uint256 withdrawAmount, uint256 expiry, uint256 nonce, uint256 discountWithdrawFee, uint8 v, bytes32 r, bytes32 s)",
       "function shiftTokens(uint256 amountSyntheticToken, uint32 marketIndex, bool isShiftFromLong)",
       "function userAmountStaked(address, address) public view returns (uint256)"
