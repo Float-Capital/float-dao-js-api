@@ -1,6 +1,5 @@
 {
-  "name": "float-js-client",
-  "namespace": true,
+  "name": "@float-dao/js-client",
   "sources": {
     "dir" : "src",
     "subdirs" : true
@@ -10,7 +9,8 @@
     "in-source": true
   },
   "bs-dependencies": [
-    "@ryyppy/rescript-promise"
+    "@ryyppy/rescript-promise",
+    "@float-dao/config"
   ],
   "suffix": ".js"
 }

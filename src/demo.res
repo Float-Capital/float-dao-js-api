@@ -4,7 +4,7 @@ open Ethers
 let env = process["env"]
 
 @module("../secretsManager.js") external mnemonic: string = "mnemonic"
-@module("../secretsManager.js") external providerUrl: string = "providerUrl"
+@module("../secretsManager.js") external providerUrlOther: string = "providerUrl"
 
 //type s = {
 //  providerUrl: string,
@@ -41,11 +41,14 @@ let run = () => {
   //  ->connectToNewWallet(~mnemonic)
   //  ->MarketSide.makeWithWallet(BigNumber.fromInt(1), false)
 
+  let providerUrl = FloatConfig.avalanche.rpcEndopint
+  let chainId = FloatConfig.avalanche.networkId // 137
+
   let marketSide =
     providerUrl
-    ->Provider.JsonRpcProvider.make(~chainId=137)
+    ->Provider.JsonRpcProvider.make(~chainId)
     //->connectToNewWallet(~mnemonic)
-    ->MarketSide.makeWithProvider(BigNumber.fromInt(1), false)
+    ->MarketSide.makeWithProvider(1, false)
 
   let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(CONSTANTS.oneGweiInWei)
   let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(CONSTANTS.oneGweiInWei)
@@ -65,8 +68,8 @@ let run = () => {
   //->Promise.thenResolve(a => a.synthToken->BigNumber.toString->Js.log)
   //->ignore
 
-  marketSide.getFundingRateApr()->Promise.thenResolve(a => a->Js.log)->ignore
-  //marketSide.getValue()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
+  //marketSide.getFundingRateApr()->Promise.thenResolve(a => a->Js.log)->ignore
+  marketSide.getValue()->Promise.thenResolve(a => a->BigNumber.toString->Js.log)->ignore
 
   //let marketSideConnected =
   //  providerUrl
@@ -88,11 +91,11 @@ let run = () => {
   //})
   //->ignore
 
-  let market =
-    providerUrl
-    ->Provider.JsonRpcProvider.make(~chainId=137)
-    //->connectToNewWallet(~mnemonic)
-    ->Market.makeWithProvider(1)
+  //let market =
+  //  providerUrl
+  //  ->Provider.JsonRpcProvider.make(~chainId=137)
+  //  //->connectToNewWallet(~mnemonic)
+  //  ->Market.makeWithProvider(1)
 
   //market.getFundingRateMultiplier()->Promise.thenResolve(a => a->Js.log)->ignore
 }
