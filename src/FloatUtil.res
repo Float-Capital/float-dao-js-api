@@ -1,4 +1,4 @@
-open Ethers
+open FloatEthers
 open FloatConfig
 
 // TODO fix these so that they actually fix the correct config and don't just return ava one

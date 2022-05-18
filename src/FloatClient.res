@@ -1,14 +1,14 @@
-open Ethers
+open FloatEthers
 
 type client = {
-  getChainWithProvider: providerType => Chain.chainWithProvider,
-  getChainWithWallet: walletType => Chain.chainWithWallet,
-  getChain: int => Chain.chainWithProvider,
+  getChainWithProvider: providerType => FloatChain.chainWithProvider,
+  getChainWithWallet: walletType => FloatChain.chainWithWallet,
+  getChain: int => FloatChain.chainWithProvider,
   // TODO add getChains method that returns all the chains that float is deployed on
 }
 
 let make = _ => {
-  getChainWithProvider: Chain.makeWithProvider,
-  getChainWithWallet: Chain.makeWithWallet,
-  getChain: i => i->Chain.makeWithDefaultProvider,
+  getChainWithProvider: FloatChain.makeWithProvider,
+  getChainWithWallet: FloatChain.makeWithWallet,
+  getChain: i => i->FloatChain.makeWithDefaultProvider,
 }

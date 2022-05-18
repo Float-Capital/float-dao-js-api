@@ -46,9 +46,34 @@ function max(a, b) {
   }
 }
 
+var oneGweiInWei = Ethers.BigNumber.from(1000000000);
+
+var zeroBN = Ethers.BigNumber.from(0);
+
+var fourBN = Ethers.BigNumber.from(4);
+
+var tenToThe2 = Ethers.BigNumber.from(100);
+
+var tenToThe4 = Ethers.BigNumber.from(10000);
+
+var tenToThe14 = Ethers.BigNumber.from("100000000000000");
+
+var tenToThe15 = Ethers.BigNumber.from("1000000000000000");
+
+var tenToThe18 = Ethers.BigNumber.from("1000000000000000000");
+
 var BigNumber = {
   min: min,
-  max: max
+  max: max,
+  oneGweiInWei: oneGweiInWei,
+  zeroBN: zeroBN,
+  fourBN: fourBN,
+  tenToThe2: tenToThe2,
+  tenToThe4: tenToThe4,
+  tenToThe9: oneGweiInWei,
+  tenToThe14: tenToThe14,
+  tenToThe15: tenToThe15,
+  tenToThe18: tenToThe18
 };
 
 var JsonRpcProvider = {};
@@ -167,4 +192,4 @@ exports.wrapProvider = wrapProvider;
 exports.wrapWallet = wrapWallet;
 exports.Contract = Contract;
 exports.Utils = Utils;
-/* tenBN Not a pure module */
+/* oneGweiInWei Not a pure module */

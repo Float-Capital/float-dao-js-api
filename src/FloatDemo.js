@@ -3,9 +3,9 @@
 
 var Curry = require("rescript/lib/js/curry.js");
 var Ethers = require("ethers");
-var CONSTANTS = require("./demo/CONSTANTS.js");
 var FloatClient = require("./FloatClient.js");
 var FloatConfig = require("@float-dao/config/src/FloatConfig.js");
+var FloatEthers = require("./FloatEthers.js");
 var SecretsManagerJs = require("../secretsManager.js");
 
 var env = process.env;
@@ -14,6 +14,8 @@ var mnemonic = SecretsManagerJs.mnemonic;
 
 var providerUrlOther = SecretsManagerJs.providerUrl;
 
+var oneGweiInWei = FloatEthers.BigNumber.oneGweiInWei;
+
 function connectToNewWallet(provider, mnemonic) {
   return new (Ethers.Wallet.fromMnemonic)(mnemonic, "m/44'/60'/0'/0/0").connect(provider);
 }
@@ -21,10 +23,11 @@ function connectToNewWallet(provider, mnemonic) {
 function run(param) {
   var providerUrl = FloatConfig.avalanche.rpcEndopint;
   var chainId = FloatConfig.avalanche.networkId;
-  new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId);
+  var provider = new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId);
+  provider.getNetwork();
   connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId), mnemonic);
-  var maxFeePerGas = Ethers.BigNumber.from(62).mul(CONSTANTS.oneGweiInWei);
-  var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(CONSTANTS.oneGweiInWei);
+  var maxFeePerGas = Ethers.BigNumber.from(62).mul(oneGweiInWei);
+  var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(oneGweiInWei);
   var gasLimit = Ethers.BigNumber.from(1000000);
   maxFeePerGas.toString();
   maxPriorityFeePerGas.toString();
@@ -74,6 +77,7 @@ run(undefined);
 exports.env = env;
 exports.mnemonic = mnemonic;
 exports.providerUrlOther = providerUrlOther;
+exports.oneGweiInWei = oneGweiInWei;
 exports.connectToNewWallet = connectToNewWallet;
 exports.run = run;
 /* env Not a pure module */

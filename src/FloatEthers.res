@@ -80,6 +80,16 @@ module BigNumber = {
 
   let min = (a, b) => a->gt(b) ? b : a
   let max = (a, b) => a->gt(b) ? a : b
+
+  let oneGweiInWei = fromInt(1000000000)
+  let zeroBN = fromInt(0)
+  let fourBN = fromInt(4)
+  let tenToThe2 = fromInt(100)
+  let tenToThe4 = fromInt(10000)
+  let tenToThe9 = oneGweiInWei
+  let tenToThe14 = fromUnsafe("100000000000000")
+  let tenToThe15 = fromUnsafe("1000000000000000")
+  let tenToThe18 = fromUnsafe("1000000000000000000")
 }
 
 type providerType

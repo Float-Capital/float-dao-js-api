@@ -1,6 +1,6 @@
 {
   "name": "@float-dao/js-client",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "scripts": {
     "res:build": "rescript build -with-deps",
     "res:start": "rescript build -w -with-deps",

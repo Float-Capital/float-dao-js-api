@@ -1,11 +1,11 @@
-open Contracts
-open Ethers
-open Config
+open FloatContracts
+open FloatEthers
+open FloatUtil
 open Promise
 open FloatConfig
 
-let {min, max, div, mul, add, sub, fromInt, fromFloat, toNumber, toNumberFloat} = module(
-  Ethers.BigNumber
+let {min, max, div, mul, add, sub, fromInt, fromFloat, toNumber, toNumberFloat, tenToThe18, tenToThe14} = module(
+  FloatEthers.BigNumber
 )
 
 type positions = {
@@ -16,30 +16,30 @@ type positions = {
 type marketSideWithWallet = {
   token: Promise.t<FloatConfig.erc20>,
   name: Promise.t<string>,
-  getValue: unit => Promise.t<Ethers.BigNumber.t>,
-  getSyntheticTokenPrice: unit => Promise.t<Ethers.BigNumber.t>,
-  getExposure: unit => Promise.t<Ethers.BigNumber.t>,
-  getUnconfirmedExposure: unit => Promise.t<Ethers.BigNumber.t>,
+  getValue: unit => Promise.t<FloatEthers.BigNumber.t>,
+  getSyntheticTokenPrice: unit => Promise.t<FloatEthers.BigNumber.t>,
+  getExposure: unit => Promise.t<FloatEthers.BigNumber.t>,
+  getUnconfirmedExposure: unit => Promise.t<FloatEthers.BigNumber.t>,
   getFundingRateApr: unit => Promise.t<float>,
   getPositions: unit => Promise.t<positions>,
   getStakedPositions: unit => Promise.t<positions>,
   getUnsettledPositions: unit => Promise.t<positions>,
-  mint: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
-  mintAndStake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
-  stake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
-  unstake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
-  redeem: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
-  shift: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
-  shiftStake: (BigNumber.t, txOptions) => Promise.t<Ethers.txSubmitted>,
+  mint: (BigNumber.t, txOptions) => Promise.t<FloatEthers.txSubmitted>,
+  mintAndStake: (BigNumber.t, txOptions) => Promise.t<FloatEthers.txSubmitted>,
+  stake: (BigNumber.t, txOptions) => Promise.t<FloatEthers.txSubmitted>,
+  unstake: (BigNumber.t, txOptions) => Promise.t<FloatEthers.txSubmitted>,
+  redeem: (BigNumber.t, txOptions) => Promise.t<FloatEthers.txSubmitted>,
+  shift: (BigNumber.t, txOptions) => Promise.t<FloatEthers.txSubmitted>,
+  shiftStake: (BigNumber.t, txOptions) => Promise.t<FloatEthers.txSubmitted>,
 }
 
 type marketSideWithProvider = {
   token: Promise.t<FloatConfig.erc20>,
   name: Promise.t<string>,
-  getValue: unit => Promise.t<Ethers.BigNumber.t>,
-  getSyntheticTokenPrice: unit => Promise.t<Ethers.BigNumber.t>,
-  getExposure: unit => Promise.t<Ethers.BigNumber.t>,
-  getUnconfirmedExposure: unit => Promise.t<Ethers.BigNumber.t>,
+  getValue: unit => Promise.t<FloatEthers.BigNumber.t>,
+  getSyntheticTokenPrice: unit => Promise.t<FloatEthers.BigNumber.t>,
+  getExposure: unit => Promise.t<FloatEthers.BigNumber.t>,
+  getUnconfirmedExposure: unit => Promise.t<FloatEthers.BigNumber.t>,
   getFundingRateApr: unit => Promise.t<float>,
   getPositions: ethAddress => Promise.t<positions>,
   getStakedPositions: ethAddress => Promise.t<positions>,
@@ -187,7 +187,7 @@ let syntheticTokenPrice = (
     marketSideValue(p, c, marketIndex, isLong),
     syntheticTokenTotalSupply(p, c, marketIndex, isLong),
   ))->thenResolve(((value, total)) =>
-    value->BigNumber.mul(CONSTANTS.tenToThe18)->BigNumber.div(total)
+    value->mul(tenToThe18)->div(total)
   )
 
 let syntheticTokenPriceSnapshot = (
@@ -209,7 +209,7 @@ let marketSideValues = (p: providerType, c: chainConfigShape, marketIndex: BigNu
 
 let exposure = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t, isLong: bool) =>
   marketSideValues(p, c, marketIndex)->thenResolve(values => {
-    let numerator = values.long->min(values.short)->mul(CONSTANTS.tenToThe18)
+    let numerator = values.long->min(values.short)->mul(tenToThe18)
     switch isLong {
     | true => numerator->div(values.long)
     | false => numerator->div(values.short)
@@ -250,7 +250,7 @@ let unconfirmedExposure = (
       ->sub(shiftsFromLong)
       ->sub(redeemsLong)
       ->mul(priceLong)
-      ->div(CONSTANTS.tenToThe18)
+      ->div(tenToThe18)
       ->add(depositsLong)
       ->add(valueLong)
 
@@ -259,11 +259,11 @@ let unconfirmedExposure = (
       ->sub(shiftsFromShort)
       ->sub(redeemsShort)
       ->mul(priceShort)
-      ->div(CONSTANTS.tenToThe18)
+      ->div(tenToThe18)
       ->add(depositsShort)
       ->add(valueShort)
 
-    let numerator = unconfirmedValueLong->min(unconfirmedValueShort)->mul(CONSTANTS.tenToThe18)
+    let numerator = unconfirmedValueLong->min(unconfirmedValueShort)->mul(tenToThe18)
 
     switch isLong {
     | true => numerator->div(unconfirmedValueLong)
@@ -293,7 +293,7 @@ let fundingRateMultiplier = (
   ->wrapProvider
   ->makeLongShortContract(c)
   ->LongShort.fundingRateMultiplier_e18(~marketIndex)
-  ->thenResolve(m => m->div(CONSTANTS.tenToThe18)->toNumberFloat)
+  ->thenResolve(m => m->div(tenToThe18)->toNumberFloat)
 
 let divFloat = (a: float, b: float) => a /. b
 
@@ -322,9 +322,9 @@ let fundingRateApr = (
     ->sub(long)
     ->mul(isLong->toSign->fromInt)
     ->mul(m->fromFloat)
-    ->mul(CONSTANTS.tenToThe18)
+    ->mul(tenToThe18)
     ->div(longOrShort(long, short, isLong))
-    ->div(CONSTANTS.tenToThe14)
+    ->div(tenToThe14)
     ->toNumberFloat
     ->divFloat(100.0)
   )
