@@ -111,102 +111,12 @@ function makeStakerContract(p, c) {
   return FloatContracts.Staker.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
 }
 
-function leverage(p, c, marketIndex) {
-  return makeLongShortContract(FloatEthers.wrapProvider(p), c).marketLeverage_e18(marketIndex).then(function (m) {
-              return m.div(tenToThe18).toNumber();
-            });
-}
-
 function longSide(param, param$1) {
   return FloatMarketSide.WithProvider.makeWrapReverseCurry(true, param, param$1);
 }
 
 function shortSide(param, param$1) {
   return FloatMarketSide.WithProvider.makeWrapReverseCurry(false, param, param$1);
-}
-
-function syntheticTokenPrices(p, c, marketIndex) {
-  return Promise.all([
-                FloatMarketSide.syntheticTokenPrice(longSide(marketIndex, p)),
-                FloatMarketSide.syntheticTokenPrice(shortSide(marketIndex, p))
-              ]).then(function (param) {
-              return {
-                      long: param[0],
-                      short: param[1]
-                    };
-            });
-}
-
-function exposures(p, c, marketIndex) {
-  return Promise.all([
-                FloatMarketSide.exposure(longSide(marketIndex, p)),
-                FloatMarketSide.exposure(shortSide(marketIndex, p))
-              ]).then(function (param) {
-              return {
-                      long: param[0],
-                      short: param[1]
-                    };
-            });
-}
-
-function unconfirmedExposures(p, c, marketIndex) {
-  return Promise.all([
-                FloatMarketSide.unconfirmedExposure(longSide(marketIndex, p)),
-                FloatMarketSide.unconfirmedExposure(shortSide(marketIndex, p))
-              ]).then(function (param) {
-              return {
-                      long: param[0],
-                      short: param[1]
-                    };
-            });
-}
-
-function fundingRateAprs(p, c, marketIndex) {
-  return Promise.all([
-                FloatMarketSide.fundingRateApr(longSide(marketIndex, p)),
-                FloatMarketSide.fundingRateApr(shortSide(marketIndex, p))
-              ]).then(function (param) {
-              return {
-                      long: param[0],
-                      short: param[1]
-                    };
-            });
-}
-
-function positions(p, c, marketIndex, address) {
-  return Promise.all([
-                FloatMarketSide.positions(longSide(marketIndex, p), address),
-                FloatMarketSide.positions(shortSide(marketIndex, p), address)
-              ]).then(function (param) {
-              return {
-                      long: param[0],
-                      short: param[1]
-                    };
-            });
-}
-
-function stakedPositions(p, c, marketIndex, address) {
-  return Promise.all([
-                FloatMarketSide.stakedPositions(longSide(marketIndex, p), address),
-                FloatMarketSide.stakedPositions(shortSide(marketIndex, p), address)
-              ]).then(function (param) {
-              return {
-                      long: param[0],
-                      short: param[1]
-                    };
-            });
-}
-
-function unsettledPositions(p, c, marketIndex, address) {
-  return Promise.all([
-                FloatMarketSide.unsettledPositions(longSide(marketIndex, p), address),
-                FloatMarketSide.unsettledPositions(shortSide(marketIndex, p), address)
-              ]).then(function (param) {
-              return {
-                      long: param[0],
-                      short: param[1]
-                    };
-            });
 }
 
 function claimFloatCustomFor(w, c, marketIndexes, address) {
@@ -230,74 +140,6 @@ function updateSystemState(w, c, marketIndex) {
   };
 }
 
-function makeWithWallet(w, marketIndex) {
-  return {
-          getLeverage: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return leverage(w.provider, c, Ethers.BigNumber.from(marketIndex));
-                        });
-            }),
-          getFundingRateMultiplier: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return FloatMarketSide.fundingRateMultiplier(w.provider, c, Ethers.BigNumber.from(marketIndex));
-                        });
-            }),
-          getSyntheticTokenPrices: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return syntheticTokenPrices(w.provider, c, marketIndex);
-                        });
-            }),
-          getExposures: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return exposures(w.provider, c, marketIndex);
-                        });
-            }),
-          getUnconfirmedExposures: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return unconfirmedExposures(w.provider, c, marketIndex);
-                        });
-            }),
-          getFundingRateAprs: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return fundingRateAprs(w.provider, c, marketIndex);
-                        });
-            }),
-          getPositions: (function (ethAddress) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return positions(w.provider, c, marketIndex, ethAddress);
-                        });
-            }),
-          getStakedPositions: (function (ethAddress) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return stakedPositions(w.provider, c, marketIndex, ethAddress);
-                        });
-            }),
-          getUnsettledPositions: (function (ethAddress) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return unsettledPositions(w.provider, c, marketIndex, ethAddress);
-                        });
-            }),
-          claimFloatCustomFor: (function (ethAddress, txOptions) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return claimFloatCustomFor(w, c, [Ethers.BigNumber.from(marketIndex)], ethAddress)(txOptions);
-                        });
-            }),
-          settleOutstandingActions: (function (ethAddress, txOptions) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return settleOutstandingActions(w, c, Ethers.BigNumber.from(marketIndex), ethAddress)(txOptions);
-                        });
-            }),
-          updateSystemState: (function (txOptions) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return updateSystemState(w, c, Ethers.BigNumber.from(marketIndex))(txOptions);
-                        });
-            }),
-          getSide: (function (param) {
-              return FloatMarketSide.WithWallet.make(w, marketIndex, param);
-            })
-        };
-}
-
 function contracts(market) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
               return {
@@ -308,9 +150,13 @@ function contracts(market) {
             });
 }
 
-function leverage$1(market) {
+function leverage(market) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return leverage(provider(market), config, Ethers.BigNumber.from(market._0.marketIndex));
+              var p = provider(market);
+              var marketIndex = Ethers.BigNumber.from(market._0.marketIndex);
+              return makeLongShortContract(FloatEthers.wrapProvider(p), config).marketLeverage_e18(marketIndex).then(function (m) {
+                          return m.div(tenToThe18).toNumber();
+                        });
             });
 }
 
@@ -320,45 +166,115 @@ function fundingRateMultiplier(market) {
             });
 }
 
-function syntheticTokenPrices$1(market) {
+function syntheticTokenPrices(market) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return syntheticTokenPrices(provider(market), config, market._0.marketIndex);
+              var p = provider(market);
+              var marketIndex = market._0.marketIndex;
+              return Promise.all([
+                            FloatMarketSide.syntheticTokenPrice(longSide(marketIndex, p)),
+                            FloatMarketSide.syntheticTokenPrice(shortSide(marketIndex, p))
+                          ]).then(function (param) {
+                          return {
+                                  long: param[0],
+                                  short: param[1]
+                                };
+                        });
             });
 }
 
-function exposures$1(market) {
+function exposures(market) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return exposures(provider(market), config, market._0.marketIndex);
+              var p = provider(market);
+              var marketIndex = market._0.marketIndex;
+              return Promise.all([
+                            FloatMarketSide.exposure(longSide(marketIndex, p)),
+                            FloatMarketSide.exposure(shortSide(marketIndex, p))
+                          ]).then(function (param) {
+                          return {
+                                  long: param[0],
+                                  short: param[1]
+                                };
+                        });
             });
 }
 
-function unconfirmedExposures$1(market) {
+function unconfirmedExposures(market) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return unconfirmedExposures(provider(market), config, market._0.marketIndex);
+              var p = provider(market);
+              var marketIndex = market._0.marketIndex;
+              return Promise.all([
+                            FloatMarketSide.unconfirmedExposure(longSide(marketIndex, p)),
+                            FloatMarketSide.unconfirmedExposure(shortSide(marketIndex, p))
+                          ]).then(function (param) {
+                          return {
+                                  long: param[0],
+                                  short: param[1]
+                                };
+                        });
             });
 }
 
-function fundingRateAprs$1(market) {
+function fundingRateAprs(market) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return fundingRateAprs(provider(market), config, market._0.marketIndex);
+              var p = provider(market);
+              var marketIndex = market._0.marketIndex;
+              return Promise.all([
+                            FloatMarketSide.fundingRateApr(longSide(marketIndex, p)),
+                            FloatMarketSide.fundingRateApr(shortSide(marketIndex, p))
+                          ]).then(function (param) {
+                          return {
+                                  long: param[0],
+                                  short: param[1]
+                                };
+                        });
             });
 }
 
-function positions$1(market, ethAddress) {
+function positions(market, ethAddress) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return positions(provider(market), config, market._0.marketIndex, ethAddress);
+              var p = provider(market);
+              var marketIndex = market._0.marketIndex;
+              return Promise.all([
+                            FloatMarketSide.positions(longSide(marketIndex, p), ethAddress),
+                            FloatMarketSide.positions(shortSide(marketIndex, p), ethAddress)
+                          ]).then(function (param) {
+                          return {
+                                  long: param[0],
+                                  short: param[1]
+                                };
+                        });
             });
 }
 
-function stakedPositions$1(market, ethAddress) {
+function stakedPositions(market, ethAddress) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return stakedPositions(provider(market), config, market._0.marketIndex, ethAddress);
+              var p = provider(market);
+              var marketIndex = market._0.marketIndex;
+              return Promise.all([
+                            FloatMarketSide.stakedPositions(longSide(marketIndex, p), ethAddress),
+                            FloatMarketSide.stakedPositions(shortSide(marketIndex, p), ethAddress)
+                          ]).then(function (param) {
+                          return {
+                                  long: param[0],
+                                  short: param[1]
+                                };
+                        });
             });
 }
 
-function unsettledPositions$1(market, ethAddress) {
+function unsettledPositions(market, ethAddress) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              return unsettledPositions(provider(market), config, market._0.marketIndex, ethAddress);
+              var p = provider(market);
+              var marketIndex = market._0.marketIndex;
+              return Promise.all([
+                            FloatMarketSide.unsettledPositions(longSide(marketIndex, p), ethAddress),
+                            FloatMarketSide.unsettledPositions(shortSide(marketIndex, p), ethAddress)
+                          ]).then(function (param) {
+                          return {
+                                  long: param[0],
+                                  short: param[1]
+                                };
+                        });
             });
 }
 
@@ -378,6 +294,24 @@ function connectWrap(market, wallet, isLong) {
   return FloatMarketSide.WithWallet.make(wallet, market._0.marketIndex, isLong);
 }
 
+function claimFloatCustomFor$1(market, ethAddress, txOptions) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapWallet(market.wallet)).then(function (config) {
+              return claimFloatCustomFor(market.wallet, config, [Ethers.BigNumber.from(market.marketIndex)], ethAddress)(txOptions);
+            });
+}
+
+function settleOutstandingActions$1(market, ethAddress, txOptions) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapWallet(market.wallet)).then(function (config) {
+              return settleOutstandingActions(market.wallet, config, Ethers.BigNumber.from(market.marketIndex), ethAddress)(txOptions);
+            });
+}
+
+function updateSystemState$1(market, txOptions) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapWallet(market.wallet)).then(function (config) {
+              return updateSystemState(market.wallet, config, Ethers.BigNumber.from(market.marketIndex))(txOptions);
+            });
+}
+
 exports.div = div;
 exports.fromInt = fromInt;
 exports.toNumber = toNumber;
@@ -392,21 +326,20 @@ exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.longSide = longSide;
 exports.shortSide = shortSide;
-exports.claimFloatCustomFor = claimFloatCustomFor;
-exports.settleOutstandingActions = settleOutstandingActions;
-exports.updateSystemState = updateSystemState;
-exports.makeWithWallet = makeWithWallet;
 exports.contracts = contracts;
-exports.leverage = leverage$1;
+exports.leverage = leverage;
 exports.fundingRateMultiplier = fundingRateMultiplier;
-exports.syntheticTokenPrices = syntheticTokenPrices$1;
-exports.exposures = exposures$1;
-exports.unconfirmedExposures = unconfirmedExposures$1;
-exports.fundingRateAprs = fundingRateAprs$1;
-exports.positions = positions$1;
-exports.stakedPositions = stakedPositions$1;
-exports.unsettledPositions = unsettledPositions$1;
+exports.syntheticTokenPrices = syntheticTokenPrices;
+exports.exposures = exposures;
+exports.unconfirmedExposures = unconfirmedExposures;
+exports.fundingRateAprs = fundingRateAprs;
+exports.positions = positions;
+exports.stakedPositions = stakedPositions;
+exports.unsettledPositions = unsettledPositions;
 exports.side = side;
 exports.connect = connect;
 exports.connectWrap = connectWrap;
+exports.claimFloatCustomFor = claimFloatCustomFor$1;
+exports.settleOutstandingActions = settleOutstandingActions$1;
+exports.updateSystemState = updateSystemState$1;
 /* ethers Not a pure module */

@@ -7,7 +7,7 @@ type chainWithWallet = {
   // TODO possibly change this to getContracts to make it clear it's a promise
   contracts: Promise.t<FloatConfig.contracts>,
   updateSystemState: (array<BigNumber.t>, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  getMarket: int => FloatMarket.marketWithWallet,
+  getMarket: int => FloatMarket.withWallet,
 }
 
 type chainWithProvider = {
@@ -51,7 +51,7 @@ let makeWithWallet = (w: walletType): chainWithWallet => {
     ->wrapWallet
     ->getChainConfig
     ->then(c => updateSystemStateMulti(w, c, marketIndexes, txOptions)),
-  getMarket: FloatMarket.makeWithWallet(w),
+  getMarket: FloatMarket.WithWallet.make(w),
 }
 
 let makeWithProvider = (p: providerType): chainWithProvider => {
