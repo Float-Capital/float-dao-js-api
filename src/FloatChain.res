@@ -1,18 +1,18 @@
-open Contracts
-open Ethers
+open FloatContracts
+open FloatEthers
 open Promise
-open Config
+open FloatUtil
 
 type chainWithWallet = {
-  // TODO possible change this to getContracts to make it clear it's a promise
+  // TODO possibly change this to getContracts to make it clear it's a promise
   contracts: Promise.t<FloatConfig.contracts>,
-  updateSystemState: (array<BigNumber.t>, txOptions) => Promise.t<Ethers.txSubmitted>,
-  getMarket: int => Market.marketWithWallet,
+  updateSystemState: (array<BigNumber.t>, txOptions) => Promise.t<FloatEthers.txSubmitted>,
+  getMarket: int => FloatMarket.marketWithWallet,
 }
 
 type chainWithProvider = {
   contracts: Promise.t<FloatConfig.contracts>,
-  getMarket: int => Market.marketWithProvider,
+  getMarket: int => FloatMarket.marketWithProvider,
   connect: walletType => chainWithWallet,
 }
 
@@ -26,7 +26,7 @@ let wrapChainWithWallet: chainWithWallet => chainProviderOrWallet = p => ChainWW
 let makeLongShortContract = (
   p: providerOrWallet,
   c: FloatConfig.chainConfigShape,
-): Ethers.Contract.t =>
+): FloatEthers.Contract.t =>
   LongShort.make(
     ~address=c.contracts.longShort.address->Utils.getAddressUnsafe,
     ~providerOrWallet=p,
@@ -38,7 +38,7 @@ let updateSystemStateMulti = (
   marketIndexes: array<BigNumber.t>,
 ) => w->wrapWallet->makeLongShortContract(c)->LongShort.updateSystemStateMulti(~marketIndexes)
 
-// TODO add getLongShortmplentationAddress function that fetches the current implentation address
+// TODO add getLongShortImplementationAddress function that fetches the current implentation address
 
 // TODO add getPositions that fetches for all markets
 
@@ -51,12 +51,12 @@ let makeWithWallet = (w: walletType): chainWithWallet => {
     ->wrapWallet
     ->getChainConfig
     ->then(c => updateSystemStateMulti(w, c, marketIndexes, txOptions)),
-  getMarket: Market.makeWithWallet(w),
+  getMarket: FloatMarket.makeWithWallet(w),
 }
 
 let makeWithProvider = (p: providerType): chainWithProvider => {
   contracts: p->wrapProvider->getChainConfig->thenResolve(c => c.contracts),
-  getMarket: Market.makeWithProvider(p),
+  getMarket: FloatMarket.makeWithProvider(p),
   connect: w => makeWithWallet(w),
 }
 
@@ -67,7 +67,7 @@ let makeWithDefaultProvider = (chainId: int) => {
   ->wrapProvider
   ->getChainConfig
   ->thenResolve(c => c.contracts),
-  getMarket: Market.makeWithProvider(chainId->getChainConfigUsingId->makeDefaultProvider),
+  getMarket: FloatMarket.makeWithProvider(chainId->getChainConfigUsingId->makeDefaultProvider),
   connect: w => makeWithWallet(w),
 }
 

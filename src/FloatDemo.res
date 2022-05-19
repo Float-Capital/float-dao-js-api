@@ -1,10 +1,12 @@
-open Ethers
+open FloatEthers
 
 @val external process: 'a = "process"
 let env = process["env"]
 
 @module("../secretsManager.js") external mnemonic: string = "mnemonic"
 @module("../secretsManager.js") external providerUrlOther: string = "providerUrl"
+
+let {oneGweiInWei} = module(FloatEthers.BigNumber)
 
 let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
@@ -14,13 +16,16 @@ let run = () => {
   let chainId = FloatConfig.avalanche.networkId // 137
 
   let provider = providerUrl->Provider.JsonRpcProvider.make(~chainId)
+
+  provider->Provider.getNetwork->ignore
+
   let wallet = providerUrl->Provider.JsonRpcProvider.make(~chainId)->connectToNewWallet(~mnemonic)
 
-  let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(CONSTANTS.oneGweiInWei)
-  let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(CONSTANTS.oneGweiInWei)
+  let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(oneGweiInWei)
+  let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(oneGweiInWei)
   let gasLimit = BigNumber.fromInt(1000000)
 
-  let txOptions: Contracts.txOptions = {
+  let txOptions: FloatContracts.txOptions = {
     maxFeePerGas: maxFeePerGas->BigNumber.toString,
     maxPriorityFeePerGas: maxPriorityFeePerGas->BigNumber.toString,
     gasLimit: gasLimit->BigNumber.toString,
