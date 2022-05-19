@@ -129,34 +129,6 @@ function provider(side) {
   }
 }
 
-function isLong(side) {
-  return side._0.isLong;
-}
-
-function marketIndex(side) {
-  return side._0.marketIndex;
-}
-
-function longOrShort($$long, $$short, isLong) {
-  if (isLong) {
-    return $$long;
-  } else {
-    return $$short;
-  }
-}
-
-function toSign(isLong) {
-  if (isLong) {
-    return 1;
-  } else {
-    return -1;
-  }
-}
-
-function divFloat(a, b) {
-  return a / b;
-}
-
 function makeLongShortContract(p, c) {
   return FloatContracts.LongShort.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
 }
@@ -529,12 +501,6 @@ exports.wrapSideP = wrapSideP;
 exports.wrapSideW = wrapSideW;
 exports.WithProvider = WithProvider;
 exports.WithWallet = WithWallet;
-exports.provider = provider;
-exports.isLong = isLong;
-exports.marketIndex = marketIndex;
-exports.longOrShort = longOrShort;
-exports.toSign = toSign;
-exports.divFloat = divFloat;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.syntheticTokenAddress = syntheticTokenAddress;

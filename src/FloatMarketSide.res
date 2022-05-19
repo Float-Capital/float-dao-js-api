@@ -57,37 +57,47 @@ module WithWallet = {
 // ====================================
 // Helper functions
 
-let provider = (side: withProviderOrWallet) =>
-  switch side {
-  | P(s) => s.provider
-  | W(s) => s.wallet.provider
-  }
+%%private(
+  let provider = (side: withProviderOrWallet) =>
+    switch side {
+    | P(s) => s.provider
+    | W(s) => s.wallet.provider
+    }
+)
 
-let isLong = (side: withProviderOrWallet) =>
-  switch side {
-  | P(s) => s.isLong
-  | W(s) => s.isLong
-  }
+%%private(
+  let isLong = (side: withProviderOrWallet) =>
+    switch side {
+    | P(s) => s.isLong
+    | W(s) => s.isLong
+    }
+)
 
-let marketIndex = (side: withProviderOrWallet) =>
-  switch side {
-  | P(s) => s.marketIndex
-  | W(s) => s.marketIndex
-  }
+%%private(
+  let marketIndex = (side: withProviderOrWallet) =>
+    switch side {
+    | P(s) => s.marketIndex
+    | W(s) => s.marketIndex
+    }
+)
 
-let longOrShort = (long, short, isLong) =>
-  switch isLong {
-  | true => long
-  | false => short
-  }
+%%private(
+  let longOrShort = (long, short, isLong) =>
+    switch isLong {
+    | true => long
+    | false => short
+    }
+)
 
-let toSign = isLong =>
-  switch isLong {
-  | true => 1
-  | false => -1
-  }
+%%private(
+  let toSign = isLong =>
+    switch isLong {
+    | true => 1
+    | false => -1
+    }
+)
 
-let divFloat = (a: float, b: float) => a /. b
+%%private(let divFloat = (a: float, b: float) => a /. b)
 
 // ====================================
 // Base functions
