@@ -47,6 +47,66 @@ var tenToThe18 = FloatEthers.BigNumber.tenToThe18;
 
 var tenToThe14 = FloatEthers.BigNumber.tenToThe14;
 
+function make(p, marketIndex, isLong) {
+  return {
+          provider: p,
+          marketIndex: marketIndex,
+          isLong: isLong
+        };
+}
+
+var WithProvider = {
+  make: make
+};
+
+function make$1(w, marketIndex, isLong) {
+  return {
+          wallet: w,
+          marketIndex: marketIndex,
+          isLong: isLong
+        };
+}
+
+var WithWallet = {
+  make: make$1
+};
+
+function provider(side) {
+  if (side.TAG === /* P */0) {
+    return side._0.provider;
+  } else {
+    return side._0.wallet.provider;
+  }
+}
+
+function isLong(side) {
+  return side._0.isLong;
+}
+
+function marketIndex(side) {
+  return side._0.marketIndex;
+}
+
+function synthToken(side) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(side))).then(function (chain) {
+              if (side._0.isLong) {
+                return Caml_array.get(chain.markets, side._0.marketIndex).longToken;
+              } else {
+                return Caml_array.get(chain.markets, side._0.marketIndex).shortToken;
+              }
+            });
+}
+
+function name(side) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(side))).then(function (param) {
+              if (side._0.isLong) {
+                return "long";
+              } else {
+                return "short";
+              }
+            });
+}
+
 function makeLongShortContract(p, c) {
   return FloatContracts.LongShort.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
 }
@@ -322,20 +382,6 @@ function shiftStake(w, c, marketIndex, isLong, amountSyntheticToken) {
 
 function makeWithWallet(w, marketIndex, isLong) {
   return {
-          token: FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                if (isLong) {
-                  return Caml_array.get(c.markets, marketIndex).longToken;
-                } else {
-                  return Caml_array.get(c.markets, marketIndex).shortToken;
-                }
-              }),
-          name: FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                if (isLong) {
-                  return "long";
-                } else {
-                  return "short";
-                }
-              }),
           getValue: (function (param) {
               return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
                           return marketSideValue(w.provider, c, Ethers.BigNumber.from(marketIndex), isLong);
@@ -416,20 +462,6 @@ function makeWithWallet(w, marketIndex, isLong) {
 
 function makeWithProvider(p, marketIndex, isLong) {
   return {
-          token: FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
-                if (isLong) {
-                  return Caml_array.get(c.markets, marketIndex).longToken;
-                } else {
-                  return Caml_array.get(c.markets, marketIndex).shortToken;
-                }
-              }),
-          name: FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
-                if (isLong) {
-                  return "long";
-                } else {
-                  return "short";
-                }
-              }),
           getValue: (function (param) {
               return FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
                           return marketSideValue(p, c, Ethers.BigNumber.from(marketIndex), isLong);
@@ -488,6 +520,13 @@ exports.toNumber = toNumber;
 exports.toNumberFloat = toNumberFloat;
 exports.tenToThe18 = tenToThe18;
 exports.tenToThe14 = tenToThe14;
+exports.WithProvider = WithProvider;
+exports.WithWallet = WithWallet;
+exports.provider = provider;
+exports.isLong = isLong;
+exports.marketIndex = marketIndex;
+exports.synthToken = synthToken;
+exports.name = name;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.syntheticTokenAddress = syntheticTokenAddress;

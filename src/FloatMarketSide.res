@@ -23,9 +23,66 @@ type positions = {
   synthToken: BigNumber.t,
 }
 
+type withProvider = {provider: providerType, marketIndex: int, isLong: bool}
+type withWallet = {wallet: walletType, marketIndex: int, isLong: bool}
+
+type withProviderOrWallet =
+  | P(withProvider)
+  | W(withWallet)
+
+module WithProvider = {
+  type t = withProvider
+  let make = (p, marketIndex, isLong) => {provider: p, marketIndex: marketIndex, isLong: isLong}
+}
+
+module WithWallet = {
+  type t = withWallet
+  let make = (w, marketIndex, isLong) => {wallet: w, marketIndex: marketIndex, isLong: isLong}
+}
+
+let provider = (side: withProviderOrWallet) =>
+  switch side {
+  | P(s) => s.provider
+  | W(s) => s.wallet.provider
+  }
+
+let isLong = (side: withProviderOrWallet) =>
+  switch side {
+  | P(s) => s.isLong
+  | W(s) => s.isLong
+  }
+
+let marketIndex = (side: withProviderOrWallet) =>
+  switch side {
+  | P(s) => s.marketIndex
+  | W(s) => s.marketIndex
+  }
+
+let synthToken = (side: withProviderOrWallet) =>
+  side
+  ->provider
+  ->wrapProvider
+  ->getChainConfig
+  ->thenResolve(chain =>
+    switch side->isLong {
+    | true => chain.markets[side->marketIndex].longToken
+    | false => chain.markets[side->marketIndex].shortToken
+    }
+  )
+
+let name = (side: withProviderOrWallet) =>
+  side
+  ->provider
+  ->wrapProvider
+  ->getChainConfig
+  ->thenResolve(_ =>
+    switch side->isLong {
+    | true => "long"
+    | false => "short"
+    }
+  )
+
 type marketSideWithWallet = {
-  token: Promise.t<FloatConfig.erc20>,
-  name: Promise.t<string>,
   getValue: unit => Promise.t<FloatEthers.BigNumber.t>,
   getSyntheticTokenPrice: unit => Promise.t<FloatEthers.BigNumber.t>,
   getExposure: unit => Promise.t<FloatEthers.BigNumber.t>,
@@ -44,8 +101,6 @@ type marketSideWithWallet = {
 }
 
 type marketSideWithProvider = {
-  token: Promise.t<FloatConfig.erc20>,
-  name: Promise.t<string>,
   getValue: unit => Promise.t<FloatEthers.BigNumber.t>,
   getSyntheticTokenPrice: unit => Promise.t<FloatEthers.BigNumber.t>,
   getExposure: unit => Promise.t<FloatEthers.BigNumber.t>,
@@ -508,24 +563,6 @@ let shiftStake = (
 //   rather we should do error handling properly
 let makeWithWallet = (w: walletType, marketIndex: int, isLong: bool) => {
   {
-    token: w
-    ->wrapWallet
-    ->getChainConfig
-    ->thenResolve(c =>
-      switch isLong {
-      | true => c.markets[marketIndex].longToken
-      | false => c.markets[marketIndex].shortToken
-      }
-    ),
-    name: w
-    ->wrapWallet
-    ->getChainConfig
-    ->thenResolve(c =>
-      switch isLong {
-      | true => "long"
-      | false => "short"
-      }
-    ),
     getValue: _ =>
       w
       ->wrapWallet
@@ -644,24 +681,6 @@ let makeWithWallet = (w: walletType, marketIndex: int, isLong: bool) => {
 
 let makeWithProvider = (p: providerType, marketIndex: int, isLong: bool) => {
   {
-    token: p
-    ->wrapProvider
-    ->getChainConfig
-    ->thenResolve(c =>
-      switch isLong {
-      | true => c.markets[marketIndex].longToken
-      | false => c.markets[marketIndex].shortToken
-      }
-    ),
-    name: p
-    ->wrapProvider
-    ->getChainConfig
-    ->thenResolve(c =>
-      switch isLong {
-      | true => "long"
-      | false => "short"
-      }
-    ),
     getValue: _ =>
       p
       ->wrapProvider
