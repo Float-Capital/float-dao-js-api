@@ -89,14 +89,14 @@ var Wallet = {};
 
 function wrapProvider(p) {
   return {
-          TAG: /* ProviderWrap */0,
+          TAG: /* P */0,
           _0: p
         };
 }
 
 function wrapWallet(w) {
   return {
-          TAG: /* WalletWrap */1,
+          TAG: /* W */1,
           _0: w
         };
 }

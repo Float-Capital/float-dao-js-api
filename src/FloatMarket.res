@@ -69,14 +69,22 @@ let makeLongShortContract = (p: providerOrWallet, c: FloatConfig.chainConfigShap
 let makeStakerContract = (p: providerOrWallet, c: FloatConfig.chainConfigShape) =>
   Staker.make(~address=c.contracts.longShort.address->Utils.getAddressUnsafe, ~providerOrWallet=p)
 
-let leverage = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: BigNumber.t): Promise.t<int> =>
+let leverage = (
+  p: providerType,
+  c: FloatConfig.chainConfigShape,
+  marketIndex: BigNumber.t,
+): Promise.t<int> =>
   p
   ->wrapProvider
   ->makeLongShortContract(c)
   ->LongShort.marketLeverage_e18(~marketIndex)
   ->thenResolve(m => m->div(tenToThe18)->toNumber)
 
-let syntheticTokenPrices = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: BigNumber.t) =>
+let syntheticTokenPrices = (
+  p: providerType,
+  c: FloatConfig.chainConfigShape,
+  marketIndex: BigNumber.t,
+) =>
   all2((
     FloatMarketSide.syntheticTokenPrice(p, c, marketIndex, true),
     FloatMarketSide.syntheticTokenPrice(p, c, marketIndex, false),
@@ -98,7 +106,11 @@ let exposures = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: 
     }
   })
 
-let unconfirmedExposures = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: BigNumber.t) =>
+let unconfirmedExposures = (
+  p: providerType,
+  c: FloatConfig.chainConfigShape,
+  marketIndex: BigNumber.t,
+) =>
   all2((
     FloatMarketSide.unconfirmedExposure(p, c, marketIndex, true),
     FloatMarketSide.unconfirmedExposure(p, c, marketIndex, false),
@@ -109,7 +121,11 @@ let unconfirmedExposures = (p: providerType, c: FloatConfig.chainConfigShape, ma
     }
   })
 
-let fundingRateAprs = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: BigNumber.t) =>
+let fundingRateAprs = (
+  p: providerType,
+  c: FloatConfig.chainConfigShape,
+  marketIndex: BigNumber.t,
+) =>
   all2((
     FloatMarketSide.fundingRateApr(p, c, marketIndex, true),
     FloatMarketSide.fundingRateApr(p, c, marketIndex, false),
@@ -180,8 +196,11 @@ let settleOutstandingActions = (
   ->makeLongShortContract(c)
   ->LongShort.executeOutstandingNextPriceSettlementsUser(~user=address, ~marketIndex)
 
-let updateSystemState = (w: walletType, c: FloatConfig.chainConfigShape, marketIndex: BigNumber.t) =>
-  w->wrapWallet->makeLongShortContract(c)->LongShort.updateSystemState(~marketIndex)
+let updateSystemState = (
+  w: walletType,
+  c: FloatConfig.chainConfigShape,
+  marketIndex: BigNumber.t,
+) => w->wrapWallet->makeLongShortContract(c)->LongShort.updateSystemState(~marketIndex)
 
 let makeWithWallet = (w: walletType, marketIndex: int): marketWithWallet => {
   {
@@ -199,7 +218,9 @@ let makeWithWallet = (w: walletType, marketIndex: int): marketWithWallet => {
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => FloatMarketSide.fundingRateMultiplier(w.provider, c, marketIndex->BigNumber.fromInt)),
+      ->then(c =>
+        FloatMarketSide.fundingRateMultiplier(w.provider, c, marketIndex->BigNumber.fromInt)
+      ),
     getSyntheticTokenPrices: _ =>
       w
       ->wrapWallet

@@ -5,8 +5,8 @@ open FloatConfig
 
 let getChainConfig = (pw: providerOrWallet) =>
   switch pw {
-  | ProviderWrap(p) => p
-  | WalletWrap(w) => w.provider
+  | P(p) => p
+  | W(w) => w.provider
   }
   ->Provider.getNetwork
   ->Promise.thenResolve(network => {

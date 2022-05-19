@@ -74,7 +74,7 @@ let makeWithDefaultProvider = (chainId: int) => {
 // This is just here as a test, not actually used but maybe we can use it in the future
 let make = (pw: providerOrWallet): chainProviderOrWallet => {
   switch pw {
-  | ProviderWrap(p) => makeWithProvider(p)->wrapChainWithProvider
-  | WalletWrap(w) => makeWithWallet(w)->wrapChainWithWallet
+  | P(p) => makeWithProvider(p)->wrapChainWithProvider
+  | W(w) => makeWithWallet(w)->wrapChainWithWallet
   }
 }

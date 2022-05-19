@@ -6,7 +6,7 @@ var FloatConfig = require("@float-dao/config/src/FloatConfig.js");
 
 function getChainConfig(pw) {
   var tmp;
-  tmp = pw.TAG === /* ProviderWrap */0 ? pw._0 : pw._0.provider;
+  tmp = pw.TAG === /* P */0 ? pw._0 : pw._0.provider;
   return tmp.getNetwork().then(function (network) {
               return FloatConfig.avalanche;
             });
