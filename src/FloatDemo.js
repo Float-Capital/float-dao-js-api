@@ -6,6 +6,7 @@ var Ethers = require("ethers");
 var FloatClient = require("./FloatClient.js");
 var FloatConfig = require("@float-dao/config/src/FloatConfig.js");
 var FloatEthers = require("./FloatEthers.js");
+var FloatMarket = require("./FloatMarket.js");
 var FloatMarketSide = require("./FloatMarketSide.js");
 var SecretsManagerJs = require("../secretsManager.js");
 
@@ -54,21 +55,20 @@ function run(param) {
         console.log("LongShort address:", c.longShort.address);
         
       });
-  var market = Curry._1(chain.getMarket, 1);
-  Curry._1(market.getFundingRateMultiplier, undefined).then(function (a) {
-        console.log("Funding rate multiplier for market ".concat((1).toString()).concat(":"), a);
-        
-      });
-  Curry._1(market.getLeverage, undefined).then(function (m) {
-        console.log("Leverage for market ".concat((1).toString()).concat(":"), m);
-        
-      });
-  Curry._1(market.getSide, false);
   
 }
 
 function runDemo(param) {
   var sideName = "long";
+  var market = FloatMarket.WithProvider.makeWrap(provider, 1);
+  FloatMarket.fundingRateMultiplier(market).then(function (a) {
+        console.log("Funding rate multiplier for market ".concat((1).toString()).concat(":"), a);
+        
+      });
+  FloatMarket.leverage(market).then(function (m) {
+        console.log("Leverage for market ".concat((1).toString()).concat(":"), m);
+        
+      });
   var marketSide = FloatMarketSide.WithProvider.makeWrap(provider, 1, true);
   FloatMarketSide.poolValue(marketSide).then(function (a) {
         console.log("Value of marketSide ".concat(sideName).concat(":"), a.toString());

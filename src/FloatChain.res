@@ -12,7 +12,7 @@ type chainWithWallet = {
 
 type chainWithProvider = {
   contracts: Promise.t<FloatConfig.contracts>,
-  getMarket: int => FloatMarket.marketWithProvider,
+  getMarket: int => FloatMarket.withProvider,
   connect: walletType => chainWithWallet,
 }
 
@@ -56,7 +56,7 @@ let makeWithWallet = (w: walletType): chainWithWallet => {
 
 let makeWithProvider = (p: providerType): chainWithProvider => {
   contracts: p->wrapProvider->getChainConfig->thenResolve(c => c.contracts),
-  getMarket: FloatMarket.makeWithProvider(p),
+  getMarket: FloatMarket.WithProvider.make(p),
   connect: w => makeWithWallet(w),
 }
 
@@ -67,7 +67,7 @@ let makeWithDefaultProvider = (chainId: int) => {
   ->wrapProvider
   ->getChainConfig
   ->thenResolve(c => c.contracts),
-  getMarket: FloatMarket.makeWithProvider(chainId->getChainConfigUsingId->makeDefaultProvider),
+  getMarket: FloatMarket.WithProvider.make(chainId->getChainConfigUsingId->makeDefaultProvider),
   connect: w => makeWithWallet(w),
 }
 

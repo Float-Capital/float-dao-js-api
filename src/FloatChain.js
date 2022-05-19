@@ -54,7 +54,7 @@ function makeWithProvider(p) {
                 return c.contracts;
               }),
           getMarket: (function (param) {
-              return FloatMarket.makeWithProvider(p, param);
+              return FloatMarket.WithProvider.make(p, param);
             }),
           connect: makeWithWallet
         };
@@ -67,7 +67,7 @@ function makeWithDefaultProvider(chainId) {
                 return c.contracts;
               }),
           getMarket: (function (param) {
-              return FloatMarket.makeWithProvider(partial_arg, param);
+              return FloatMarket.WithProvider.make(partial_arg, param);
             }),
           connect: makeWithWallet
         };
