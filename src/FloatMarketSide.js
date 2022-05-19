@@ -400,11 +400,6 @@ function shiftStake(w, c, marketIndex, isLong, amountSyntheticToken) {
 
 function makeWithWallet(w, marketIndex, isLong) {
   return {
-          getSyntheticTokenPrice: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return syntheticTokenPrice(w.provider, c, Ethers.BigNumber.from(marketIndex), isLong);
-                        });
-            }),
           getExposure: (function (param) {
               return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
                           return exposure(w.provider, c, Ethers.BigNumber.from(marketIndex), isLong);
@@ -475,11 +470,6 @@ function makeWithWallet(w, marketIndex, isLong) {
 
 function makeWithProvider(p, marketIndex, isLong) {
   return {
-          getSyntheticTokenPrice: (function (param) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
-                          return syntheticTokenPrice(p, c, Ethers.BigNumber.from(marketIndex), isLong);
-                        });
-            }),
           getExposure: (function (param) {
               return FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
                           return exposure(p, c, Ethers.BigNumber.from(marketIndex), isLong);
@@ -542,6 +532,12 @@ function getValue(side) {
             });
 }
 
+function getSyntheticTokenPrice(side) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(side))).then(function (config) {
+              return syntheticTokenPrice(provider(side), config, Ethers.BigNumber.from(side._0.marketIndex), side._0.isLong);
+            });
+}
+
 exports.min = min;
 exports.max = max;
 exports.div = div;
@@ -598,4 +594,5 @@ exports.makeWithProvider = makeWithProvider;
 exports.synthToken = synthToken;
 exports.name = name;
 exports.getValue = getValue;
+exports.getSyntheticTokenPrice = getSyntheticTokenPrice;
 /* ethers Not a pure module */

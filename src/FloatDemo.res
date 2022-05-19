@@ -137,21 +137,21 @@ let runDemo = _ => {
   let marketIndex = 1
   let isLong = true
   let sideName = switch isLong {
-      | true => "long"
-      | false => "short"
+  | true => "long"
+  | false => "short"
   }
 
   let marketSide = FloatMarketSide.WithProvider.makeWrap(provider, marketIndex, isLong)
 
-  marketSide->FloatMarketSide.getValue
-    ->Promise.thenResolve(a =>
-      "Value of marketSide "
-        ->Js.String2.concat(sideName)
-        ->Js.String2.concat(":")
-        ->Js.log2(a->BigNumber.toString)
-    )
-    ->ignore
-
+  marketSide
+  ->FloatMarketSide.getValue
+  ->Promise.thenResolve(a =>
+    "Value of marketSide "
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a->BigNumber.toString)
+  )
+  ->ignore
 }
 
 let _ = run()
