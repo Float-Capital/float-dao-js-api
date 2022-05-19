@@ -22,6 +22,87 @@ function toNumber(prim) {
 
 var tenToThe18 = FloatEthers.BigNumber.tenToThe18;
 
+function wrapSideP(side) {
+  return {
+          TAG: /* P */0,
+          _0: side
+        };
+}
+
+function wrapSideW(side) {
+  return {
+          TAG: /* W */1,
+          _0: side
+        };
+}
+
+function make(p, marketIndex) {
+  return {
+          provider: p,
+          marketIndex: marketIndex
+        };
+}
+
+function makeWrap(p, marketIndex) {
+  return {
+          TAG: /* P */0,
+          _0: {
+            provider: p,
+            marketIndex: marketIndex
+          }
+        };
+}
+
+function makeWrapReverseCurry(marketIndex, p) {
+  return {
+          TAG: /* P */0,
+          _0: {
+            provider: p,
+            marketIndex: marketIndex
+          }
+        };
+}
+
+var WithProvider = {
+  make: make,
+  makeWrap: makeWrap,
+  makeWrapReverseCurry: makeWrapReverseCurry
+};
+
+function make$1(w, marketIndex) {
+  return {
+          wallet: w,
+          marketIndex: marketIndex
+        };
+}
+
+function makeWrap$1(w, marketIndex) {
+  return {
+          TAG: /* W */1,
+          _0: {
+            wallet: w,
+            marketIndex: marketIndex
+          }
+        };
+}
+
+var WithWallet = {
+  make: make$1,
+  makeWrap: makeWrap$1
+};
+
+function provider(side) {
+  if (side.TAG === /* P */0) {
+    return side._0.provider;
+  } else {
+    return side._0.wallet.provider;
+  }
+}
+
+function marketIndex(side) {
+  return side._0.marketIndex;
+}
+
 function makeLongShortContract(p, c) {
   return FloatContracts.LongShort.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
 }
@@ -151,13 +232,6 @@ function updateSystemState(w, c, marketIndex) {
 
 function makeWithWallet(w, marketIndex) {
   return {
-          contracts: FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                return {
-                        longToken: Caml_array.get(c.markets, marketIndex).longToken,
-                        shortToken: Caml_array.get(c.markets, marketIndex).shortToken,
-                        yieldManager: Caml_array.get(c.markets, marketIndex).yieldManager
-                      };
-              }),
           getLeverage: (function (param) {
               return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
                           return leverage(w.provider, c, Ethers.BigNumber.from(marketIndex));
@@ -226,13 +300,6 @@ function makeWithWallet(w, marketIndex) {
 
 function makeWithProvider(p, marketIndex) {
   return {
-          contracts: FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
-                return {
-                        longToken: Caml_array.get(c.markets, marketIndex).longToken,
-                        shortToken: Caml_array.get(c.markets, marketIndex).shortToken,
-                        yieldManager: Caml_array.get(c.markets, marketIndex).yieldManager
-                      };
-              }),
           getLeverage: (function (param) {
               return FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
                           return leverage(p, c, Ethers.BigNumber.from(marketIndex));
@@ -287,10 +354,26 @@ function makeWithProvider(p, marketIndex) {
         };
 }
 
+function contracts(market) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
+              return {
+                      longToken: Caml_array.get(config.markets, market._0.marketIndex).longToken,
+                      shortToken: Caml_array.get(config.markets, market._0.marketIndex).shortToken,
+                      yieldManager: Caml_array.get(config.markets, market._0.marketIndex).yieldManager
+                    };
+            });
+}
+
 exports.div = div;
 exports.fromInt = fromInt;
 exports.toNumber = toNumber;
 exports.tenToThe18 = tenToThe18;
+exports.wrapSideP = wrapSideP;
+exports.wrapSideW = wrapSideW;
+exports.WithProvider = WithProvider;
+exports.WithWallet = WithWallet;
+exports.provider = provider;
+exports.marketIndex = marketIndex;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.leverage = leverage;
@@ -308,4 +391,5 @@ exports.settleOutstandingActions = settleOutstandingActions;
 exports.updateSystemState = updateSystemState;
 exports.makeWithWallet = makeWithWallet;
 exports.makeWithProvider = makeWithProvider;
+exports.contracts = contracts;
 /* ethers Not a pure module */
