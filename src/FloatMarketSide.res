@@ -84,12 +84,6 @@ let marketIndex = (side: withProviderOrWallet) =>
 // Legacy
 
 type marketSideWithWallet = {
-  getExposure: unit => Promise.t<bn>,
-  getUnconfirmedExposure: unit => Promise.t<bn>,
-  getFundingRateApr: unit => Promise.t<float>,
-  getPositions: unit => Promise.t<positions>,
-  getStakedPositions: unit => Promise.t<positions>,
-  getUnsettledPositions: unit => Promise.t<positions>,
   mint: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
   mintAndStake: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
   stake: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
@@ -97,16 +91,6 @@ type marketSideWithWallet = {
   redeem: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
   shift: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
   shiftStake: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-}
-
-type marketSideWithProvider = {
-  getExposure: unit => Promise.t<bn>,
-  getUnconfirmedExposure: unit => Promise.t<bn>,
-  getFundingRateApr: unit => Promise.t<float>,
-  getPositions: ethAddress => Promise.t<positions>,
-  getStakedPositions: ethAddress => Promise.t<positions>,
-  getUnsettledPositions: ethAddress => Promise.t<positions>,
-  connect: walletType => marketSideWithWallet,
 }
 
 let makeLongShortContract = (p: providerOrWallet, c: FloatConfig.chainConfigShape) =>
@@ -567,60 +551,6 @@ let shiftStake = (
 //   rather we should do error handling properly
 let makeWithWallet = (w: walletType, marketIndex: int, isLong: bool) => {
   {
-    getExposure: _ =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => exposure(w.provider, c, marketIndex->fromInt, isLong)),
-    getUnconfirmedExposure: _ =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => unconfirmedExposure(w.provider, c, marketIndex->fromInt, isLong)),
-    getFundingRateApr: _ =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => fundingRateApr(w.provider, c, marketIndex->fromInt, isLong)),
-    getPositions: _ =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c =>
-        positions(
-          w.provider,
-          c,
-          marketIndex->fromInt,
-          isLong,
-          w.address->FloatEthers.Utils.getAddressUnsafe,
-        )
-      ),
-    getStakedPositions: _ =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c =>
-        stakedPositions(
-          w.provider,
-          c,
-          marketIndex->fromInt,
-          isLong,
-          w.address->FloatEthers.Utils.getAddressUnsafe,
-        )
-      ),
-    getUnsettledPositions: _ =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c =>
-        unsettledPositions(
-          w.provider,
-          c,
-          marketIndex->fromInt,
-          isLong,
-          w.address->FloatEthers.Utils.getAddressUnsafe,
-        )
-      ),
     mint: (amountPaymentToken, txOptions) =>
       w
       ->FloatEthers.wrapWallet
@@ -656,42 +586,6 @@ let makeWithWallet = (w: walletType, marketIndex: int, isLong: bool) => {
       ->FloatEthers.wrapWallet
       ->getChainConfig
       ->then(c => shiftStake(w, c, marketIndex->fromInt, isLong, amountSyntheticToken, txOptions)),
-  }
-}
-
-let makeWithProvider = (p: providerType, marketIndex: int, isLong: bool) => {
-  {
-    getExposure: _ =>
-      p
-      ->FloatEthers.wrapProvider
-      ->getChainConfig
-      ->then(c => exposure(p, c, marketIndex->fromInt, isLong)),
-    getUnconfirmedExposure: _ =>
-      p
-      ->FloatEthers.wrapProvider
-      ->getChainConfig
-      ->then(c => unconfirmedExposure(p, c, marketIndex->fromInt, isLong)),
-    getFundingRateApr: _ =>
-      p
-      ->FloatEthers.wrapProvider
-      ->getChainConfig
-      ->then(c => fundingRateApr(p, c, marketIndex->fromInt, isLong)),
-    getPositions: ethAddress =>
-      p
-      ->FloatEthers.wrapProvider
-      ->getChainConfig
-      ->then(c => positions(p, c, marketIndex->fromInt, isLong, ethAddress)),
-    getStakedPositions: ethAddress =>
-      p
-      ->FloatEthers.wrapProvider
-      ->getChainConfig
-      ->then(c => stakedPositions(p, c, marketIndex->fromInt, isLong, ethAddress)),
-    getUnsettledPositions: ethAddress =>
-      p
-      ->FloatEthers.wrapProvider
-      ->getChainConfig
-      ->then(c => unsettledPositions(p, c, marketIndex->fromInt, isLong, ethAddress)),
-    connect: w => makeWithWallet(w, marketIndex, isLong),
   }
 }
 
@@ -738,4 +632,54 @@ let getSyntheticTokenPrice = (side: withProviderOrWallet) =>
   ->getChainConfig
   ->then(config =>
     side->provider->syntheticTokenPrice(config, side->marketIndex->fromInt, side->isLong)
+  )
+
+let getExposure = (side: withProviderOrWallet) =>
+  side
+  ->provider
+  ->FloatEthers.wrapProvider
+  ->getChainConfig
+  ->then(config => side->provider->exposure(config, side->marketIndex->fromInt, side->isLong))
+
+let getUnconfirmedExposure = (side: withProviderOrWallet) =>
+  side
+  ->provider
+  ->FloatEthers.wrapProvider
+  ->getChainConfig
+  ->then(config =>
+    side->provider->unconfirmedExposure(config, side->marketIndex->fromInt, side->isLong)
+  )
+
+let getFundingRateApr = (side: withProviderOrWallet) =>
+  side
+  ->provider
+  ->FloatEthers.wrapProvider
+  ->getChainConfig
+  ->then(config => side->provider->fundingRateApr(config, side->marketIndex->fromInt, side->isLong))
+
+let getPositions = (side: withProviderOrWallet, ethAddress) =>
+  side
+  ->provider
+  ->FloatEthers.wrapProvider
+  ->getChainConfig
+  ->then(config =>
+    side->provider->positions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
+  )
+
+let getStakedPositions = (side: withProviderOrWallet, ethAddress) =>
+  side
+  ->provider
+  ->FloatEthers.wrapProvider
+  ->getChainConfig
+  ->then(config =>
+    side->provider->stakedPositions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
+  )
+
+let getUnsettledPositions = (side: withProviderOrWallet, ethAddress) =>
+  side
+  ->provider
+  ->FloatEthers.wrapProvider
+  ->getChainConfig
+  ->then(config =>
+    side->provider->unsettledPositions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
   )

@@ -64,43 +64,6 @@ let run = () => {
 
   let marketSide = isLong->market.getSide
 
-  marketSide.getFundingRateApr()
-  ->Promise.thenResolve(a =>
-    "Funding rate APR for marketSide "
-    ->Js.String2.concat(sideName)
-    ->Js.String2.concat(":")
-    ->Js.log2(a)
-  )
-  ->ignore
-
-  marketSide.getExposure()
-  ->Promise.thenResolve(a =>
-    "Exposure of marketSide"
-    ->Js.String2.concat(sideName)
-    ->Js.String2.concat(":")
-    ->Js.log2(a->BigNumber.toString)
-  )
-  ->ignore
-
-  marketSide.getUnconfirmedExposure()
-  ->Promise.thenResolve(a =>
-    "Unconfirmed exposure of marketSide"
-    ->Js.String2.concat(sideName)
-    ->Js.String2.concat(":")
-    ->Js.log2(a->BigNumber.toString)
-  )
-  ->ignore
-
-  let address = "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"
-  marketSide.getPositions(address->Utils.getAddressUnsafe)
-  ->Promise.thenResolve(a =>
-    "Synth token amount for 0x38.. in marketSide"
-    ->Js.String2.concat(sideName)
-    ->Js.String2.concat(":")
-    ->Js.log2(a.synthToken->BigNumber.toString)
-  )
-  ->ignore
-
   //let marketSideConnected =
   //  providerUrl
   //  ->Provider.JsonRpcProvider.make(~chainId=137)
@@ -150,6 +113,47 @@ let runDemo = _ => {
     ->Js.String2.concat(sideName)
     ->Js.String2.concat(":")
     ->Js.log2(a->BigNumber.toString)
+  )
+  ->ignore
+
+  marketSide
+  ->FloatMarketSide.getFundingRateApr
+  ->Promise.thenResolve(a =>
+    "Funding rate APR for marketSide "
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a)
+  )
+  ->ignore
+
+  marketSide
+  ->FloatMarketSide.getExposure
+  ->Promise.thenResolve(a =>
+    "Exposure of marketSide"
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a->BigNumber.toString)
+  )
+  ->ignore
+
+  marketSide
+  ->FloatMarketSide.getUnconfirmedExposure
+  ->Promise.thenResolve(a =>
+    "Unconfirmed exposure of marketSide"
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a->BigNumber.toString)
+  )
+  ->ignore
+
+  let address = "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"
+  marketSide
+  ->FloatMarketSide.getPositions(address->Utils.getAddressUnsafe)
+  ->Promise.thenResolve(a =>
+    "Synth token amount for 0x38.. in marketSide"
+    ->Js.String2.concat(sideName)
+    ->Js.String2.concat(":")
+    ->Js.log2(a.synthToken->BigNumber.toString)
   )
   ->ignore
 }

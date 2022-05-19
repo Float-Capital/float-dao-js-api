@@ -56,7 +56,7 @@ type marketWithProvider = {
   getPositions: ethAddress => Promise.t<longshortpositions>,
   getStakedPositions: ethAddress => Promise.t<longshortpositions>,
   getUnsettledPositions: ethAddress => Promise.t<longshortpositions>,
-  getSide: bool => FloatMarketSide.marketSideWithProvider,
+  getSide: bool => FloatMarketSide.withProvider,
   connect: walletType => marketWithWallet,
 }
 
@@ -328,7 +328,7 @@ let makeWithProvider = (p: providerType, marketIndex: int): marketWithProvider =
       ->wrapProvider
       ->getChainConfig
       ->then(c => unsettledPositions(p, c, marketIndex->BigNumber.fromInt, ethAddress)),
-    getSide: isLong => FloatMarketSide.makeWithProvider(p, marketIndex, isLong),
+    getSide: isLong => FloatMarketSide.WithProvider.make(p, marketIndex, isLong),
     connect: w => makeWithWallet(w, marketIndex),
   }
 }
