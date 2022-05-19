@@ -73,15 +73,6 @@ let run = () => {
   )
   ->ignore
 
-  marketSide.getValue()
-  ->Promise.thenResolve(a =>
-    "Value of marketSide "
-    ->Js.String2.concat(sideName)
-    ->Js.String2.concat(":")
-    ->Js.log2(a->BigNumber.toString)
-  )
-  ->ignore
-
   marketSide.getExposure()
   ->Promise.thenResolve(a =>
     "Exposure of marketSide"
@@ -140,6 +131,27 @@ let run = () => {
   //    | ChainPWrap(c) => c.getMarket(1).getFundingRateMultiplier()->Promise.thenResolve(m => m->Js.log)->ignore
   //    | ChainWWrap(c) => c.getMarket(1).getLeverage()->Promise.thenResolve(m => m->Js.log)->ignore
   //}
+}
+
+let runDemo = _ => {
+  let marketIndex = 1
+  let isLong = true
+  let sideName = switch isLong {
+      | true => "long"
+      | false => "short"
+  }
+
+  let marketSide = FloatMarketSide.WithProvider.makeWrap(provider, marketIndex, isLong)
+
+  marketSide->FloatMarketSide.getValue
+    ->Promise.thenResolve(a =>
+      "Value of marketSide "
+        ->Js.String2.concat(sideName)
+        ->Js.String2.concat(":")
+        ->Js.log2(a->BigNumber.toString)
+    )
+    ->ignore
+
 }
 
 let _ = run()
