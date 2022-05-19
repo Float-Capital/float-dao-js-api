@@ -42,7 +42,7 @@ type marketWithWallet = {
   claimFloatCustomFor: (ethAddress, txOptions) => Promise.t<FloatEthers.txSubmitted>,
   settleOutstandingActions: (ethAddress, txOptions) => Promise.t<FloatEthers.txSubmitted>,
   updateSystemState: txOptions => Promise.t<FloatEthers.txSubmitted>,
-  getSide: bool => FloatMarketSide.marketSideWithWallet,
+  getSide: bool => FloatMarketSide.withWallet,
 }
 
 type marketWithProvider = {
@@ -80,14 +80,17 @@ let leverage = (
   ->LongShort.marketLeverage_e18(~marketIndex)
   ->thenResolve(m => m->div(tenToThe18)->toNumber)
 
+let longSide = FloatMarketSide.WithProvider.makeWrapReverseCurry(true)
+let shortSide = FloatMarketSide.WithProvider.makeWrapReverseCurry(false)
+
 let syntheticTokenPrices = (
   p: providerType,
   c: FloatConfig.chainConfigShape,
-  marketIndex: BigNumber.t,
+  marketIndex: int,
 ) =>
   all2((
-    FloatMarketSide.syntheticTokenPrice(p, c, marketIndex, true),
-    FloatMarketSide.syntheticTokenPrice(p, c, marketIndex, false),
+    longSide(marketIndex, p)->FloatMarketSide.syntheticTokenPrice,
+    shortSide(marketIndex, p)->FloatMarketSide.syntheticTokenPrice,
   ))->thenResolve(((priceLong, priceShort)): bigNumbers => {
     {
       long: priceLong,
@@ -95,10 +98,10 @@ let syntheticTokenPrices = (
     }
   })
 
-let exposures = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: BigNumber.t) =>
+let exposures = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: int) =>
   all2((
-    FloatMarketSide.exposure(p, c, marketIndex, true),
-    FloatMarketSide.exposure(p, c, marketIndex, false),
+    longSide(marketIndex, p)->FloatMarketSide.exposure,
+    shortSide(marketIndex, p)->FloatMarketSide.exposure,
   ))->thenResolve(((exposureLong, exposureShort)): bigNumbers => {
     {
       long: exposureLong,
@@ -109,11 +112,11 @@ let exposures = (p: providerType, c: FloatConfig.chainConfigShape, marketIndex: 
 let unconfirmedExposures = (
   p: providerType,
   c: FloatConfig.chainConfigShape,
-  marketIndex: BigNumber.t,
+  marketIndex: int,
 ) =>
   all2((
-    FloatMarketSide.unconfirmedExposure(p, c, marketIndex, true),
-    FloatMarketSide.unconfirmedExposure(p, c, marketIndex, false),
+    longSide(marketIndex, p)->FloatMarketSide.unconfirmedExposure,
+    shortSide(marketIndex, p)->FloatMarketSide.unconfirmedExposure,
   ))->thenResolve(((exposureLong, exposureShort)): bigNumbers => {
     {
       long: exposureLong,
@@ -124,11 +127,11 @@ let unconfirmedExposures = (
 let fundingRateAprs = (
   p: providerType,
   c: FloatConfig.chainConfigShape,
-  marketIndex: BigNumber.t,
+  marketIndex: int,
 ) =>
   all2((
-    FloatMarketSide.fundingRateApr(p, c, marketIndex, true),
-    FloatMarketSide.fundingRateApr(p, c, marketIndex, false),
+    longSide(marketIndex, p)->FloatMarketSide.fundingRateApr,
+    shortSide(marketIndex, p)->FloatMarketSide.fundingRateApr,
   ))->thenResolve(((rateLong, rateShort)): longshortfloats => {
     {
       long: rateLong,
@@ -139,12 +142,12 @@ let fundingRateAprs = (
 let positions = (
   p: providerType,
   c: FloatConfig.chainConfigShape,
-  marketIndex: BigNumber.t,
+  marketIndex: int,
   address: ethAddress,
 ) =>
   all2((
-    FloatMarketSide.positions(p, c, marketIndex, true, address),
-    FloatMarketSide.positions(p, c, marketIndex, false, address),
+    longSide(marketIndex, p)->FloatMarketSide.positions(address),
+    shortSide(marketIndex, p)->FloatMarketSide.positions(address),
   ))->thenResolve(((positionLong, positionShort)) => {
     long: positionLong,
     short: positionShort,
@@ -153,12 +156,12 @@ let positions = (
 let stakedPositions = (
   p: providerType,
   c: FloatConfig.chainConfigShape,
-  marketIndex: BigNumber.t,
+  marketIndex: int,
   address: ethAddress,
 ) =>
   all2((
-    FloatMarketSide.stakedPositions(p, c, marketIndex, true, address),
-    FloatMarketSide.stakedPositions(p, c, marketIndex, false, address),
+    longSide(marketIndex, p)->FloatMarketSide.stakedPositions(address),
+    shortSide(marketIndex, p)->FloatMarketSide.stakedPositions(address),
   ))->thenResolve(((positionLong, positionShort)) => {
     long: positionLong,
     short: positionShort,
@@ -167,12 +170,12 @@ let stakedPositions = (
 let unsettledPositions = (
   p: providerType,
   c: FloatConfig.chainConfigShape,
-  marketIndex: BigNumber.t,
+  marketIndex: int,
   address: ethAddress,
 ) =>
   all2((
-    FloatMarketSide.unsettledPositions(p, c, marketIndex, true, address),
-    FloatMarketSide.unsettledPositions(p, c, marketIndex, false, address),
+    longSide(marketIndex, p)->FloatMarketSide.unsettledPositions(address),
+    shortSide(marketIndex, p)->FloatMarketSide.unsettledPositions(address),
   ))->thenResolve(((positionLong, positionShort)) => {
     long: positionLong,
     short: positionShort,
@@ -225,37 +228,37 @@ let makeWithWallet = (w: walletType, marketIndex: int): marketWithWallet => {
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => syntheticTokenPrices(w.provider, c, marketIndex->BigNumber.fromInt)),
+      ->then(c => syntheticTokenPrices(w.provider, c, marketIndex)),
     getExposures: _ =>
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => exposures(w.provider, c, marketIndex->BigNumber.fromInt)),
+      ->then(c => exposures(w.provider, c, marketIndex)),
     getUnconfirmedExposures: _ =>
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => unconfirmedExposures(w.provider, c, marketIndex->BigNumber.fromInt)),
+      ->then(c => unconfirmedExposures(w.provider, c, marketIndex)),
     getFundingRateAprs: _ =>
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => fundingRateAprs(w.provider, c, marketIndex->BigNumber.fromInt)),
+      ->then(c => fundingRateAprs(w.provider, c, marketIndex)),
     getPositions: ethAddress =>
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => positions(w.provider, c, marketIndex->BigNumber.fromInt, ethAddress)),
+      ->then(c => positions(w.provider, c, marketIndex, ethAddress)),
     getStakedPositions: ethAddress =>
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => stakedPositions(w.provider, c, marketIndex->BigNumber.fromInt, ethAddress)),
+      ->then(c => stakedPositions(w.provider, c, marketIndex, ethAddress)),
     getUnsettledPositions: ethAddress =>
       w
       ->wrapWallet
       ->getChainConfig
-      ->then(c => unsettledPositions(w.provider, c, marketIndex->BigNumber.fromInt, ethAddress)),
+      ->then(c => unsettledPositions(w.provider, c, marketIndex, ethAddress)),
     claimFloatCustomFor: (ethAddress, txOptions) =>
       w
       ->wrapWallet
@@ -275,7 +278,7 @@ let makeWithWallet = (w: walletType, marketIndex: int): marketWithWallet => {
       ->wrapWallet
       ->getChainConfig
       ->then(c => updateSystemState(w, c, marketIndex->BigNumber.fromInt, txOptions)),
-    getSide: FloatMarketSide.makeWithWallet(w, marketIndex),
+    getSide: FloatMarketSide.WithWallet.make(w, marketIndex),
   }
 }
 
@@ -300,34 +303,34 @@ let makeWithProvider = (p: providerType, marketIndex: int): marketWithProvider =
       p
       ->wrapProvider
       ->getChainConfig
-      ->then(c => syntheticTokenPrices(p, c, marketIndex->BigNumber.fromInt)),
+      ->then(c => syntheticTokenPrices(p, c, marketIndex)),
     getExposures: _ =>
-      p->wrapProvider->getChainConfig->then(c => exposures(p, c, marketIndex->BigNumber.fromInt)),
+      p->wrapProvider->getChainConfig->then(c => exposures(p, c, marketIndex)),
     getUnconfirmedExposures: _ =>
       p
       ->wrapProvider
       ->getChainConfig
-      ->then(c => unconfirmedExposures(p, c, marketIndex->BigNumber.fromInt)),
+      ->then(c => unconfirmedExposures(p, c, marketIndex)),
     getFundingRateAprs: _ =>
       p
       ->wrapProvider
       ->getChainConfig
-      ->then(c => fundingRateAprs(p, c, marketIndex->BigNumber.fromInt)),
+      ->then(c => fundingRateAprs(p, c, marketIndex)),
     getPositions: ethAddress =>
       p
       ->wrapProvider
       ->getChainConfig
-      ->then(c => positions(p, c, marketIndex->BigNumber.fromInt, ethAddress)),
+      ->then(c => positions(p, c, marketIndex, ethAddress)),
     getStakedPositions: ethAddress =>
       p
       ->wrapProvider
       ->getChainConfig
-      ->then(c => stakedPositions(p, c, marketIndex->BigNumber.fromInt, ethAddress)),
+      ->then(c => stakedPositions(p, c, marketIndex, ethAddress)),
     getUnsettledPositions: ethAddress =>
       p
       ->wrapProvider
       ->getChainConfig
-      ->then(c => unsettledPositions(p, c, marketIndex->BigNumber.fromInt, ethAddress)),
+      ->then(c => unsettledPositions(p, c, marketIndex, ethAddress)),
     getSide: isLong => FloatMarketSide.WithProvider.make(p, marketIndex, isLong),
     connect: w => makeWithWallet(w, marketIndex),
   }
