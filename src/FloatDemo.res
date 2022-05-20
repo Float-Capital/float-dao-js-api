@@ -27,58 +27,26 @@ let txOptions: FloatContracts.txOptions = {
   gasLimit: gasLimit->BigNumber.toString,
 }
 
-let run = () => {
-  let floatClient = FloatClient.make()
-
-  let chain = floatClient.getChain(chainId)
-  chain.contracts
-  ->Promise.thenResolve(c => "LongShort address:"->Js.log2(c.longShort.address))
-  ->ignore
-  let isLong = false
-  let sideName = switch isLong {
-  | true => "long"
-  | false => "short"
-  }
-
-  //let marketSideConnected =
-  //  providerUrl
-  //  ->Provider.JsonRpcProvider.make(~chainId=137)
-  //  ->connectToNewWallet(~mnemonic)
-  //  ->MarketSide.makeWithWallet(BigNumber.fromInt(1), false)
-
-  //marketSideConnected.shift(
-  //  BigNumber.fromInt(1)->BigNumber.mul(CONSTANTS.tenToThe18), //->BigNumber.div(CONSTANTS.tenToThe2),
-  //  txOptions,
-  //)->Promise.thenResolve(tx => tx.hash->Js.log)->ignore
-
-  //wallet
-  //->Wallet.getBalance
-  //->Promise.thenResolve(balance => {
-  //  Js.log2("Account balance:", balance->Utils.formatEther)
-  //})
-  //->ignore
-
-  //let chain = 43114->Chain.makeWithDefaultProvider
-
-  //chain.getMarket(1).getFundingRateMultiplier()->Promise.thenResolve(m => m->Js.log)->ignore
-
-  //connectedChain.getMarket(1)
-
-  //let chainWithProviderOrWallet = Chain.make(wallet->wrapWallet)
-
-  //switch chainWithProviderOrWallet {
-  //    | ChainPWrap(c) => c.getMarket(1).getFundingRateMultiplier()->Promise.thenResolve(m => m->Js.log)->ignore
-  //    | ChainWWrap(c) => c.getMarket(1).getLeverage()->Promise.thenResolve(m => m->Js.log)->ignore
-  //}
-}
-
 let runDemo = _ => {
+  wallet
+  ->Wallet.getBalance
+  ->Promise.thenResolve(balance => {
+    Js.log2("Account balance:", balance->Utils.formatEther)
+  })
+  ->ignore
+
   let marketIndex = 1
   let isLong = true
   let sideName = switch isLong {
   | true => "long"
   | false => "short"
   }
+
+  let chain = FloatChain.WithProvider.makeDefaultWrap(chainId)
+  chain
+  ->FloatChain.contracts
+  ->Promise.thenResolve(c => "LongShort address:"->Js.log2(c.longShort.address))
+  ->ignore
 
   let market = FloatMarket.WithProvider.makeWrap(provider, marketIndex)
 
@@ -156,4 +124,4 @@ let runDemo = _ => {
   ->ignore
 }
 
-let _ = run()
+let _ = runDemo()

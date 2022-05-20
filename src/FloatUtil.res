@@ -16,4 +16,4 @@ let getChainConfig = (pw: providerOrWallet) =>
 
 let getChainConfigUsingId = chainId => avalanche
 
-let makeDefaultProvider = c => c.rpcEndopint->Provider.JsonRpcProvider.make(~chainId=c.networkId)
+let makeDefaultProvider = config => config.rpcEndopint->Provider.JsonRpcProvider.make(~chainId=config.networkId)

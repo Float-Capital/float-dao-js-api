@@ -3,25 +3,40 @@ open FloatEthers
 open Promise
 open FloatUtil
 
-type chainWithWallet = {
-  // TODO possibly change this to getContracts to make it clear it's a promise
-  contracts: Promise.t<FloatConfig.contracts>,
-  updateSystemState: (array<BigNumber.t>, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  getMarket: int => FloatMarket.withWallet,
+// ====================================
+// Type definitions
+
+type withProvider = {provider: FloatEthers.providerType}
+type withWallet = {wallet: FloatEthers.walletType}
+
+type withProviderOrWalletOrId =
+  | P(withProvider)
+  | W(withWallet)
+
+let wrapSideP: withProvider => withProviderOrWalletOrId = side => P(side)
+let wrapSideW: withWallet => withProviderOrWalletOrId = side => W(side)
+
+// ====================================
+// Constructors
+
+module WithProvider = {
+  type t = withProvider
+  let make = p => {provider: p}
+  let makeWrap = p => p->make->wrapSideP
+
+  // TODO repeat this pattern in Market & Side files
+  let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
+  let makeDefaultWrap = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeWrap
 }
 
-type chainWithProvider = {
-  contracts: Promise.t<FloatConfig.contracts>,
-  getMarket: int => FloatMarket.withProvider,
-  connect: walletType => chainWithWallet,
+module WithWallet = {
+  type t = withWallet
+  let make = w => {wallet: w}
+  let makeWrap = w => w->make->wrapSideW
 }
 
-type chainProviderOrWallet =
-  | ChainPWrap(chainWithProvider)
-  | ChainWWrap(chainWithWallet)
-
-let wrapChainWithProvider: chainWithProvider => chainProviderOrWallet = p => ChainPWrap(p)
-let wrapChainWithWallet: chainWithWallet => chainProviderOrWallet = p => ChainWWrap(p)
+// ====================================
+// Helper functions
 
 let makeLongShortContract = (
   p: providerOrWallet,
@@ -33,10 +48,10 @@ let makeLongShortContract = (
   )
 
 let updateSystemStateMulti = (
-  w: walletType,
-  c: FloatConfig.chainConfigShape,
+  wallet,
+  config,
   marketIndexes: array<BigNumber.t>,
-) => w->wrapWallet->makeLongShortContract(c)->LongShort.updateSystemStateMulti(~marketIndexes)
+) => wallet->wrapWallet->makeLongShortContract(config)->LongShort.updateSystemStateMulti(~marketIndexes)
 
 // TODO add getLongShortImplementationAddress function that fetches the current implentation address
 
@@ -44,37 +59,25 @@ let updateSystemStateMulti = (
 
 // TODO add settleOutstandingActions that settles for all markets
 
-let makeWithWallet = (w: walletType): chainWithWallet => {
-  contracts: w->wrapWallet->getChainConfig->thenResolve(c => c.contracts),
-  updateSystemState: (marketIndexes, txOptions) =>
-    w
-    ->wrapWallet
-    ->getChainConfig
-    ->then(c => updateSystemStateMulti(w, c, marketIndexes, txOptions)),
-  getMarket: FloatMarket.WithWallet.make(w),
-}
+// ====================================
+// Export functions
 
-let makeWithProvider = (p: providerType): chainWithProvider => {
-  contracts: p->wrapProvider->getChainConfig->thenResolve(c => c.contracts),
-  getMarket: FloatMarket.WithProvider.make(p),
-  connect: w => makeWithWallet(w),
-}
+let contracts = (chain: withProviderOrWalletOrId) =>
+  switch chain {
+  | P(c) => c.provider->FloatEthers.wrapProvider->getChainConfig
+  | W(c) => c.wallet.provider->FloatEthers.wrapProvider->getChainConfig
+  }->thenResolve(c => c.contracts)
 
-let makeWithDefaultProvider = (chainId: int) => {
-  contracts: chainId
-  ->getChainConfigUsingId
-  ->makeDefaultProvider
-  ->wrapProvider
-  ->getChainConfig
-  ->thenResolve(c => c.contracts),
-  getMarket: FloatMarket.WithProvider.make(chainId->getChainConfigUsingId->makeDefaultProvider),
-  connect: w => makeWithWallet(w),
-}
-
-// This is just here as a test, not actually used but maybe we can use it in the future
-let make = (pw: providerOrWallet): chainProviderOrWallet => {
-  switch pw {
-  | P(p) => makeWithProvider(p)->wrapChainWithProvider
-  | W(w) => makeWithWallet(w)->wrapChainWithWallet
+// TODO turns out that this is not very nice to use as the consumer
+let market = (chain: withProviderOrWalletOrId, marketIndex) =>
+  switch chain {
+  | P(c) => c.provider->FloatMarket.WithProvider.makeWrap(marketIndex)
+  | W(c) => c.wallet->FloatMarket.WithWallet.makeWrap(marketIndex)
   }
-}
+
+// TODO repeat this function in Market & Side files (and do the same for other functions that can 'move down a layer')
+let updateSystemState = (chain: withWallet, marketIndexes, txOptions) =>
+  chain.wallet
+  ->wrapWallet
+  ->getChainConfig
+  ->then(config => chain.wallet->updateSystemStateMulti(config, marketIndexes, txOptions))
