@@ -1,7 +1,11 @@
 open FloatContracts
-open FloatEthers
 open Promise
 open FloatUtil
+
+// ====================================
+// Convenience
+
+let {fromInt} = module(FloatEthers.BigNumber)
 
 // ====================================
 // Type definitions
@@ -39,19 +43,19 @@ module WithWallet = {
 // Helper functions
 
 let makeLongShortContract = (
-  p: providerOrWallet,
+  p: FloatEthers.providerOrWallet,
   c: FloatConfig.chainConfigShape,
 ): FloatEthers.Contract.t =>
   LongShort.make(
-    ~address=c.contracts.longShort.address->Utils.getAddressUnsafe,
+    ~address=c.contracts.longShort.address->FloatEthers.Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
 
-let updateSystemStateMulti = (
-  wallet,
-  config,
-  marketIndexes: array<BigNumber.t>,
-) => wallet->wrapWallet->makeLongShortContract(config)->LongShort.updateSystemStateMulti(~marketIndexes)
+let updateSystemStateMulti = (wallet, config, marketIndexes: array<int>) =>
+  wallet
+  ->FloatEthers.wrapWallet
+  ->makeLongShortContract(config)
+  ->LongShort.updateSystemStateMulti(~marketIndexes=marketIndexes->Js.Array2.map(i => i->fromInt))
 
 // TODO add getLongShortImplementationAddress function that fetches the current implentation address
 
@@ -68,16 +72,8 @@ let contracts = (chain: withProviderOrWalletOrId) =>
   | W(c) => c.wallet.provider->FloatEthers.wrapProvider->getChainConfig
   }->thenResolve(c => c.contracts)
 
-// TODO turns out that this is not very nice to use as the consumer
-let market = (chain: withProviderOrWalletOrId, marketIndex) =>
-  switch chain {
-  | P(c) => c.provider->FloatMarket.WithProvider.makeWrap(marketIndex)
-  | W(c) => c.wallet->FloatMarket.WithWallet.makeWrap(marketIndex)
-  }
-
-// TODO repeat this function in Market & Side files (and do the same for other functions that can 'move down a layer')
-let updateSystemState = (chain: withWallet, marketIndexes, txOptions) =>
+let updateSystemStateMulti = (chain: withWallet, marketIndexes, txOptions) =>
   chain.wallet
-  ->wrapWallet
+  ->FloatEthers.wrapWallet
   ->getChainConfig
   ->then(config => chain.wallet->updateSystemStateMulti(config, marketIndexes, txOptions))
