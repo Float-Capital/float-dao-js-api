@@ -11,26 +11,23 @@ let {oneGweiInWei} = module(FloatEthers.BigNumber)
 let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
 
+let providerUrl = FloatConfig.avalanche.rpcEndopint
+let chainId = FloatConfig.avalanche.networkId
+
+let provider = providerUrl->Provider.JsonRpcProvider.make(~chainId)
+let wallet = providerUrl->Provider.JsonRpcProvider.make(~chainId)->connectToNewWallet(~mnemonic)
+
+let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(oneGweiInWei)
+let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(oneGweiInWei)
+let gasLimit = BigNumber.fromInt(1000000)
+
+let txOptions: FloatContracts.txOptions = {
+  maxFeePerGas: maxFeePerGas->BigNumber.toString,
+  maxPriorityFeePerGas: maxPriorityFeePerGas->BigNumber.toString,
+  gasLimit: gasLimit->BigNumber.toString,
+}
+
 let run = () => {
-  let providerUrl = FloatConfig.avalanche.rpcEndopint
-  let chainId = FloatConfig.avalanche.networkId // 137
-
-  let provider = providerUrl->Provider.JsonRpcProvider.make(~chainId)
-
-  provider->Provider.getNetwork->ignore
-
-  let wallet = providerUrl->Provider.JsonRpcProvider.make(~chainId)->connectToNewWallet(~mnemonic)
-
-  let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(oneGweiInWei)
-  let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(oneGweiInWei)
-  let gasLimit = BigNumber.fromInt(1000000)
-
-  let txOptions: FloatContracts.txOptions = {
-    maxFeePerGas: maxFeePerGas->BigNumber.toString,
-    maxPriorityFeePerGas: maxPriorityFeePerGas->BigNumber.toString,
-    gasLimit: gasLimit->BigNumber.toString,
-  }
-
   let floatClient = FloatClient.make()
 
   let chain = floatClient.getChain(chainId)

@@ -2,11 +2,21 @@ open FloatContracts
 open FloatEthers
 open FloatUtil
 open Promise
-open FloatConfig
 
-let {min, max, div, mul, add, sub, fromInt, fromFloat, toNumber, toNumberFloat, tenToThe18, tenToThe14} = module(
-  FloatEthers.BigNumber
-)
+let {
+  min,
+  max,
+  div,
+  mul,
+  add,
+  sub,
+  fromInt,
+  fromFloat,
+  toNumber,
+  toNumberFloat,
+  tenToThe18,
+  tenToThe14,
+} = module(FloatEthers.BigNumber)
 
 type positions = {
   paymentToken: BigNumber.t,
@@ -47,7 +57,7 @@ type marketSideWithProvider = {
   connect: walletType => marketSideWithWallet,
 }
 
-let makeLongShortContract = (p: providerOrWallet, c: chainConfigShape) =>
+let makeLongShortContract = (p: providerOrWallet, c: FloatConfig.chainConfigShape) =>
   LongShort.make(
     ~address=c.contracts.longShort.address->Utils.getAddressUnsafe,
     ~providerOrWallet=p,
@@ -57,19 +67,19 @@ let makeLongShortContract = (p: providerOrWallet, c: chainConfigShape) =>
 //let makeSynth = (p: providerOrWallet, address: ethAddress) =>
 //    Synth.make(~address, ~providerOrWallet=p)
 
-let makeStakerContract = (p: providerOrWallet, c: chainConfigShape) =>
+let makeStakerContract = (p: providerOrWallet, c: FloatConfig.chainConfigShape) =>
   Staker.make(~address=c.contracts.longShort.address->Utils.getAddressUnsafe, ~providerOrWallet=p)
 
 let syntheticTokenAddress = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ) => p->wrapProvider->makeLongShortContract(c)->LongShort.syntheticTokens(~marketIndex, ~isLong)
 
 let syntheticTokenTotalSupply = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ) =>
@@ -80,7 +90,7 @@ let syntheticTokenTotalSupply = (
 
 let syntheticTokenBalance = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   owner: ethAddress,
@@ -92,7 +102,7 @@ let syntheticTokenBalance = (
 
 let stakedSyntheticTokenBalance = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   owner: ethAddress,
@@ -103,7 +113,7 @@ let stakedSyntheticTokenBalance = (
 
 let marketSideValue = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ) =>
@@ -120,7 +130,7 @@ let marketSideValue = (
 
 let updateIndex = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   user: ethAddress,
 ) =>
@@ -131,7 +141,7 @@ let updateIndex = (
 
 let unsettledSynthBalance = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   user: ethAddress,
@@ -143,7 +153,7 @@ let unsettledSynthBalance = (
 
 let marketSideUnconfirmedDeposits = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ) =>
@@ -154,7 +164,7 @@ let marketSideUnconfirmedDeposits = (
 
 let marketSideUnconfirmedRedeems = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ) =>
@@ -165,7 +175,7 @@ let marketSideUnconfirmedRedeems = (
 
 let marketSideUnconfirmedShifts = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isShiftFromLong: bool,
 ) =>
@@ -179,20 +189,18 @@ let marketSideUnconfirmedShifts = (
 
 let syntheticTokenPrice = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ) =>
   all2((
     marketSideValue(p, c, marketIndex, isLong),
     syntheticTokenTotalSupply(p, c, marketIndex, isLong),
-  ))->thenResolve(((value, total)) =>
-    value->mul(tenToThe18)->div(total)
-  )
+  ))->thenResolve(((value, total)) => value->mul(tenToThe18)->div(total))
 
 let syntheticTokenPriceSnapshot = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   priceSnapshotIndex: BigNumber.t,
@@ -202,12 +210,19 @@ let syntheticTokenPriceSnapshot = (
   ->makeLongShortContract(c)
   ->LongShort.get_syntheticToken_priceSnapshot_side(~marketIndex, ~isLong, ~priceSnapshotIndex)
 
-let marketSideValues = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t): Promise.t<
-  LongShort.marketSideValue,
-> =>
+let marketSideValues = (
+  p: providerType,
+  c: FloatConfig.chainConfigShape,
+  marketIndex: BigNumber.t,
+): Promise.t<LongShort.marketSideValue> =>
   p->wrapProvider->makeLongShortContract(c)->LongShort.marketSideValueInPaymentToken(~marketIndex)
 
-let exposure = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t, isLong: bool) =>
+let exposure = (
+  p: providerType,
+  c: FloatConfig.chainConfigShape,
+  marketIndex: BigNumber.t,
+  isLong: bool,
+) =>
   marketSideValues(p, c, marketIndex)->thenResolve(values => {
     let numerator = values.long->min(values.short)->mul(tenToThe18)
     switch isLong {
@@ -218,7 +233,7 @@ let exposure = (p: providerType, c: chainConfigShape, marketIndex: BigNumber.t, 
 
 let unconfirmedExposure = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ) =>
@@ -286,7 +301,7 @@ let toSign = isLong =>
 // This should really be in the Market.res file but the compiler complains about a dependency cycle
 let fundingRateMultiplier = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
 ): Promise.t<float> =>
   p
@@ -310,7 +325,7 @@ Returns percentage APR.
 */
 let fundingRateApr = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
 ): Promise.t<float> =>
@@ -331,7 +346,7 @@ let fundingRateApr = (
 
 let positions = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   address: ethAddress,
@@ -346,7 +361,7 @@ let positions = (
 
 let stakedPositions = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   address: ethAddress,
@@ -363,7 +378,7 @@ let stakedPositions = (
 
 let unsettledPositions = (
   p: providerType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   address: ethAddress,
@@ -382,7 +397,7 @@ let unsettledPositions = (
 
 let mint = (
   w: walletType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountPaymentToken: BigNumber.t,
@@ -402,7 +417,7 @@ let mint = (
 
 let mintAndStake = (
   w: walletType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountPaymentToken: BigNumber.t,
@@ -414,7 +429,7 @@ let mintAndStake = (
 
 let stake = (
   w: walletType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
@@ -427,7 +442,7 @@ let stake = (
 
 let unstake = (
   w: walletType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
@@ -439,7 +454,7 @@ let unstake = (
 
 let redeem = (
   w: walletType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
@@ -459,7 +474,7 @@ let redeem = (
 
 let shift = (
   w: walletType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,
@@ -479,7 +494,7 @@ let shift = (
 
 let shiftStake = (
   w: walletType,
-  c: chainConfigShape,
+  c: FloatConfig.chainConfigShape,
   marketIndex: BigNumber.t,
   isLong: bool,
   amountSyntheticToken: BigNumber.t,

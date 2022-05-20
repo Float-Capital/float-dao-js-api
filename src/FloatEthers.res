@@ -168,12 +168,12 @@ module Wallet = {
 }
 
 type providerOrWallet =
-  | ProviderWrap(Provider.t)
-  | WalletWrap(Wallet.t)
+  | P(Provider.t)
+  | W(Wallet.t)
 
-let wrapProvider: providerType => providerOrWallet = p => ProviderWrap(p)
+let wrapProvider: providerType => providerOrWallet = p => P(p)
 
-let wrapWallet: walletType => providerOrWallet = w => WalletWrap(w)
+let wrapWallet: walletType => providerOrWallet = w => W(w)
 
 module Contract = {
   type t
@@ -195,8 +195,8 @@ module Contract = {
 
   let make: (ethAddress, abi, providerOrWallet) => t = (address, abi, providerSigner) => {
     switch providerSigner {
-    | ProviderWrap(provider) => getContractProvider(address, abi, provider)
-    | WalletWrap(signer) => getContractSigner(address, abi, signer)
+    | P(provider) => getContractProvider(address, abi, provider)
+    | W(signer) => getContractSigner(address, abi, signer)
     }
   }
 }

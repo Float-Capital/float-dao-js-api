@@ -74,7 +74,7 @@ function makeWithDefaultProvider(chainId) {
 }
 
 function make(pw) {
-  if (pw.TAG === /* ProviderWrap */0) {
+  if (pw.TAG === /* P */0) {
     return {
             TAG: /* ChainPWrap */0,
             _0: makeWithProvider(pw._0)

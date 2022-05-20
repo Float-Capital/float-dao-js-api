@@ -20,18 +20,33 @@ function connectToNewWallet(provider, mnemonic) {
   return new (Ethers.Wallet.fromMnemonic)(mnemonic, "m/44'/60'/0'/0/0").connect(provider);
 }
 
+var providerUrl = FloatConfig.avalanche.rpcEndopint;
+
+var chainId = FloatConfig.avalanche.networkId;
+
+var provider = new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId);
+
+var wallet = connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId), mnemonic);
+
+var maxFeePerGas = Ethers.BigNumber.from(62).mul(oneGweiInWei);
+
+var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(oneGweiInWei);
+
+var gasLimit = Ethers.BigNumber.from(1000000);
+
+var txOptions_maxFeePerGas = maxFeePerGas.toString();
+
+var txOptions_maxPriorityFeePerGas = maxPriorityFeePerGas.toString();
+
+var txOptions_gasLimit = gasLimit.toString();
+
+var txOptions = {
+  maxFeePerGas: txOptions_maxFeePerGas,
+  maxPriorityFeePerGas: txOptions_maxPriorityFeePerGas,
+  gasLimit: txOptions_gasLimit
+};
+
 function run(param) {
-  var providerUrl = FloatConfig.avalanche.rpcEndopint;
-  var chainId = FloatConfig.avalanche.networkId;
-  var provider = new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId);
-  provider.getNetwork();
-  connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId), mnemonic);
-  var maxFeePerGas = Ethers.BigNumber.from(62).mul(oneGweiInWei);
-  var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(oneGweiInWei);
-  var gasLimit = Ethers.BigNumber.from(1000000);
-  maxFeePerGas.toString();
-  maxPriorityFeePerGas.toString();
-  gasLimit.toString();
   var floatClient = FloatClient.make(undefined);
   var chain = Curry._1(floatClient.getChain, chainId);
   chain.contracts.then(function (c) {
@@ -79,5 +94,13 @@ exports.mnemonic = mnemonic;
 exports.providerUrlOther = providerUrlOther;
 exports.oneGweiInWei = oneGweiInWei;
 exports.connectToNewWallet = connectToNewWallet;
+exports.providerUrl = providerUrl;
+exports.chainId = chainId;
+exports.provider = provider;
+exports.wallet = wallet;
+exports.maxFeePerGas = maxFeePerGas;
+exports.maxPriorityFeePerGas = maxPriorityFeePerGas;
+exports.gasLimit = gasLimit;
+exports.txOptions = txOptions;
 exports.run = run;
 /* env Not a pure module */

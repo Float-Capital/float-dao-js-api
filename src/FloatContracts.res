@@ -145,7 +145,8 @@ module LongShort = {
     t,
     ~marketIndex: FloatEthers.BigNumber.t,
     ~isLong: bool,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "batched_amountSyntheticToken_toShiftAwayFrom_marketSide"
+  ) => Promise.t<FloatEthers.BigNumber.t> =
+    "batched_amountSyntheticToken_toShiftAwayFrom_marketSide"
   @send
   external userNextPrice_currentUpdateIndex: (
     t,
@@ -268,8 +269,10 @@ module Erc20 = {
   ) => Promise.t<FloatEthers.txSubmitted> = "approve"
 
   @send
-  external balanceOf: (~contract: t, ~owner: FloatEthers.ethAddress) => Promise.t<FloatEthers.BigNumber.t> =
-    "balanceOf"
+  external balanceOf: (
+    ~contract: t,
+    ~owner: FloatEthers.ethAddress,
+  ) => Promise.t<FloatEthers.BigNumber.t> = "balanceOf"
 
   @send
   external allowance: (
@@ -298,7 +301,8 @@ module Synth = {
       "function totalSupply() external view returns (uint256 total)",
     ]->FloatEthers.makeAbi
 
-  let make = (address, ~providerOrWallet): t => FloatEthers.Contract.make(address, abi, providerOrWallet)
+  let make = (address, ~providerOrWallet): t =>
+    FloatEthers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external approve: (
@@ -309,7 +313,8 @@ module Synth = {
   ) => Promise.t<FloatEthers.txSubmitted> = "approve"
 
   @send
-  external balanceOf: (t, ~owner: FloatEthers.ethAddress) => Promise.t<FloatEthers.BigNumber.t> = "balanceOf"
+  external balanceOf: (t, ~owner: FloatEthers.ethAddress) => Promise.t<FloatEthers.BigNumber.t> =
+    "balanceOf"
 
   @send
   external allowance: (
