@@ -485,33 +485,95 @@ let fundingRateApr = (side: withProviderOrWallet) =>
   ->getChainConfig
   ->then(config => side->provider->fundingRateApr(config, side->marketIndex->fromInt, side->isLong))
 
-// TODO need to make ethAddress optional
-let positions = (side: withProviderOrWallet, ethAddress) =>
+let positions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
   ->getChainConfig
-  ->then(config =>
-    side->provider->positions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
-  )
+  ->then(config => {
+    let address = switch ethAddress {
+    | Some(value) => value
+    | None =>
+      switch side {
+      | W(s) => s.wallet.address
+      | _ => {
+          // TODO not a great DX but not how to make it better
+          //   1 way would be to have every exported function return an option (failed or successful)
+          //   and let the consuming code deal with it
+          Js.log("No address found")
+          ""
+        }
+      }
+    }
+    side
+    ->provider
+    ->positions(
+      config,
+      side->marketIndex->fromInt,
+      side->isLong,
+      address->FloatEthers.Utils.getAddressUnsafe,
+    )
+  })
 
-let stakedPositions = (side: withProviderOrWallet, ethAddress) =>
+let stakedPositions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
   ->getChainConfig
-  ->then(config =>
-    side->provider->stakedPositions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
-  )
+  ->then(config => {
+    let address = switch ethAddress {
+    | Some(value) => value
+    | None =>
+      switch side {
+      | W(s) => s.wallet.address
+      | _ => {
+          // TODO not a great DX but not how to make it better
+          //   1 way would be to have every exported function return an option (failed or successful)
+          //   and let the consuming code deal with it
+          Js.log("No address found")
+          ""
+        }
+      }
+    }
+    side
+    ->provider
+    ->stakedPositions(
+      config,
+      side->marketIndex->fromInt,
+      side->isLong,
+      address->FloatEthers.Utils.getAddressUnsafe,
+    )
+  })
 
 let unsettledPositions = (side: withProviderOrWallet, ethAddress) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
   ->getChainConfig
-  ->then(config =>
-    side->provider->unsettledPositions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
-  )
+  ->then(config => {
+    let address = switch ethAddress {
+    | Some(value) => value
+    | None =>
+      switch side {
+      | W(s) => s.wallet.address
+      | _ => {
+          // TODO not a great DX but not how to make it better
+          //   1 way would be to have every exported function return an option (failed or successful)
+          //   and let the consuming code deal with it
+          Js.log("No address found")
+          ""
+        }
+      }
+    }
+    side
+    ->provider
+    ->unsettledPositions(
+      config,
+      side->marketIndex->fromInt,
+      side->isLong,
+      address->FloatEthers.Utils.getAddressUnsafe,
+    )
+  })
 
 let mint = (side: withWallet, amountPaymentToken, txOptions) =>
   side.wallet

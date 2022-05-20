@@ -248,42 +248,38 @@ let stakedPositions = (market: withProviderOrWallet, ethAddress) =>
 let unsettledPositions = (market: withProviderOrWallet, ethAddress) =>
   market->provider->unsettledPositions(market->marketIndex, ethAddress)
 
-let side = (market: withProviderOrWallet, isLong) =>
-  switch market {
-  | P(m) => m.provider->FloatMarketSide.WithProvider.makeWrap(market->marketIndex, isLong)
-  | W(m) => m.wallet->FloatMarketSide.WithWallet.makeWrap(market->marketIndex, isLong)
-  }
-
-let connect = (market: withProvider, wallet, isLong) =>
-  wallet->FloatMarketSide.WithWallet.make(market.marketIndex, isLong)
-
-let connectWrap = (market: withProviderOrWallet, wallet, isLong) =>
-  wallet->FloatMarketSide.WithWallet.make(market->marketIndex, isLong)
-
-let claimFloatCustomFor = (market: withWallet, ethAddress, txOptions) =>
+let claimFloatCustomFor = (market: withWallet, ~ethAddress=?, txOptions) =>
   market.wallet
   ->FloatEthers.wrapWallet
   ->getChainConfig
-  ->then(config =>
+  ->then(config => {
+    let address = switch ethAddress {
+    | Some(value) => value
+    | None => market.wallet.address
+    }
     market.wallet->claimFloatCustomFor(
       config,
       [market.marketIndex->FloatEthers.BigNumber.fromInt],
-      ethAddress,
+      address->FloatEthers.Utils.getAddressUnsafe,
       txOptions,
     )
-  )
-let settleOutstandingActions = (market: withWallet, ethAddress, txOptions) =>
+  })
+let settleOutstandingActions = (market: withWallet, ~ethAddress=?, txOptions) =>
   market.wallet
   ->FloatEthers.wrapWallet
   ->getChainConfig
-  ->then(config =>
+  ->then(config => {
+    let address = switch ethAddress {
+    | Some(value) => value
+    | None => market.wallet.address
+    }
     market.wallet->settleOutstandingActions(
       config,
       market.marketIndex->FloatEthers.BigNumber.fromInt,
-      ethAddress,
+      address->FloatEthers.Utils.getAddressUnsafe,
       txOptions,
     )
-  )
+  })
 let updateSystemState = (market: withWallet, txOptions) =>
   market.wallet
   ->FloatEthers.wrapWallet

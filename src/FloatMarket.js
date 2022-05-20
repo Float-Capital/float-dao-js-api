@@ -7,6 +7,7 @@ var Caml_array = require("rescript/lib/js/caml_array.js");
 var FloatEthers = require("./FloatEthers.js");
 var FloatContracts = require("./FloatContracts.js");
 var FloatMarketSide = require("./FloatMarketSide.js");
+var FloatMarketTypes = require("./FloatMarketTypes.js");
 
 function div(prim0, prim1) {
   return prim0.div(prim1);
@@ -22,20 +23,6 @@ function toNumber(prim) {
 
 var tenToThe18 = FloatEthers.BigNumber.tenToThe18;
 
-function wrapSideP(side) {
-  return {
-          TAG: /* P */0,
-          _0: side
-        };
-}
-
-function wrapSideW(side) {
-  return {
-          TAG: /* W */1,
-          _0: side
-        };
-}
-
 function make(provider, marketIndex) {
   return {
           provider: provider,
@@ -44,23 +31,17 @@ function make(provider, marketIndex) {
 }
 
 function makeWrap(provider, marketIndex) {
-  return {
-          TAG: /* P */0,
-          _0: {
-            provider: provider,
-            marketIndex: marketIndex
-          }
-        };
+  return FloatMarketTypes.wrapMarketP({
+              provider: provider,
+              marketIndex: marketIndex
+            });
 }
 
 function makeWrapReverseCurry(marketIndex, provider) {
-  return {
-          TAG: /* P */0,
-          _0: {
-            provider: provider,
-            marketIndex: marketIndex
-          }
-        };
+  return FloatMarketTypes.wrapMarketP({
+              provider: provider,
+              marketIndex: marketIndex
+            });
 }
 
 var WithProvider = {
@@ -77,19 +58,30 @@ function make$1(w, marketIndex) {
 }
 
 function makeWrap$1(w, marketIndex) {
-  return {
-          TAG: /* W */1,
-          _0: {
-            wallet: w,
-            marketIndex: marketIndex
-          }
-        };
+  return FloatMarketTypes.wrapMarketW({
+              wallet: w,
+              marketIndex: marketIndex
+            });
 }
 
 var WithWallet = {
   make: make$1,
   makeWrap: makeWrap$1
 };
+
+function makeUsingChain(chain, marketIndex) {
+  if (chain.TAG === /* P */0) {
+    return FloatMarketTypes.wrapMarketP({
+                provider: chain._0.provider,
+                marketIndex: marketIndex
+              });
+  } else {
+    return FloatMarketTypes.wrapMarketW({
+                wallet: chain._0.wallet,
+                marketIndex: marketIndex
+              });
+  }
+}
 
 function provider(side) {
   if (side.TAG === /* P */0) {
@@ -224,8 +216,8 @@ function positions(market, ethAddress) {
   var provider$1 = provider(market);
   var marketIndex = market._0.marketIndex;
   return Promise.all([
-                FloatMarketSide.positions(longSide(marketIndex, provider$1), ethAddress),
-                FloatMarketSide.positions(shortSide(marketIndex, provider$1), ethAddress)
+                FloatMarketSide.positions(longSide(marketIndex, provider$1), undefined, ethAddress),
+                FloatMarketSide.positions(shortSide(marketIndex, provider$1), undefined, ethAddress)
               ]).then(function (param) {
               return {
                       long: param[0],
@@ -238,8 +230,8 @@ function stakedPositions(market, ethAddress) {
   var provider$1 = provider(market);
   var marketIndex = market._0.marketIndex;
   return Promise.all([
-                FloatMarketSide.stakedPositions(longSide(marketIndex, provider$1), ethAddress),
-                FloatMarketSide.stakedPositions(shortSide(marketIndex, provider$1), ethAddress)
+                FloatMarketSide.stakedPositions(longSide(marketIndex, provider$1), undefined, ethAddress),
+                FloatMarketSide.stakedPositions(shortSide(marketIndex, provider$1), undefined, ethAddress)
               ]).then(function (param) {
               return {
                       long: param[0],
@@ -262,31 +254,17 @@ function unsettledPositions(market, ethAddress) {
             });
 }
 
-function side(market, isLong) {
-  if (market.TAG === /* P */0) {
-    return FloatMarketSide.WithProvider.makeWrap(market._0.provider, market._0.marketIndex, isLong);
-  } else {
-    return FloatMarketSide.WithWallet.makeWrap(market._0.wallet, market._0.marketIndex, isLong);
-  }
-}
-
-function connect(market, wallet, isLong) {
-  return FloatMarketSide.WithWallet.make(wallet, market.marketIndex, isLong);
-}
-
-function connectWrap(market, wallet, isLong) {
-  return FloatMarketSide.WithWallet.make(wallet, market._0.marketIndex, isLong);
-}
-
 function claimFloatCustomFor$1(market, ethAddress, txOptions) {
   return FloatUtil.getChainConfig(FloatEthers.wrapWallet(market.wallet)).then(function (config) {
-              return claimFloatCustomFor(market.wallet, config, [Ethers.BigNumber.from(market.marketIndex)], ethAddress)(txOptions);
+              var address = ethAddress !== undefined ? ethAddress : market.wallet._address;
+              return claimFloatCustomFor(market.wallet, config, [Ethers.BigNumber.from(market.marketIndex)], Ethers.utils.getAddress(address))(txOptions);
             });
 }
 
 function settleOutstandingActions$1(market, ethAddress, txOptions) {
   return FloatUtil.getChainConfig(FloatEthers.wrapWallet(market.wallet)).then(function (config) {
-              return settleOutstandingActions(market.wallet, config, Ethers.BigNumber.from(market.marketIndex), ethAddress)(txOptions);
+              var address = ethAddress !== undefined ? ethAddress : market.wallet._address;
+              return settleOutstandingActions(market.wallet, config, Ethers.BigNumber.from(market.marketIndex), Ethers.utils.getAddress(address))(txOptions);
             });
 }
 
@@ -300,10 +278,9 @@ exports.div = div;
 exports.fromInt = fromInt;
 exports.toNumber = toNumber;
 exports.tenToThe18 = tenToThe18;
-exports.wrapSideP = wrapSideP;
-exports.wrapSideW = wrapSideW;
 exports.WithProvider = WithProvider;
 exports.WithWallet = WithWallet;
+exports.makeUsingChain = makeUsingChain;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.contracts = contracts;
@@ -316,9 +293,6 @@ exports.fundingRateAprs = fundingRateAprs;
 exports.positions = positions;
 exports.stakedPositions = stakedPositions;
 exports.unsettledPositions = unsettledPositions;
-exports.side = side;
-exports.connect = connect;
-exports.connectWrap = connectWrap;
 exports.claimFloatCustomFor = claimFloatCustomFor$1;
 exports.settleOutstandingActions = settleOutstandingActions$1;
 exports.updateSystemState = updateSystemState$1;
