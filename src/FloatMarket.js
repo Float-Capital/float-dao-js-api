@@ -155,18 +155,16 @@ function fundingRateMultiplier(market) {
 }
 
 function syntheticTokenPrices(market) {
-  return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(market))).then(function (config) {
-              var provider$1 = provider(market);
-              var marketIndex = market._0.marketIndex;
-              return Promise.all([
-                            FloatMarketSide.syntheticTokenPrice(longSide(marketIndex, provider$1)),
-                            FloatMarketSide.syntheticTokenPrice(shortSide(marketIndex, provider$1))
-                          ]).then(function (param) {
-                          return {
-                                  long: param[0],
-                                  short: param[1]
-                                };
-                        });
+  var provider$1 = provider(market);
+  var marketIndex = market._0.marketIndex;
+  return Promise.all([
+                FloatMarketSide.syntheticTokenPrice(longSide(marketIndex, provider$1)),
+                FloatMarketSide.syntheticTokenPrice(shortSide(marketIndex, provider$1))
+              ]).then(function (param) {
+              return {
+                      long: param[0],
+                      short: param[1]
+                    };
             });
 }
 
@@ -254,16 +252,16 @@ function unsettledPositions(market, ethAddress) {
             });
 }
 
-function claimFloatCustomFor$1(market, ethAddress, txOptions) {
+function claimFloatCustom(market, ethAddress, txOptions) {
   return FloatUtil.getChainConfig(FloatEthers.wrapWallet(market.wallet)).then(function (config) {
-              var address = ethAddress !== undefined ? ethAddress : market.wallet._address;
+              var address = ethAddress !== undefined ? ethAddress : market.wallet.address;
               return claimFloatCustomFor(market.wallet, config, [Ethers.BigNumber.from(market.marketIndex)], Ethers.utils.getAddress(address))(txOptions);
             });
 }
 
 function settleOutstandingActions$1(market, ethAddress, txOptions) {
   return FloatUtil.getChainConfig(FloatEthers.wrapWallet(market.wallet)).then(function (config) {
-              var address = ethAddress !== undefined ? ethAddress : market.wallet._address;
+              var address = ethAddress !== undefined ? ethAddress : market.wallet.address;
               return settleOutstandingActions(market.wallet, config, Ethers.BigNumber.from(market.marketIndex), Ethers.utils.getAddress(address))(txOptions);
             });
 }
@@ -283,6 +281,7 @@ exports.WithWallet = WithWallet;
 exports.makeUsingChain = makeUsingChain;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
+exports.claimFloatCustomFor = claimFloatCustomFor;
 exports.contracts = contracts;
 exports.leverage = leverage;
 exports.fundingRateMultiplier = fundingRateMultiplier;
@@ -293,7 +292,7 @@ exports.fundingRateAprs = fundingRateAprs;
 exports.positions = positions;
 exports.stakedPositions = stakedPositions;
 exports.unsettledPositions = unsettledPositions;
-exports.claimFloatCustomFor = claimFloatCustomFor$1;
+exports.claimFloatCustom = claimFloatCustom;
 exports.settleOutstandingActions = settleOutstandingActions$1;
 exports.updateSystemState = updateSystemState$1;
 /* ethers Not a pure module */

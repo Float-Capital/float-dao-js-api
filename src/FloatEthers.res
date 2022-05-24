@@ -142,7 +142,7 @@ module Provider = {
   external getNetwork: providerType => Promise.t<network> = "getNetwork"
 }
 
-type walletType = {@as("_address") address: string, provider: providerType}
+type walletType = {address: string, provider: providerType}
 
 module Wallet = {
   type t = walletType

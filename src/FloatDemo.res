@@ -6,7 +6,7 @@ let env = process["env"]
 @module("../secretsManager.js") external mnemonic: string = "mnemonic"
 @module("../secretsManager.js") external providerUrlOther: string = "providerUrl"
 
-let {oneGweiInWei} = module(FloatEthers.BigNumber)
+let {oneGweiInWei, fromInt} = module(FloatEthers.BigNumber)
 
 let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
@@ -70,7 +70,7 @@ let demoReadyOnly = _ => {
   )
   ->ignore
 
-  let marketSide = FloatMarketSide.WithProvider.makeWrap(provider, marketIndex, isLong)
+  let marketSide = market->FloatMarketSide.makeUsingMarket(isLong)
 
   marketSide
   ->FloatMarketSide.poolValue
@@ -134,10 +134,10 @@ let demoWrite = _ => {
 
   let chain = wallet->FloatChain.WithWallet.make
 
-  chain
-  ->FloatChain.updateSystemStateMulti([1], txOptions)
-  ->Promise.thenResolve(tx => tx.hash->Js.log)
-  ->ignore
+  //chain
+  //->FloatChain.updateSystemStateMulti([1], txOptions)
+  //->Promise.thenResolve(tx => tx.hash->Js.log)
+  //->ignore
 
   let market = wallet->FloatMarket.WithWallet.make(marketIndex)
 
@@ -145,6 +145,13 @@ let demoWrite = _ => {
   ->FloatMarket.settleOutstandingActions(txOptions)
   ->Promise.thenResolve(tx => tx.hash->Js.log)
   ->ignore
+
+  //let side = wallet->FloatMarketSide.WithWallet.make(marketIndex, isLong)
+
+  //side
+  //->FloatMarketSide.mint(1->fromInt, txOptions)
+  //->Promise.thenResolve(tx => tx.hash->Js.log)
+  //->ignore
 }
 
 let _ = demoWrite()

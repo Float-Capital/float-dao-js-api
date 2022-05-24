@@ -10,14 +10,14 @@ function fromInt(prim) {
   return Ethers.BigNumber.from(prim);
 }
 
-function wrapSideP(side) {
+function wrapChainP(side) {
   return {
           TAG: /* P */0,
           _0: side
         };
 }
 
-function wrapSideW(side) {
+function wrapChainW(side) {
   return {
           TAG: /* W */1,
           _0: side
@@ -111,8 +111,8 @@ function updateSystemStateMulti$1(chain, marketIndexes, txOptions) {
 }
 
 exports.fromInt = fromInt;
-exports.wrapSideP = wrapSideP;
-exports.wrapSideW = wrapSideW;
+exports.wrapChainP = wrapChainP;
+exports.wrapChainW = wrapChainW;
 exports.WithProvider = WithProvider;
 exports.WithWallet = WithWallet;
 exports.makeLongShortContract = makeLongShortContract;
