@@ -1,5 +1,5 @@
 {
-  "name": "@float-capital/js-client",
+  "name": "@float-capital/rescript-client",
   "sources": {
     "dir" : "src",
     "subdirs" : true

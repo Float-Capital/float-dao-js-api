@@ -1,107 +1,125 @@
 
-TODO needs work
+# Rescript and Javascript library for Float
 
-# Build
+This library is used to interact with the Float smart contracts, which can also be accessed via the DApp: https://float.capital
+
+Can view the contract addresses and other config here: https://github.com/Float-Capital/config
+Can read the docs here: https://docs.float.capital/
+
+## Getting started
+
+All numeric parameters and return values are in BigNumber form (18 decimals) except for these params:
+- marketIndex
+- txOptions
+
+### Rescript
+
+To install run `yarn add @float-capital/rescript-client` or `npm install @float-capital/rescript-client` and then add the following to your bsconfig.json:
 ```
-npm run build
+  "bs-dependencies": [
+    "@float-capital/js-client",
+    "@float-capital/config"
+  ],
 ```
 
-# Watch
+Here are some examples of how to use the library:
 
+```rescript
+
+// readonly chain initialization
+let chain = Float.Chain.WithProvider.makeDefault(chainId)
+// or
+let chain = provider->Float.Chain.WithProvider.make
+
+let marketIndex = 1
+
+// readonly market initialization
+let market = provider->Float.Market.WithProvider.make(marketIndex)
+// or
+let market = chain->Float.Market.makeUsingChain(marketIndex)
+
+// readonly function call
+market
+->Float.Market.fundingRateMultiplier
+->Promise.thenResolve(multiplier =>
+  j`Funding rate multiplier for market $marketIndex:`
+  ->Js.log2(multiplier)
+)
+->ignore
+
+let isLong = true
+
+// writable market side initialization
+let side = wallet->Float.MarketSide.WithWallet.make(marketIndex, isLong)
+
+// this is manual for now
+let txOptions: Float.txOptions = {
+  maxFeePerGas: 62, // gwei
+  maxPriorityFeePerGas: 34, // gwei
+  gasLimit: 1_000_000, // units
+}
+
+// write function call
+side
+->Float.MarketSide.mint(1->convertToBigNumber, txOptions)
+->Promise.thenResolve(tx => tx.hash->Js.log)
+->ignore
 ```
-npm run watch
+
+### Javascript
+
+*This section needs some work*
+
+```javascript
+var Market = require("@float-capital/rescript-client/src/Float__Market.js");
+var marketIndex = 1
+var market = Market.WithProvider.make(provider, marketIndex);
+Market.fundingRateMultiplier(market).then(function (multiplier) {
+  console.log("Funding rate multiplier for market " + marketIndex + ":", multiplier);
+});
 ```
 
-# What we want to JS client interop to look like
+## Full list of APIs
 
-``` javascript
-// NOTE 'get' prefix implies network calls (could also use 'fetch' instead)
-// network call can be either to a blockchain or to the chain config repo
+```rescript
+Float.Chain.contracts // read
+Float.Chain.updateSystemStateMulti // write
 
-// NOTE 'unsettled' prefixed functions are those that include 
-// next price actions in their calculation
+// read
+Float.Market.contracts
+Float.Market.unsettledPositions
+Float.Market.stakedPositions
+Float.Market.positions
+Float.Market.fundingRateAprs
+Float.Market.unconfirmedExposures
+Float.Market.exposures
+Float.Market.leverage
+Float.Market.fundingRateMultiplier
+Float.Market.syntheticTokenPrices
 
-float = floatDao.newClient(provider)
+// write
+Float.Market.updateSystemState
+Float.Market.settleOutstandingActions
+Float.Market.claimFloatCustom
 
-chains = float.getChains()
-chain = chains[chainId]
-chain = float.getChain(chainId) // or chain name, we will store this in config repo 
+// read
+Float.MarketSide.syntheticToken
+Float.MarketSide.name
+Float.MarketSide.poolValue
+Float.MarketSide.syntheticTokenPrice
+Float.MarketSide.exposure
+Float.MarketSide.unconfirmedExposure
+Float.MarketSide.fundingRateApr
+Float.MarketSide.positions
+Float.MarketSide.stakedPositions
+Float.MarketSide.unsettledPositions
 
-chain.longShortProxyAddress
-chain.getLongShortmplentationAddress()
-chain.fltAddress
-chain.treasuryAddress
-
-positions = chain.getPositions(address, side=Both, includeStake=False, includeNextPrice=False)
-positions = chainWithSigner.getPositions(address=signer.address, side=Both, includeStake=False, includeNextPrice=False)
-positions[marketIndex].long.paymentTokenAmount
-positions[marketIndex].long.syntheticTokenAmount
-positions[marketIndex].long.stake.paymentTokenAmount
-positions[marketIndex].long.stake.syntheticTokenAmount
-
-chainWithSigner = chain.connect(signer)
-chainWithSigner.updateSystemState(marketIndexArray)
-chainWithSigner.settleOutstandingActions(address=signer.address, marketIndexArray)
-
-markets = float.getMarkets(chainId)
-market = markets[marketIndex]
-market = float.getMarket(chainId, marketIndex)
-market = chain.getMarket(marketIndex)
-
-market.tokenAddresses.paymentToken
-market.tokenAddresses.longToken
-market.tokenAddresses.shortToken
-
-market.getExposure()
-market.getUnsettledExposure()
-market.getUnsettledExposure()
-market.getLeverage()
-market.getFundingRate()
-market.getSyntheticTokenPrice(side)
-
-positions = market.getPositions(address, side=Both, includeStake=False, includeNextPrice=False)
-positions.long.paymentTokenAmount
-// etc
-
-marketWithSigner = chainWithSigner.getMarket(marketIndex)
-marketWithSigner = market.connect(signer)
-marketWithSigner.getPositions(address=signer.address, side=Both, includeStake=False, includeNextPrice=False)
-marketWithSigner.mint(amount, side, alsoStake=Fasle)
-marketWithSigner.redeem(amount, side, alsoStake=Fasle)
-marketWithSigner.stake(amount, side)
-marketWithSigner.unstake(amount, side)
-marketWithSigner.shiftFrom(amount, originside, includeStake=False)
-marketWithSigner.shiftStakeFrom(amount, originside)
-marketWithSigner.claimFlt()
-marketWithSigner.updateSystemState()
-marketWithSigner.settleOutstandingActions(address=signer.address)
-
-side = market.longSide
-side.tokenAddress
-side.getName // "long" or "short"
-
-side.getPositions(address, includeStake=False, includeNextPrice=False)
-side.getNextPricePositions(address)
-side.getStakedPositions(address)
-side.getSyntheticTokenPrice()
-
-sideWithSigner = marketWithSigner.longSide
-sideWithSigner = side.connect(signer)
-sideWithSigner.mint(amount, alsoStake=False)
-sideWithSigner.redeem(amount, alsoStake=False)
-sideWithSigner.stake(amount)
-sideWithSigner.unstake(amount)
-sideWithSigner.shiftFrom(amount, originside, includeStake=False)
-sideWithSigner.shiftStakeFrom(amount, originside)
-sideWithSigner.getPositions(address=signer.address, includeStake=False, includeNextPrice=False)
-sideWithSigner.getNextPricePositions(address=signer.address)
-sideWithSigner.getStakedPositions(address=signer.address)
-
-oracle = market.oracleManager
-oracle.address
-oracle.getPrice()
-
-ym = market.yieldManager
-ym.address
-ym.providerAddress
+// write
+Float.MarketSide.mint
+Float.MarketSide.mintAndStake
+Float.MarketSide.stake
+Float.MarketSide.unstake
+Float.MarketSide.redeem
+Float.MarketSide.shift
+Float.MarketSide.shiftStake
 ```

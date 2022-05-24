@@ -1,5 +1,5 @@
 {
-  "name": "@float-capital/js-client",
+  "name": "@float-capital/rescript-client",
   "version": "0.7.0",
   "scripts": {
     "res:build": "rescript build -with-deps",
