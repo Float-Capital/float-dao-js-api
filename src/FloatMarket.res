@@ -7,6 +7,9 @@ open FloatUtil
 
 let {div, fromInt, toNumber, tenToThe18} = module(FloatEthers.BigNumber)
 
+// ====================================
+// Type definitions
+
 type bigNumbers = {
   long: FloatEthers.BigNumber.t,
   short: FloatEthers.BigNumber.t,
@@ -30,8 +33,48 @@ type contracts = {
   // TODO add oracleManager but wait for the change in FloatConfig first
 }
 
+type withProvider = {provider: FloatEthers.providerType, marketIndex: int}
+type withWallet = {wallet: FloatEthers.walletType, marketIndex: int}
+
+type withProviderOrWallet =
+  | P(withProvider)
+  | W(withWallet)
+
+let wrapSideP: withProvider => withProviderOrWallet = side => P(side)
+let wrapSideW: withWallet => withProviderOrWallet = side => W(side)
+
+// ====================================
+// Constructors
+
+module WithProvider = {
+  type t = withProvider
+  let make = (p, marketIndex) => {provider: p, marketIndex: marketIndex}
+  let makeWrap = (p, marketIndex) => make(p, marketIndex)->wrapSideP
+  let makeWrapReverseCurry = (marketIndex, p) => make(p, marketIndex)->wrapSideP
+}
+
+module WithWallet = {
+  type t = withWallet
+  let make = (w, marketIndex) => {wallet: w, marketIndex: marketIndex}
+  let makeWrap = (w, marketIndex) => make(w, marketIndex)->wrapSideW
+}
+
+// ====================================
+// Helper functions
+
+let provider = (side: withProviderOrWallet) =>
+    switch side {
+        | P(s) => s.provider
+        | W(s) => s.wallet.provider
+    }
+
+let marketIndex = (side: withProviderOrWallet) =>
+    switch side {
+        | P(s) => s.marketIndex
+        | W(s) => s.marketIndex
+    }
+
 type marketWithWallet = {
-  contracts: Promise.t<contracts>,
   getLeverage: unit => Promise.t<int>,
   getFundingRateMultiplier: unit => Promise.t<float>,
   getSyntheticTokenPrices: unit => Promise.t<bigNumbers>,
@@ -51,7 +94,6 @@ type marketWithWallet = {
 }
 
 type marketWithProvider = {
-  contracts: Promise.t<contracts>,
   getLeverage: unit => Promise.t<int>,
   getFundingRateMultiplier: unit => Promise.t<float>,
   getSyntheticTokenPrices: unit => Promise.t<bigNumbers>,
@@ -200,14 +242,6 @@ let updateSystemState = (
 
 let makeWithWallet = (w: FloatEthers.walletType, marketIndex: int): marketWithWallet => {
   {
-    contracts: w
-    ->FloatEthers.wrapWallet
-    ->getChainConfig
-    ->thenResolve(c => {
-      longToken: c.markets[marketIndex].longToken,
-      shortToken: c.markets[marketIndex].shortToken,
-      yieldManager: c.markets[marketIndex].yieldManager,
-    }),
     getLeverage: _ =>
       w->FloatEthers.wrapWallet->getChainConfig->then(c => leverage(w.provider, c, marketIndex->fromInt)),
     getFundingRateMultiplier: _ =>
@@ -262,14 +296,6 @@ let makeWithWallet = (w: FloatEthers.walletType, marketIndex: int): marketWithWa
 
 let makeWithProvider = (p: FloatEthers.providerType, marketIndex: int): marketWithProvider => {
   {
-    contracts: p
-    ->FloatEthers.wrapProvider
-    ->getChainConfig
-    ->thenResolve(c => {
-      longToken: c.markets[marketIndex].longToken,
-      shortToken: c.markets[marketIndex].shortToken,
-      yieldManager: c.markets[marketIndex].yieldManager,
-    }),
     getLeverage: _ =>
       p->FloatEthers.wrapProvider->getChainConfig->then(c => leverage(p, c, marketIndex->FloatEthers.BigNumber.fromInt)),
     getFundingRateMultiplier: _ =>
@@ -294,3 +320,17 @@ let makeWithProvider = (p: FloatEthers.providerType, marketIndex: int): marketWi
     connect: (w, isLong) => FloatMarketSide.WithWallet.make(w, marketIndex, isLong),
   }
 }
+
+// ====================================
+// Export functions
+
+let contracts = (market: withProviderOrWallet) =>
+    market
+->provider
+->FloatEthers.wrapProvider
+  ->getChainConfig
+  ->thenResolve(config => {
+    longToken: config.markets[market->marketIndex].longToken,
+    shortToken: config.markets[market->marketIndex].shortToken,
+    yieldManager: config.markets[market->marketIndex].yieldManager,
+  })
