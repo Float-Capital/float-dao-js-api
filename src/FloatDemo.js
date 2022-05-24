@@ -2,7 +2,7 @@
 'use strict';
 
 var Ethers = require("ethers");
-var FloatConfig = require("@float-dao/config/src/FloatConfig.js");
+var FloatConfig = require("@float-capital/config/src/FloatConfig.js");
 var Float__Chain = require("./Float__Chain.js");
 var Float__Ethers = require("./Float__Ethers.js");
 var Float__Market = require("./Float__Market.js");
@@ -25,9 +25,9 @@ function connectToNewWallet(provider, mnemonic) {
   return new (Ethers.Wallet.fromMnemonic)(mnemonic, "m/44'/60'/0'/0/0").connect(provider);
 }
 
-var providerUrl = FloatConfig.avalanche.rpcEndopint;
+var providerUrl = FloatConfig.avalancheConfig.rpcEndpoint;
 
-var chainId = FloatConfig.avalanche.networkId;
+var chainId = FloatConfig.avalancheConfig.networkId;
 
 var provider = new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId);
 
@@ -105,7 +105,7 @@ function demoWrite(param) {
   
 }
 
-demoWrite(undefined);
+demoReadyOnly(undefined);
 
 exports.env = env;
 exports.mnemonic = mnemonic;

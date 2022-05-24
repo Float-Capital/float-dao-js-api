@@ -46,21 +46,31 @@ module WithProvider = {
 
   // the unwrapped version is not the default but may be useful for rescript consumers
   //   that don't want to have to do a switch statement
-  let makeUnwrapped = (p, marketIndex, isLong) => {provider: p, marketIndex: marketIndex, isLong: isLong}
+  let makeUnwrapped = (p, marketIndex, isLong) => {
+    provider: p,
+    marketIndex: marketIndex,
+    isLong: isLong,
+  }
   let make = (p, marketIndex, isLong) => makeUnwrapped(p, marketIndex, isLong)->wrapSideP
 
   // this is just a convenience file that is used inside this repo,
   //   but it may be useful to consumers so why not leave it public
-  let makeReverseCurry = (isLong, marketIndex, p) => makeUnwrapped(p, marketIndex, isLong)->wrapSideP
+  let makeReverseCurry = (isLong, marketIndex, p) =>
+    makeUnwrapped(p, marketIndex, isLong)->wrapSideP
 
   // default provider can also be used
   let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
-  let makeDefaultUnwrapped = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
+  let makeDefaultUnwrapped = chainId =>
+    chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
 }
 
 module WithWallet = {
   type t = withWallet
-  let makeUnwrapped = (w, marketIndex, isLong) => {wallet: w, marketIndex: marketIndex, isLong: isLong}
+  let makeUnwrapped = (w, marketIndex, isLong) => {
+    wallet: w,
+    marketIndex: marketIndex,
+    isLong: isLong,
+  }
   let make = (w, marketIndex, isLong) => makeUnwrapped(w, marketIndex, isLong)->wrapSideW
 }
 
@@ -382,7 +392,9 @@ let stake = (
 ) =>
   wallet.provider
   ->syntheticTokenAddress(config, marketIndex, isLong)
-  ->then(address => resolve(address->Synth.make(~providerOrWallet=wallet->Float__Ethers.wrapWallet)))
+  ->then(address =>
+    resolve(address->Synth.make(~providerOrWallet=wallet->Float__Ethers.wrapWallet))
+  )
   ->then(synth => synth->Synth.stake(~amountSyntheticToken, txOptions))
 
 let unstake = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
@@ -507,7 +519,7 @@ let positions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
       switch side {
       | W(s) => s.wallet.address
       | _ => {
-          // TODO not a great DX but not how to make it better
+          // TODO not a great DX but not sure how to make it better
           //   1 way would be to have every exported function return an option (failed or successful)
           //   and let the consuming code deal with it
           Js.log("No address found")
@@ -537,7 +549,7 @@ let stakedPositions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
       switch side {
       | W(s) => s.wallet.address
       | _ => {
-          // TODO not a great DX but not how to make it better
+          // TODO not a great DX but not sure how to make it better
           //   1 way would be to have every exported function return an option (failed or successful)
           //   and let the consuming code deal with it
           Js.log("No address found")
@@ -567,7 +579,7 @@ let unsettledPositions = (side: withProviderOrWallet, ethAddress) =>
       switch side {
       | W(s) => s.wallet.address
       | _ => {
-          // TODO not a great DX but not how to make it better
+          // TODO not a great DX but not sure how to make it better
           //   1 way would be to have every exported function return an option (failed or successful)
           //   and let the consuming code deal with it
           Js.log("No address found")

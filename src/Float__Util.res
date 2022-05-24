@@ -1,8 +1,14 @@
 open Float__Ethers
 open FloatConfig
 
-// TODO fix these so that they actually fix the correct config and don't just return ava one
-//  first make a function in the config repo that will fetch the correct config given a chainId
+let getChainConfigUsingId = chainId =>
+  switch FloatConfig.getChainConfig(chainId) {
+  | Some(config) => config
+  | None => {
+      j`Cannot find chain config associated with network ID $chainId, defaulting to Avalanche`->Js.log
+      FloatConfig.avalancheConfig
+    }
+  }
 
 let getChainConfig = (pw: providerOrWallet) =>
   switch pw {
@@ -10,12 +16,7 @@ let getChainConfig = (pw: providerOrWallet) =>
   | W(w) => w.provider
   }
   ->Provider.getNetwork
-  ->Promise.thenResolve(network => {
-    let a = network.chainId
-    avalanche
-  })
-
-let getChainConfigUsingId = chainId => avalanche
+  ->Promise.thenResolve(network => network.chainId->getChainConfigUsingId)
 
 let makeDefaultProvider = config =>
-  config.rpcEndopint->Provider.JsonRpcProvider.make(~chainId=config.networkId)
+  config.rpcEndpoint->Provider.JsonRpcProvider.make(~chainId=config.networkId)

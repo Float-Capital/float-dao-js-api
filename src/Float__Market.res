@@ -29,9 +29,9 @@ type longshortpositions = {
 type contracts = {
   longToken: FloatConfig.erc20,
   shortToken: FloatConfig.erc20,
-  yieldManager: FloatConfig.contract,
-  // TODO add paymentToken but wait for the change in FloatConfig first
-  // TODO add oracleManager but wait for the change in FloatConfig first
+  yieldManager: FloatConfig.yieldManager,
+  paymentToken: FloatConfig.erc20,
+  oracleManager: FloatConfig.oracleManager,
 }
 
 // ====================================
@@ -47,11 +47,13 @@ module WithProvider = {
 
   // this is just a convenience file that is used inside this repo,
   //   but it may be useful to consumers so why not leave it public
-  let makeReverseCurry = (marketIndex, provider) => provider->makeUnwrapped(marketIndex)->wrapMarketP
+  let makeReverseCurry = (marketIndex, provider) =>
+    provider->makeUnwrapped(marketIndex)->wrapMarketP
 
   // default provider can also be used
   let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
-  let makeDefaultUnwrapped = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
+  let makeDefaultUnwrapped = chainId =>
+    chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
 }
 
 module WithWallet = {
@@ -208,6 +210,8 @@ let contracts = (market: withProviderOrWallet) =>
     longToken: config.markets[market->marketIndex].longToken,
     shortToken: config.markets[market->marketIndex].shortToken,
     yieldManager: config.markets[market->marketIndex].yieldManager,
+    paymentToken: config.markets[market->marketIndex].paymentToken,
+    oracleManager: config.markets[market->marketIndex].oracleManager,
   })
 
 let leverage = (market: withProviderOrWallet) =>
