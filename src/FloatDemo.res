@@ -34,35 +34,11 @@ let run = () => {
   chain.contracts
   ->Promise.thenResolve(c => "LongShort address:"->Js.log2(c.longShort.address))
   ->ignore
-
-  let marketIndex = 1
-  let market = marketIndex->chain.getMarket
-
-  market.getFundingRateMultiplier()
-  ->Promise.thenResolve(a =>
-    "Funding rate multiplier for market "
-    ->Js.String2.concat(marketIndex->Js.Int.toString)
-    ->Js.String2.concat(":")
-    ->Js.log2(a)
-  )
-  ->ignore
-
-  market.getLeverage()
-  ->Promise.thenResolve(m =>
-    "Leverage for market "
-    ->Js.String2.concat(marketIndex->Js.Int.toString)
-    ->Js.String2.concat(":")
-    ->Js.log2(m)
-  )
-  ->ignore
-
   let isLong = false
   let sideName = switch isLong {
   | true => "long"
   | false => "short"
   }
-
-  let marketSide = isLong->market.getSide
 
   //let marketSideConnected =
   //  providerUrl
@@ -103,6 +79,28 @@ let runDemo = _ => {
   | true => "long"
   | false => "short"
   }
+
+  let market = FloatMarket.WithProvider.makeWrap(provider, marketIndex)
+
+  market
+  ->FloatMarket.fundingRateMultiplier
+  ->Promise.thenResolve(a =>
+    "Funding rate multiplier for market "
+    ->Js.String2.concat(marketIndex->Js.Int.toString)
+    ->Js.String2.concat(":")
+    ->Js.log2(a)
+  )
+  ->ignore
+
+  market
+  ->FloatMarket.leverage
+  ->Promise.thenResolve(m =>
+    "Leverage for market "
+    ->Js.String2.concat(marketIndex->Js.Int.toString)
+    ->Js.String2.concat(":")
+    ->Js.log2(m)
+  )
+  ->ignore
 
   let marketSide = FloatMarketSide.WithProvider.makeWrap(provider, marketIndex, isLong)
 

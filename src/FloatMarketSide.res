@@ -76,16 +76,16 @@ let marketIndex = (side: withProviderOrWallet) =>
   }
 
 let longOrShort = (long, short, isLong) =>
-    switch isLong {
-        | true => long
-        | false => short
-    }
+  switch isLong {
+  | true => long
+  | false => short
+  }
 
 let toSign = isLong =>
-    switch isLong {
-        | true => 1
-        | false => -1
-    }
+  switch isLong {
+  | true => 1
+  | false => -1
+  }
 
 let divFloat = (a: float, b: float) => a /. b
 
@@ -341,7 +341,7 @@ let mint = (wallet, config, marketIndex, isLong, amountPaymentToken) =>
   }
 
 let mintAndStake = (wallet, config, marketIndex, isLong, amountPaymentToken) =>
-    wallet
+  wallet
   ->FloatEthers.wrapWallet
   ->makeLongShortContract(config)
   ->LongShort.mintAndStakeNextPrice(~marketIndex, ~amountPaymentToken, ~isLong)
@@ -360,7 +360,7 @@ let stake = (
   ->then(synth => synth->Synth.stake(~amountSyntheticToken, txOptions))
 
 let unstake = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
-    wallet
+  wallet
   ->FloatEthers.wrapWallet
   ->makeStakerContract(config)
   ->Staker.withdraw(~marketIndex, ~isWithdrawFromLong=isLong, ~amountSyntheticToken)
@@ -394,7 +394,7 @@ let shift = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
   }
 
 let shiftStake = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
-    wallet
+  wallet
   ->FloatEthers.wrapWallet
   ->makeStakerContract(config)
   ->Staker.shiftTokens(~amountSyntheticToken, ~marketIndex, ~isShiftFromLong=isLong)
@@ -469,6 +469,7 @@ let fundingRateApr = (side: withProviderOrWallet) =>
   ->getChainConfig
   ->then(config => side->provider->fundingRateApr(config, side->marketIndex->fromInt, side->isLong))
 
+// TODO need to make ethAddress optional
 let positions = (side: withProviderOrWallet, ethAddress) =>
   side
   ->provider
