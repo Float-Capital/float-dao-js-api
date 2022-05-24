@@ -342,17 +342,10 @@
     "@ethersproject/properties" "^5.5.0"
     "@ethersproject/strings" "^5.5.0"
 
-"@float-capital/config@^0.6.0":
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/@float-capital/config/-/config-0.6.0.tgz#9161654ee902645ed69bfdd60def5c2a0a2b7b2a"
-  integrity sha512-UwN9XcY1SSa2t/3usO3DQom01hm+reGMmmI4puSdWkfj2tbeEcM3bN4p9V8tfHfdvd+zQYqrfzRrAAaSBJeFOw==
-  dependencies:
-    rescript "^9.1.4"
-
-"@float-dao/config@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@float-dao/config/-/config-0.3.0.tgz#947523e2227157d54fd8e6566d1d650561a44c25"
-  integrity sha512-JReFiSK04dV1/b/TncKsnvJVRGJ9XEMLb21Hcj68qfCVEuVlPlG7fq5AbIxJXCQJvGbRhEc2FC9kvR3bNZxG5g==
+"@float-capital/config@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@float-capital/config/-/config-0.7.0.tgz#a75f4da4a597b2fa924f5fa6f34668bf2f7c8ab9"
+  integrity sha512-SIEpnyRU9/6ax46WG2Hu9jC0ol8kxYYs9mfZSBBPOgQ5kexDevsrP4hUNltpA0KuAxZSD3IrREGq3FNsuA4y6A==
   dependencies:
     rescript "^9.1.4"
 
