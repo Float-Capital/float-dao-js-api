@@ -7,92 +7,118 @@ var FloatEthers = require("./FloatEthers.js");
 var FloatMarket = require("./FloatMarket.js");
 var FloatContracts = require("./FloatContracts.js");
 
-function wrapChainWithProvider(p) {
+function wrapSideP(side) {
   return {
-          TAG: /* ChainPWrap */0,
-          _0: p
+          TAG: /* P */0,
+          _0: side
         };
 }
 
-function wrapChainWithWallet(p) {
+function wrapSideW(side) {
   return {
-          TAG: /* ChainWWrap */1,
-          _0: p
+          TAG: /* W */1,
+          _0: side
         };
 }
+
+function make(p) {
+  return {
+          provider: p
+        };
+}
+
+function makeWrap(p) {
+  return {
+          TAG: /* P */0,
+          _0: {
+            provider: p
+          }
+        };
+}
+
+function makeDefault(chainId) {
+  return {
+          provider: FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId))
+        };
+}
+
+function makeDefaultWrap(chainId) {
+  var p = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
+  return {
+          TAG: /* P */0,
+          _0: {
+            provider: p
+          }
+        };
+}
+
+var WithProvider = {
+  make: make,
+  makeWrap: makeWrap,
+  makeDefault: makeDefault,
+  makeDefaultWrap: makeDefaultWrap
+};
+
+function make$1(w) {
+  return {
+          wallet: w
+        };
+}
+
+function makeWrap$1(w) {
+  return {
+          TAG: /* W */1,
+          _0: {
+            wallet: w
+          }
+        };
+}
+
+var WithWallet = {
+  make: make$1,
+  makeWrap: makeWrap$1
+};
 
 function makeLongShortContract(p, c) {
   return FloatContracts.LongShort.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
 }
 
-function updateSystemStateMulti(w, c, marketIndexes) {
-  var partial_arg = makeLongShortContract(FloatEthers.wrapWallet(w), c);
+function updateSystemStateMulti(wallet, config, marketIndexes) {
+  var partial_arg = makeLongShortContract(FloatEthers.wrapWallet(wallet), config);
   return function (param) {
     return partial_arg.updateSystemStateMulti(marketIndexes, param);
   };
 }
 
-function makeWithWallet(w) {
-  return {
-          contracts: FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                return c.contracts;
-              }),
-          updateSystemState: (function (marketIndexes, txOptions) {
-              return FloatUtil.getChainConfig(FloatEthers.wrapWallet(w)).then(function (c) {
-                          return updateSystemStateMulti(w, c, marketIndexes)(txOptions);
-                        });
-            }),
-          getMarket: (function (param) {
-              return FloatMarket.WithWallet.make(w, param);
-            })
-        };
+function contracts(chain) {
+  var tmp;
+  tmp = chain.TAG === /* P */0 ? FloatUtil.getChainConfig(FloatEthers.wrapProvider(chain._0.provider)) : FloatUtil.getChainConfig(FloatEthers.wrapProvider(chain._0.wallet.provider));
+  return tmp.then(function (c) {
+              return c.contracts;
+            });
 }
 
-function makeWithProvider(p) {
-  return {
-          contracts: FloatUtil.getChainConfig(FloatEthers.wrapProvider(p)).then(function (c) {
-                return c.contracts;
-              }),
-          getMarket: (function (param) {
-              return FloatMarket.WithProvider.make(p, param);
-            }),
-          connect: makeWithWallet
-        };
-}
-
-function makeWithDefaultProvider(chainId) {
-  var partial_arg = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
-  return {
-          contracts: FloatUtil.getChainConfig(FloatEthers.wrapProvider(FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId)))).then(function (c) {
-                return c.contracts;
-              }),
-          getMarket: (function (param) {
-              return FloatMarket.WithProvider.make(partial_arg, param);
-            }),
-          connect: makeWithWallet
-        };
-}
-
-function make(pw) {
-  if (pw.TAG === /* P */0) {
-    return {
-            TAG: /* ChainPWrap */0,
-            _0: makeWithProvider(pw._0)
-          };
+function market(chain, marketIndex) {
+  if (chain.TAG === /* P */0) {
+    return FloatMarket.WithProvider.makeWrap(chain._0.provider, marketIndex);
   } else {
-    return {
-            TAG: /* ChainWWrap */1,
-            _0: makeWithWallet(pw._0)
-          };
+    return FloatMarket.WithWallet.makeWrap(chain._0.wallet, marketIndex);
   }
 }
 
-exports.wrapChainWithProvider = wrapChainWithProvider;
-exports.wrapChainWithWallet = wrapChainWithWallet;
+function updateSystemState(chain, marketIndexes, txOptions) {
+  return FloatUtil.getChainConfig(FloatEthers.wrapWallet(chain.wallet)).then(function (config) {
+              return updateSystemStateMulti(chain.wallet, config, marketIndexes)(txOptions);
+            });
+}
+
+exports.wrapSideP = wrapSideP;
+exports.wrapSideW = wrapSideW;
+exports.WithProvider = WithProvider;
+exports.WithWallet = WithWallet;
 exports.makeLongShortContract = makeLongShortContract;
 exports.updateSystemStateMulti = updateSystemStateMulti;
-exports.makeWithWallet = makeWithWallet;
-exports.makeWithProvider = makeWithProvider;
-exports.makeWithDefaultProvider = makeWithDefaultProvider;
-exports.make = make;
+exports.contracts = contracts;
+exports.market = market;
+exports.updateSystemState = updateSystemState;
 /* ethers Not a pure module */

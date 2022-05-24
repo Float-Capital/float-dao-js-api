@@ -16,8 +16,8 @@ function getChainConfigUsingId(chainId) {
   return FloatConfig.avalanche;
 }
 
-function makeDefaultProvider(c) {
-  return new (Ethers.providers.JsonRpcProvider)(c.rpcEndopint, c.networkId);
+function makeDefaultProvider(config) {
+  return new (Ethers.providers.JsonRpcProvider)(config.rpcEndopint, config.networkId);
 }
 
 exports.getChainConfig = getChainConfig;
