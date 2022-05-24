@@ -39,22 +39,31 @@ type contracts = {
 
 module WithProvider = {
   type t = withProvider
-  // TODO change the following around so that wrap is default
-  let make = (provider, marketIndex) => {provider: provider, marketIndex: marketIndex}
-  let makeWrap = (provider, marketIndex) => provider->make(marketIndex)->wrapMarketP
-  let makeWrapReverseCurry = (marketIndex, provider) => provider->make(marketIndex)->wrapMarketP
+
+  // the unwrapped version is not the default but may be useful for rescript consumers
+  //   that don't want to have to do a switch statement
+  let makeUnwrapped = (provider, marketIndex) => {provider: provider, marketIndex: marketIndex}
+  let make = (provider, marketIndex) => provider->makeUnwrapped(marketIndex)->wrapMarketP
+
+  // this is just a convenience file that is used inside this repo,
+  //   but it may be useful to consumers so why not leave it public
+  let makeReverseCurry = (marketIndex, provider) => provider->makeUnwrapped(marketIndex)->wrapMarketP
+
+  // default provider can also be used
+  let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
+  let makeDefaultUnwrapped = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
 }
 
 module WithWallet = {
   type t = withWallet
-  let make = (w, marketIndex) => {wallet: w, marketIndex: marketIndex}
-  let makeWrap = (w, marketIndex) => make(w, marketIndex)->wrapMarketW
+  let makeUnwrapped = (w, marketIndex) => {wallet: w, marketIndex: marketIndex}
+  let make = (w, marketIndex) => makeUnwrapped(w, marketIndex)->wrapMarketW
 }
 
 let makeUsingChain = (chain, marketIndex) =>
   switch chain {
-  | FloatChain.P(c) => c.provider->WithProvider.makeWrap(marketIndex)
-  | FloatChain.W(c) => c.wallet->WithWallet.makeWrap(marketIndex)
+  | FloatChain.P(c) => c.provider->WithProvider.make(marketIndex)
+  | FloatChain.W(c) => c.wallet->WithWallet.make(marketIndex)
   }
 
 // ====================================
@@ -76,8 +85,8 @@ let makeUsingChain = (chain, marketIndex) =>
     }
 )
 
-%%private(let longSide = FloatMarketSide.WithProvider.makeWrapReverseCurry(true))
-%%private(let shortSide = FloatMarketSide.WithProvider.makeWrapReverseCurry(false))
+%%private(let longSide = FloatMarketSide.WithProvider.makeReverseCurry(true))
+%%private(let shortSide = FloatMarketSide.WithProvider.makeReverseCurry(false))
 
 let makeLongShortContract = (p: FloatEthers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
   LongShort.make(

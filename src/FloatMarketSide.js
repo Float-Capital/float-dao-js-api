@@ -61,7 +61,7 @@ function wrapSideW(side) {
         };
 }
 
-function make(p, marketIndex, isLong) {
+function makeUnwrapped(p, marketIndex, isLong) {
   return {
           provider: p,
           marketIndex: marketIndex,
@@ -69,7 +69,7 @@ function make(p, marketIndex, isLong) {
         };
 }
 
-function makeWrap(p, marketIndex, isLong) {
+function make(p, marketIndex, isLong) {
   return {
           TAG: /* P */0,
           _0: {
@@ -80,7 +80,7 @@ function makeWrap(p, marketIndex, isLong) {
         };
 }
 
-function makeWrapReverseCurry(isLong, marketIndex, p) {
+function makeReverseCurry(isLong, marketIndex, p) {
   return {
           TAG: /* P */0,
           _0: {
@@ -89,15 +89,35 @@ function makeWrapReverseCurry(isLong, marketIndex, p) {
             isLong: isLong
           }
         };
+}
+
+function makeDefault(chainId) {
+  var partial_arg = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
+  return function (param, param$1) {
+    return make(partial_arg, param, param$1);
+  };
+}
+
+function makeDefaultUnwrapped(chainId) {
+  var partial_arg = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
+  return function (param, param$1) {
+    return {
+            provider: partial_arg,
+            marketIndex: param,
+            isLong: param$1
+          };
+  };
 }
 
 var WithProvider = {
+  makeUnwrapped: makeUnwrapped,
   make: make,
-  makeWrap: makeWrap,
-  makeWrapReverseCurry: makeWrapReverseCurry
+  makeReverseCurry: makeReverseCurry,
+  makeDefault: makeDefault,
+  makeDefaultUnwrapped: makeDefaultUnwrapped
 };
 
-function make$1(w, marketIndex, isLong) {
+function makeUnwrapped$1(w, marketIndex, isLong) {
   return {
           wallet: w,
           marketIndex: marketIndex,
@@ -105,7 +125,7 @@ function make$1(w, marketIndex, isLong) {
         };
 }
 
-function makeWrap$1(w, marketIndex, isLong) {
+function make$1(w, marketIndex, isLong) {
   return {
           TAG: /* W */1,
           _0: {
@@ -117,17 +137,17 @@ function makeWrap$1(w, marketIndex, isLong) {
 }
 
 var WithWallet = {
-  make: make$1,
-  makeWrap: makeWrap$1
+  makeUnwrapped: makeUnwrapped$1,
+  make: make$1
 };
 
 function makeUsingMarket(market, isLong) {
   if (market.TAG === /* P */0) {
     var m = market._0;
-    return makeWrap(m.provider, m.marketIndex, isLong);
+    return make(m.provider, m.marketIndex, isLong);
   }
   var m$1 = market._0;
-  return makeWrap$1(m$1.wallet, m$1.marketIndex, isLong);
+  return make$1(m$1.wallet, m$1.marketIndex, isLong);
 }
 
 function provider(side) {

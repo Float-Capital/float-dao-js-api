@@ -42,13 +42,13 @@ let demoReadyOnly = _ => {
   | false => "short"
   }
 
-  let chain = FloatChain.WithProvider.makeDefaultWrap(chainId)
+  let chain = FloatChain.WithProvider.makeDefault(chainId)
   chain
   ->FloatChain.contracts
   ->Promise.thenResolve(c => "LongShort address:"->Js.log2(c.longShort.address))
   ->ignore
 
-  let market = FloatMarket.WithProvider.makeWrap(provider, marketIndex)
+  let market = FloatMarket.WithProvider.make(provider, marketIndex)
 
   market
   ->FloatMarket.fundingRateMultiplier
@@ -139,7 +139,7 @@ let demoWrite = _ => {
   //->Promise.thenResolve(tx => tx.hash->Js.log)
   //->ignore
 
-  let market = wallet->FloatMarket.WithWallet.make(marketIndex)
+  let market = wallet->FloatMarket.WithWallet.makeUnwrapped(marketIndex)
 
   market
   ->FloatMarket.settleOutstandingActions(txOptions)

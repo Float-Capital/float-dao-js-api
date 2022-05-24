@@ -43,21 +43,31 @@ let wrapSideW: withWallet => withProviderOrWallet = side => W(side)
 
 module WithProvider = {
   type t = withProvider
-  let make = (p, marketIndex, isLong) => {provider: p, marketIndex: marketIndex, isLong: isLong}
-  let makeWrap = (p, marketIndex, isLong) => make(p, marketIndex, isLong)->wrapSideP
-  let makeWrapReverseCurry = (isLong, marketIndex, p) => make(p, marketIndex, isLong)->wrapSideP
+
+  // the unwrapped version is not the default but may be useful for rescript consumers
+  //   that don't want to have to do a switch statement
+  let makeUnwrapped = (p, marketIndex, isLong) => {provider: p, marketIndex: marketIndex, isLong: isLong}
+  let make = (p, marketIndex, isLong) => makeUnwrapped(p, marketIndex, isLong)->wrapSideP
+
+  // this is just a convenience file that is used inside this repo,
+  //   but it may be useful to consumers so why not leave it public
+  let makeReverseCurry = (isLong, marketIndex, p) => makeUnwrapped(p, marketIndex, isLong)->wrapSideP
+
+  // default provider can also be used
+  let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
+  let makeDefaultUnwrapped = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
 }
 
 module WithWallet = {
   type t = withWallet
-  let make = (w, marketIndex, isLong) => {wallet: w, marketIndex: marketIndex, isLong: isLong}
-  let makeWrap = (w, marketIndex, isLong) => make(w, marketIndex, isLong)->wrapSideW
+  let makeUnwrapped = (w, marketIndex, isLong) => {wallet: w, marketIndex: marketIndex, isLong: isLong}
+  let make = (w, marketIndex, isLong) => makeUnwrapped(w, marketIndex, isLong)->wrapSideW
 }
 
 let makeUsingMarket = (market, isLong) =>
   switch market {
-  | FloatMarketTypes.P(m) => m.provider->WithProvider.makeWrap(m.marketIndex, isLong)
-  | FloatMarketTypes.W(m) => m.wallet->WithWallet.makeWrap(m.marketIndex, isLong)
+  | FloatMarketTypes.P(m) => m.provider->WithProvider.make(m.marketIndex, isLong)
+  | FloatMarketTypes.W(m) => m.wallet->WithWallet.make(m.marketIndex, isLong)
   }
 
 // ====================================
