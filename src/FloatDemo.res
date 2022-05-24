@@ -1,4 +1,4 @@
-open FloatEthers
+open Float__Ethers
 
 @val external process: 'a = "process"
 let env = process["env"]
@@ -6,7 +6,7 @@ let env = process["env"]
 @module("../secretsManager.js") external mnemonic: string = "mnemonic"
 @module("../secretsManager.js") external providerUrlOther: string = "providerUrl"
 
-let {oneGweiInWei, fromInt} = module(FloatEthers.BigNumber)
+let {oneGweiInWei, fromInt} = module(Float__Ethers.BigNumber)
 
 let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
@@ -21,7 +21,7 @@ let maxFeePerGas = BigNumber.fromInt(62)->BigNumber.mul(oneGweiInWei)
 let maxPriorityFeePerGas = BigNumber.fromInt(34)->BigNumber.mul(oneGweiInWei)
 let gasLimit = BigNumber.fromInt(1000000)
 
-let txOptions: FloatContracts.txOptions = {
+let txOptions: Float__Contracts.txOptions = {
   maxFeePerGas: maxFeePerGas->BigNumber.toString,
   maxPriorityFeePerGas: maxPriorityFeePerGas->BigNumber.toString,
   gasLimit: gasLimit->BigNumber.toString,
@@ -42,16 +42,16 @@ let demoReadyOnly = _ => {
   | false => "short"
   }
 
-  let chain = FloatChain.WithProvider.makeDefault(chainId)
+  let chain = Float__Chain.WithProvider.makeDefault(chainId)
   chain
-  ->FloatChain.contracts
+  ->Float__Chain.contracts
   ->Promise.thenResolve(c => "LongShort address:"->Js.log2(c.longShort.address))
   ->ignore
 
-  let market = FloatMarket.WithProvider.make(provider, marketIndex)
+  let market = Float__Market.WithProvider.make(provider, marketIndex)
 
   market
-  ->FloatMarket.fundingRateMultiplier
+  ->Float__Market.fundingRateMultiplier
   ->Promise.thenResolve(a =>
     "Funding rate multiplier for market "
     ->Js.String2.concat(marketIndex->Js.Int.toString)
@@ -61,7 +61,7 @@ let demoReadyOnly = _ => {
   ->ignore
 
   market
-  ->FloatMarket.leverage
+  ->Float__Market.leverage
   ->Promise.thenResolve(m =>
     "Leverage for market "
     ->Js.String2.concat(marketIndex->Js.Int.toString)
@@ -70,10 +70,10 @@ let demoReadyOnly = _ => {
   )
   ->ignore
 
-  let marketSide = market->FloatMarketSide.makeUsingMarket(isLong)
+  let marketSide = market->Float__MarketSide.makeUsingMarket(isLong)
 
   marketSide
-  ->FloatMarketSide.poolValue
+  ->Float__MarketSide.poolValue
   ->Promise.thenResolve(a =>
     "Value of marketSide "
     ->Js.String2.concat(sideName)
@@ -83,7 +83,7 @@ let demoReadyOnly = _ => {
   ->ignore
 
   marketSide
-  ->FloatMarketSide.fundingRateApr
+  ->Float__MarketSide.fundingRateApr
   ->Promise.thenResolve(a =>
     "Funding rate APR for marketSide "
     ->Js.String2.concat(sideName)
@@ -93,7 +93,7 @@ let demoReadyOnly = _ => {
   ->ignore
 
   marketSide
-  ->FloatMarketSide.exposure
+  ->Float__MarketSide.exposure
   ->Promise.thenResolve(a =>
     "Exposure of marketSide"
     ->Js.String2.concat(sideName)
@@ -103,7 +103,7 @@ let demoReadyOnly = _ => {
   ->ignore
 
   marketSide
-  ->FloatMarketSide.unconfirmedExposure
+  ->Float__MarketSide.unconfirmedExposure
   ->Promise.thenResolve(a =>
     "Unconfirmed exposure of marketSide"
     ->Js.String2.concat(sideName)
@@ -114,7 +114,7 @@ let demoReadyOnly = _ => {
 
   let address = "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"
   marketSide
-  ->FloatMarketSide.positions(~ethAddress=address, ())
+  ->Float__MarketSide.positions(~ethAddress=address, ())
   ->Promise.thenResolve(a =>
     "Synth token amount for 0x38.. in marketSide"
     ->Js.String2.concat(sideName)
@@ -132,24 +132,24 @@ let demoWrite = _ => {
   | false => "short"
   }
 
-  let chain = wallet->FloatChain.WithWallet.make
+  let chain = wallet->Float__Chain.WithWallet.make
 
   //chain
-  //->FloatChain.updateSystemStateMulti([1], txOptions)
+  //->Float__Chain.updateSystemStateMulti([1], txOptions)
   //->Promise.thenResolve(tx => tx.hash->Js.log)
   //->ignore
 
-  let market = wallet->FloatMarket.WithWallet.makeUnwrapped(marketIndex)
+  let market = wallet->Float__Market.WithWallet.makeUnwrapped(marketIndex)
 
   market
-  ->FloatMarket.settleOutstandingActions(txOptions)
+  ->Float__Market.settleOutstandingActions(txOptions)
   ->Promise.thenResolve(tx => tx.hash->Js.log)
   ->ignore
 
-  //let side = wallet->FloatMarketSide.WithWallet.make(marketIndex, isLong)
+  //let side = wallet->Float__MarketSide.WithWallet.make(marketIndex, isLong)
 
   //side
-  //->FloatMarketSide.mint(1->fromInt, txOptions)
+  //->Float__MarketSide.mint(1->fromInt, txOptions)
   //->Promise.thenResolve(tx => tx.hash->Js.log)
   //->ignore
 }

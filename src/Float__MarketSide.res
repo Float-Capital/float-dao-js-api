@@ -1,5 +1,5 @@
-open FloatContracts
-open FloatUtil
+open Float__Contracts
+open Float__Util
 open Promise
 
 // ====================================
@@ -18,18 +18,18 @@ let {
   toNumberFloat,
   tenToThe18,
   tenToThe14,
-} = module(FloatEthers.BigNumber)
+} = module(Float__Ethers.BigNumber)
 
 // ====================================
 // Type definitions
 
 type positions = {
-  paymentToken: FloatEthers.BigNumber.t,
-  syntheticToken: FloatEthers.BigNumber.t,
+  paymentToken: Float__Ethers.BigNumber.t,
+  syntheticToken: Float__Ethers.BigNumber.t,
 }
 
-type withProvider = {provider: FloatEthers.providerType, marketIndex: int, isLong: bool}
-type withWallet = {wallet: FloatEthers.walletType, marketIndex: int, isLong: bool}
+type withProvider = {provider: Float__Ethers.providerType, marketIndex: int, isLong: bool}
+type withWallet = {wallet: Float__Ethers.walletType, marketIndex: int, isLong: bool}
 
 type withProviderOrWallet =
   | P(withProvider)
@@ -66,8 +66,8 @@ module WithWallet = {
 
 let makeUsingMarket = (market, isLong) =>
   switch market {
-  | FloatMarketTypes.P(m) => m.provider->WithProvider.make(m.marketIndex, isLong)
-  | FloatMarketTypes.W(m) => m.wallet->WithWallet.make(m.marketIndex, isLong)
+  | Float__Market__shared.P(m) => m.provider->WithProvider.make(m.marketIndex, isLong)
+  | Float__Market__shared.W(m) => m.wallet->WithWallet.make(m.marketIndex, isLong)
   }
 
 // ====================================
@@ -120,21 +120,21 @@ let makeUsingMarket = (market, isLong) =>
 
 // TODO we should not be using getAddressUnsafe
 //   rather we should do error handling properly
-let makeLongShortContract = (p: FloatEthers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
+let makeLongShortContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
   LongShort.make(
-    ~address=c.contracts.longShort.address->FloatEthers.Utils.getAddressUnsafe,
+    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
 
-let makeStakerContract = (p: FloatEthers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
+let makeStakerContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
   Staker.make(
-    ~address=c.contracts.longShort.address->FloatEthers.Utils.getAddressUnsafe,
+    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
 
 let syntheticTokenAddress = (provider, config, marketIndex, isLong) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.syntheticTokens(~marketIndex, ~isLong)
 
@@ -142,7 +142,7 @@ let syntheticTokenTotalSupply = (provider, config, marketIndex, isLong) =>
   provider
   ->syntheticTokenAddress(config, marketIndex, isLong)
   ->then(address =>
-    resolve(address->Synth.make(~providerOrWallet=provider->FloatEthers.wrapProvider))
+    resolve(address->Synth.make(~providerOrWallet=provider->Float__Ethers.wrapProvider))
   )
   ->then(synth => synth->Synth.totalSupply)
 
@@ -150,7 +150,7 @@ let syntheticTokenBalance = (provider, config, marketIndex, isLong, owner) =>
   provider
   ->syntheticTokenAddress(config, marketIndex, isLong)
   ->then(address =>
-    resolve(address->Synth.make(~providerOrWallet=provider->FloatEthers.wrapProvider))
+    resolve(address->Synth.make(~providerOrWallet=provider->Float__Ethers.wrapProvider))
   )
   ->then(synth => synth->Synth.balanceOf(~owner))
 
@@ -159,14 +159,14 @@ let stakedSyntheticTokenBalance = (provider, config, marketIndex, isLong, owner)
   ->syntheticTokenAddress(config, marketIndex, isLong)
   ->then(token =>
     provider
-    ->FloatEthers.wrapProvider
+    ->Float__Ethers.wrapProvider
     ->makeStakerContract(config)
     ->Staker.userAmountStaked(~token, ~owner)
   )
 
 let marketSideValue = (provider, config, marketIndex, isLong) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.marketSideValueInPaymentToken(~marketIndex)
   ->thenResolve(value =>
@@ -178,31 +178,31 @@ let marketSideValue = (provider, config, marketIndex, isLong) =>
 
 let updateIndex = (provider, config, marketIndex, user) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.userNextPrice_currentUpdateIndex(~marketIndex, ~user)
 
 let unsettledSynthBalance = (provider, config, marketIndex, isLong, user) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.getUsersConfirmedButNotSettledSynthBalance(~marketIndex, ~isLong, ~user)
 
 let marketSideUnconfirmedDeposits = (provider, config, marketIndex, isLong) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.batched_amountPaymentToken_deposit(~marketIndex, ~isLong)
 
 let marketSideUnconfirmedRedeems = (provider, config, marketIndex, isLong) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.batched_amountSyntheticToken_redeem(~marketIndex, ~isLong)
 
 let marketSideUnconfirmedShifts = (provider, config, marketIndex, isShiftFromLong) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.batched_amountSyntheticToken_toShiftAwayFrom_marketSide(
     ~marketIndex,
@@ -217,13 +217,13 @@ let syntheticTokenPrice = (provider, config, marketIndex, isLong) =>
 
 let syntheticTokenPriceSnapshot = (provider, config, marketIndex, isLong, priceSnapshotIndex) =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.get_syntheticToken_priceSnapshot_side(~marketIndex, ~isLong, ~priceSnapshotIndex)
 
 let marketSideValues = (provider, config, marketIndex): Promise.t<LongShort.marketSideValue> =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.marketSideValueInPaymentToken(~marketIndex)
 
@@ -289,7 +289,7 @@ let unconfirmedExposure = (provider, config, marketIndex, isLong) =>
 // This should really be in the Market.res file but the compiler complains about a dependency cycle
 let fundingRateMultiplier = (provider, config, marketIndex): Promise.t<float> =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.fundingRateMultiplier_e18(~marketIndex)
   ->thenResolve(m => m->div(tenToThe18)->toNumberFloat)
@@ -356,24 +356,24 @@ let mint = (wallet, config, marketIndex, isLong, amountPaymentToken) =>
   switch isLong {
   | true =>
     wallet
-    ->FloatEthers.wrapWallet
+    ->Float__Ethers.wrapWallet
     ->makeLongShortContract(config)
     ->LongShort.mintLongNextPrice(~marketIndex, ~amountPaymentToken)
   | false =>
     wallet
-    ->FloatEthers.wrapWallet
+    ->Float__Ethers.wrapWallet
     ->makeLongShortContract(config)
     ->LongShort.mintShortNextPrice(~marketIndex, ~amountPaymentToken)
   }
 
 let mintAndStake = (wallet, config, marketIndex, isLong, amountPaymentToken) =>
   wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->makeLongShortContract(config)
   ->LongShort.mintAndStakeNextPrice(~marketIndex, ~amountPaymentToken, ~isLong)
 
 let stake = (
-  wallet: FloatEthers.walletType,
+  wallet: Float__Ethers.walletType,
   config,
   marketIndex,
   isLong,
@@ -382,12 +382,12 @@ let stake = (
 ) =>
   wallet.provider
   ->syntheticTokenAddress(config, marketIndex, isLong)
-  ->then(address => resolve(address->Synth.make(~providerOrWallet=wallet->FloatEthers.wrapWallet)))
+  ->then(address => resolve(address->Synth.make(~providerOrWallet=wallet->Float__Ethers.wrapWallet)))
   ->then(synth => synth->Synth.stake(~amountSyntheticToken, txOptions))
 
 let unstake = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
   wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->makeStakerContract(config)
   ->Staker.withdraw(~marketIndex, ~isWithdrawFromLong=isLong, ~amountSyntheticToken)
 
@@ -395,12 +395,12 @@ let redeem = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
   switch isLong {
   | true =>
     wallet
-    ->FloatEthers.wrapWallet
+    ->Float__Ethers.wrapWallet
     ->makeLongShortContract(config)
     ->LongShort.redeemLongNextPrice(~marketIndex, ~amountSyntheticToken)
   | false =>
     wallet
-    ->FloatEthers.wrapWallet
+    ->Float__Ethers.wrapWallet
     ->makeLongShortContract(config)
     ->LongShort.redeemShortNextPrice(~marketIndex, ~amountSyntheticToken)
   }
@@ -409,19 +409,19 @@ let shift = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
   switch isLong {
   | true =>
     wallet
-    ->FloatEthers.wrapWallet
+    ->Float__Ethers.wrapWallet
     ->makeLongShortContract(config)
     ->LongShort.shiftPositionFromLongNextPrice(~marketIndex, ~amountSyntheticToken)
   | false =>
     wallet
-    ->FloatEthers.wrapWallet
+    ->Float__Ethers.wrapWallet
     ->makeLongShortContract(config)
     ->LongShort.shiftPositionFromShortNextPrice(~marketIndex, ~amountSyntheticToken)
   }
 
 let shiftStake = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
   wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->makeStakerContract(config)
   ->Staker.shiftTokens(~amountSyntheticToken, ~marketIndex, ~isShiftFromLong=isLong)
 
@@ -433,7 +433,7 @@ let shiftStake = (wallet, config, marketIndex, isLong, amountSyntheticToken) =>
 let syntheticToken = (side: withProviderOrWallet) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->thenResolve(config =>
     switch side->isLong {
@@ -445,7 +445,7 @@ let syntheticToken = (side: withProviderOrWallet) =>
 let name = (side: withProviderOrWallet) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->thenResolve(_ =>
     switch side->isLong {
@@ -457,7 +457,7 @@ let name = (side: withProviderOrWallet) =>
 let poolValue = (side: withProviderOrWallet) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config =>
     side->provider->marketSideValue(config, side->marketIndex->fromInt, side->isLong)
@@ -466,7 +466,7 @@ let poolValue = (side: withProviderOrWallet) =>
 let syntheticTokenPrice = (side: withProviderOrWallet) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config =>
     side->provider->syntheticTokenPrice(config, side->marketIndex->fromInt, side->isLong)
@@ -475,14 +475,14 @@ let syntheticTokenPrice = (side: withProviderOrWallet) =>
 let exposure = (side: withProviderOrWallet) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config => side->provider->exposure(config, side->marketIndex->fromInt, side->isLong))
 
 let unconfirmedExposure = (side: withProviderOrWallet) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config =>
     side->provider->unconfirmedExposure(config, side->marketIndex->fromInt, side->isLong)
@@ -491,14 +491,14 @@ let unconfirmedExposure = (side: withProviderOrWallet) =>
 let fundingRateApr = (side: withProviderOrWallet) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config => side->provider->fundingRateApr(config, side->marketIndex->fromInt, side->isLong))
 
 let positions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config => {
     let address = switch ethAddress {
@@ -521,14 +521,14 @@ let positions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
       config,
       side->marketIndex->fromInt,
       side->isLong,
-      address->FloatEthers.Utils.getAddressUnsafe,
+      address->Float__Ethers.Utils.getAddressUnsafe,
     )
   })
 
 let stakedPositions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config => {
     let address = switch ethAddress {
@@ -551,14 +551,14 @@ let stakedPositions = (side: withProviderOrWallet, ~ethAddress=?, ()) =>
       config,
       side->marketIndex->fromInt,
       side->isLong,
-      address->FloatEthers.Utils.getAddressUnsafe,
+      address->Float__Ethers.Utils.getAddressUnsafe,
     )
   })
 
 let unsettledPositions = (side: withProviderOrWallet, ethAddress) =>
   side
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config => {
     let address = switch ethAddress {
@@ -581,13 +581,13 @@ let unsettledPositions = (side: withProviderOrWallet, ethAddress) =>
       config,
       side->marketIndex->fromInt,
       side->isLong,
-      address->FloatEthers.Utils.getAddressUnsafe,
+      address->Float__Ethers.Utils.getAddressUnsafe,
     )
   })
 
 let mint = (side: withWallet, amountPaymentToken, txOptions) =>
   side.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(config =>
     side.wallet->mint(
@@ -601,7 +601,7 @@ let mint = (side: withWallet, amountPaymentToken, txOptions) =>
 
 let mintAndStake = (side: withWallet, amountPaymentToken, txOptions) =>
   side.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(c =>
     side.wallet->mintAndStake(
@@ -615,7 +615,7 @@ let mintAndStake = (side: withWallet, amountPaymentToken, txOptions) =>
 
 let stake = (side: withWallet, amountSyntheticToken, txOptions) =>
   side.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(c =>
     side.wallet->stake(
@@ -629,7 +629,7 @@ let stake = (side: withWallet, amountSyntheticToken, txOptions) =>
 
 let unstake = (side: withWallet, amountSyntheticToken, txOptions) =>
   side.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(c =>
     side.wallet->unstake(
@@ -643,7 +643,7 @@ let unstake = (side: withWallet, amountSyntheticToken, txOptions) =>
 
 let redeem = (side: withWallet, amountSyntheticToken, txOptions) =>
   side.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(c =>
     side.wallet->redeem(
@@ -657,7 +657,7 @@ let redeem = (side: withWallet, amountSyntheticToken, txOptions) =>
 
 let shift = (side: withWallet, amountSyntheticToken, txOptions) =>
   side.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(c =>
     side.wallet->shift(
@@ -671,7 +671,7 @@ let shift = (side: withWallet, amountSyntheticToken, txOptions) =>
 
 let shiftStake = (side: withWallet, amountSyntheticToken, txOptions) =>
   side.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(c =>
     side.wallet->shiftStake(
