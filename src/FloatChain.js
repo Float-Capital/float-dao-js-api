@@ -43,7 +43,7 @@ function makeWithWallet(w) {
                         });
             }),
           getMarket: (function (param) {
-              return FloatMarket.makeWithWallet(w, param);
+              return FloatMarket.WithWallet.make(w, param);
             })
         };
 }
