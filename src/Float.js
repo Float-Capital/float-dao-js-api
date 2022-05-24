@@ -8,7 +8,10 @@ var Market;
 
 var MarketSide;
 
+var Config;
+
 exports.Chain = Chain;
 exports.Market = Market;
 exports.MarketSide = MarketSide;
+exports.Config = Config;
 /* No side effect */

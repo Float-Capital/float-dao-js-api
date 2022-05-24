@@ -82,15 +82,11 @@ var WithWallet = {
   make: make$1
 };
 
-function makeLongShortContract(p, c) {
-  return Float__Contracts.LongShort.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
-}
-
 function updateSystemStateMulti(wallet, config, marketIndexes) {
   var partial_arg = marketIndexes.map(function (i) {
         return Ethers.BigNumber.from(i);
       });
-  var partial_arg$1 = makeLongShortContract(Float__Ethers.wrapWallet(wallet), config);
+  var partial_arg$1 = Float__Util.makeLongShortContract(Float__Ethers.wrapWallet(wallet), config);
   return function (param) {
     return partial_arg$1.updateSystemStateMulti(partial_arg, param);
   };
@@ -106,7 +102,7 @@ function contracts(chain) {
 
 function updateSystemStateMulti$1(chain, marketIndexes, txOptions) {
   return Float__Util.getChainConfig(Float__Ethers.wrapWallet(chain.wallet)).then(function (config) {
-              return updateSystemStateMulti(chain.wallet, config, marketIndexes)(txOptions);
+              return updateSystemStateMulti(chain.wallet, config, marketIndexes)(Float__Contracts.convertTxOptions(txOptions));
             });
 }
 
@@ -115,7 +111,6 @@ exports.wrapChainP = wrapChainP;
 exports.wrapChainW = wrapChainW;
 exports.WithProvider = WithProvider;
 exports.WithWallet = WithWallet;
-exports.makeLongShortContract = makeLongShortContract;
 exports.contracts = contracts;
 exports.updateSystemStateMulti = updateSystemStateMulti$1;
 /* ethers Not a pure module */

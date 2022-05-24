@@ -8,17 +8,16 @@ open Float__Market__shared
 
 let {div, fromInt, toNumber, tenToThe18} = module(Float__Ethers.BigNumber)
 
+let convert = Float__Contracts.convertTxOptions
+
+type txOptions = Float__Contracts.txOptions
+
 // ====================================
 // Type definitions
 
 type bigNumbers = {
   long: Float__Ethers.BigNumber.t,
   short: Float__Ethers.BigNumber.t,
-}
-
-type longshortfloats = {
-  long: float,
-  short: float,
 }
 
 type longshortpositions = {
@@ -90,24 +89,11 @@ let makeUsingChain = (chain, marketIndex) =>
 %%private(let longSide = Float__MarketSide.WithProvider.makeReverseCurry(true))
 %%private(let shortSide = Float__MarketSide.WithProvider.makeReverseCurry(false))
 
-let makeLongShortContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
-  LongShort.make(
-    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
-    ~providerOrWallet=p,
-  )
-
-let makeStakerContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
-  Staker.make(
-    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
-    ~providerOrWallet=p,
-  )
-
-let leverage = (provider, config, marketIndex): Promise.t<int> =>
+let leverage = (provider, config, marketIndex): Promise.t<Float__Ethers.BigNumber.t> =>
   provider
   ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.marketLeverage_e18(~marketIndex)
-  ->thenResolve(m => m->div(tenToThe18)->toNumber)
 
 let syntheticTokenPrices = (provider, marketIndex) =>
   all2((
@@ -146,7 +132,7 @@ let fundingRateAprs = (provider, marketIndex) =>
   all2((
     longSide(marketIndex, provider)->Float__MarketSide.fundingRateApr,
     shortSide(marketIndex, provider)->Float__MarketSide.fundingRateApr,
-  ))->thenResolve(((rateLong, rateShort)): longshortfloats => {
+  ))->thenResolve(((rateLong, rateShort)): bigNumbers => {
     {
       long: rateLong,
       short: rateShort,
@@ -231,7 +217,7 @@ let fundingRateMultiplier = (market: withProviderOrWallet) =>
   ->then(config =>
     market
     ->provider
-    ->Float__MarketSide.fundingRateMultiplier(
+    ->fundingRateMultiplier(
       config,
       market->marketIndex->Float__Ethers.BigNumber.fromInt,
     )
@@ -257,7 +243,7 @@ let stakedPositions = (market: withProviderOrWallet, ethAddress) =>
 let unsettledPositions = (market: withProviderOrWallet, ethAddress) =>
   market->provider->unsettledPositions(market->marketIndex, ethAddress)
 
-let claimFloatCustom = (market: withWallet, ~ethAddress=?, txOptions) =>
+let claimFloatCustom = (market: withWallet, ~ethAddress=?, txOptions: txOptions) =>
   market.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -270,10 +256,10 @@ let claimFloatCustom = (market: withWallet, ~ethAddress=?, txOptions) =>
       config,
       [market.marketIndex->Float__Ethers.BigNumber.fromInt],
       address->Float__Ethers.Utils.getAddressUnsafe,
-      txOptions,
+      txOptions->convert,
     )
   })
-let settleOutstandingActions = (market: withWallet, ~ethAddress=?, txOptions) =>
+let settleOutstandingActions = (market: withWallet, ~ethAddress=?, txOptions: txOptions) =>
   market.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -286,10 +272,10 @@ let settleOutstandingActions = (market: withWallet, ~ethAddress=?, txOptions) =>
       config,
       market.marketIndex->Float__Ethers.BigNumber.fromInt,
       address->Float__Ethers.Utils.getAddressUnsafe,
-      txOptions,
+      txOptions->convert,
     )
   })
-let updateSystemState = (market: withWallet, txOptions) =>
+let updateSystemState = (market: withWallet, txOptions: txOptions) =>
   market.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -297,6 +283,6 @@ let updateSystemState = (market: withWallet, txOptions) =>
     market.wallet->updateSystemState(
       config,
       market.marketIndex->Float__Ethers.BigNumber.fromInt,
-      txOptions,
+      txOptions->convert,
     )
   )
