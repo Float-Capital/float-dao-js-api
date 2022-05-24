@@ -70,24 +70,24 @@ function run(param) {
 function runDemo(param) {
   var sideName = "long";
   var marketSide = FloatMarketSide.WithProvider.makeWrap(provider, 1, true);
-  FloatMarketSide.getValue(marketSide).then(function (a) {
+  FloatMarketSide.poolValue(marketSide).then(function (a) {
         console.log("Value of marketSide ".concat(sideName).concat(":"), a.toString());
         
       });
-  FloatMarketSide.getFundingRateApr(marketSide).then(function (a) {
+  FloatMarketSide.fundingRateApr(marketSide).then(function (a) {
         console.log("Funding rate APR for marketSide ".concat(sideName).concat(":"), a);
         
       });
-  FloatMarketSide.getExposure(marketSide).then(function (a) {
+  FloatMarketSide.exposure(marketSide).then(function (a) {
         console.log("Exposure of marketSide".concat(sideName).concat(":"), a.toString());
         
       });
-  FloatMarketSide.getUnconfirmedExposure(marketSide).then(function (a) {
+  FloatMarketSide.unconfirmedExposure(marketSide).then(function (a) {
         console.log("Unconfirmed exposure of marketSide".concat(sideName).concat(":"), a.toString());
         
       });
-  FloatMarketSide.getPositions(marketSide, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
-        console.log("Synth token amount for 0x38.. in marketSide".concat(sideName).concat(":"), a.synthToken.toString());
+  FloatMarketSide.positions(marketSide, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
+        console.log("Synth token amount for 0x38.. in marketSide".concat(sideName).concat(":"), a.syntheticToken.toString());
         
       });
   

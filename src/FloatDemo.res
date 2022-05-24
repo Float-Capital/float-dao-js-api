@@ -107,7 +107,7 @@ let runDemo = _ => {
   let marketSide = FloatMarketSide.WithProvider.makeWrap(provider, marketIndex, isLong)
 
   marketSide
-  ->FloatMarketSide.getValue
+  ->FloatMarketSide.poolValue
   ->Promise.thenResolve(a =>
     "Value of marketSide "
     ->Js.String2.concat(sideName)
@@ -117,7 +117,7 @@ let runDemo = _ => {
   ->ignore
 
   marketSide
-  ->FloatMarketSide.getFundingRateApr
+  ->FloatMarketSide.fundingRateApr
   ->Promise.thenResolve(a =>
     "Funding rate APR for marketSide "
     ->Js.String2.concat(sideName)
@@ -127,7 +127,7 @@ let runDemo = _ => {
   ->ignore
 
   marketSide
-  ->FloatMarketSide.getExposure
+  ->FloatMarketSide.exposure
   ->Promise.thenResolve(a =>
     "Exposure of marketSide"
     ->Js.String2.concat(sideName)
@@ -137,7 +137,7 @@ let runDemo = _ => {
   ->ignore
 
   marketSide
-  ->FloatMarketSide.getUnconfirmedExposure
+  ->FloatMarketSide.unconfirmedExposure
   ->Promise.thenResolve(a =>
     "Unconfirmed exposure of marketSide"
     ->Js.String2.concat(sideName)
@@ -148,12 +148,12 @@ let runDemo = _ => {
 
   let address = "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"
   marketSide
-  ->FloatMarketSide.getPositions(address->Utils.getAddressUnsafe)
+  ->FloatMarketSide.positions(address->Utils.getAddressUnsafe)
   ->Promise.thenResolve(a =>
     "Synth token amount for 0x38.. in marketSide"
     ->Js.String2.concat(sideName)
     ->Js.String2.concat(":")
-    ->Js.log2(a.synthToken->BigNumber.toString)
+    ->Js.log2(a.syntheticToken->BigNumber.toString)
   )
   ->ignore
 }

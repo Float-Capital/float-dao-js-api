@@ -31,7 +31,7 @@ type providerOrWallet = FloatEthers.providerOrWallet
 
 type positions = {
   paymentToken: bn,
-  synthToken: bn,
+  syntheticToken: bn,
 }
 
 type withProvider = {provider: providerType, marketIndex: int, isLong: bool}
@@ -51,6 +51,7 @@ module WithProvider = {
   type t = withProvider
   let make = (p, marketIndex, isLong) => {provider: p, marketIndex: marketIndex, isLong: isLong}
   let makeWrap = (p, marketIndex, isLong) => make(p, marketIndex, isLong)->wrapSideP
+  let makeWrapReverseCurry = (isLong, marketIndex, p) => make(p, marketIndex, isLong)->wrapSideP
 }
 
 module WithWallet = {
@@ -80,28 +81,13 @@ let marketIndex = (side: withProviderOrWallet) =>
   | W(s) => s.marketIndex
   }
 
-// ====================================
-// Legacy
-
-type marketSideWithWallet = {
-  mint: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  mintAndStake: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  stake: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  unstake: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  redeem: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  shift: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-  shiftStake: (bn, txOptions) => Promise.t<FloatEthers.txSubmitted>,
-}
-
+// TODO we should not be using getAddressUnsafe
+//   rather we should do error handling properly
 let makeLongShortContract = (p: providerOrWallet, c: FloatConfig.chainConfigShape) =>
   LongShort.make(
     ~address=c.contracts.longShort.address->FloatEthers.Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
-
-// TODO was getting weird type error here
-//let makeSynth = (p: providerOrWallet, address: ethAddress) =>
-//    Synth.make(~address, ~providerOrWallet=p)
 
 let makeStakerContract = (p: providerOrWallet, c: FloatConfig.chainConfigShape) =>
   Staker.make(
@@ -399,7 +385,7 @@ let positions = (
     syntheticTokenPrice(p, c, marketIndex, isLong),
   ))->thenResolve(((balance, price)) => {
     paymentToken: balance->mul(price),
-    synthToken: balance,
+    syntheticToken: balance,
   })
 
 let stakedPositions = (
@@ -414,7 +400,7 @@ let stakedPositions = (
     syntheticTokenPrice(p, c, marketIndex, isLong),
   ))->thenResolve(((balance, price)) => {
     paymentToken: balance->mul(price),
-    synthToken: balance,
+    syntheticToken: balance,
   })
 
 // TODO add users unconfirmed positions
@@ -435,7 +421,7 @@ let unsettledPositions = (
   )
   ->thenResolve(((price, balance)) => {
     paymentToken: balance->mul(price),
-    synthToken: balance,
+    syntheticToken: balance,
   })
 
 let mint = (
@@ -547,52 +533,10 @@ let shiftStake = (
   ->makeStakerContract(c)
   ->Staker.shiftTokens(~amountSyntheticToken, ~marketIndex, ~isShiftFromLong=isLong)
 
-// TODO we should not be using getAddressUnsafe
-//   rather we should do error handling properly
-let makeWithWallet = (w: walletType, marketIndex: int, isLong: bool) => {
-  {
-    mint: (amountPaymentToken, txOptions) =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => mint(w, c, marketIndex->fromInt, isLong, amountPaymentToken, txOptions)),
-    mintAndStake: (amountPaymentToken, txOptions) =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => mintAndStake(w, c, marketIndex->fromInt, isLong, amountPaymentToken, txOptions)),
-    stake: (amountSyntheticToken, txOptions) =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => stake(w, c, marketIndex->fromInt, isLong, amountSyntheticToken, txOptions)),
-    unstake: (amountSyntheticToken, txOptions) =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => unstake(w, c, marketIndex->fromInt, isLong, amountSyntheticToken, txOptions)),
-    redeem: (amountSyntheticToken, txOptions) =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => redeem(w, c, marketIndex->fromInt, isLong, amountSyntheticToken, txOptions)),
-    shift: (amountSyntheticToken, txOptions) =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => shift(w, c, marketIndex->fromInt, isLong, amountSyntheticToken, txOptions)),
-    shiftStake: (amountSyntheticToken, txOptions) =>
-      w
-      ->FloatEthers.wrapWallet
-      ->getChainConfig
-      ->then(c => shiftStake(w, c, marketIndex->fromInt, isLong, amountSyntheticToken, txOptions)),
-  }
-}
-
 // ====================================
 // Export functions
 
-let synthToken = (side: withProviderOrWallet) =>
+let syntheticToken = (side: withProviderOrWallet) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
@@ -616,7 +560,7 @@ let name = (side: withProviderOrWallet) =>
     }
   )
 
-let getValue = (side: withProviderOrWallet) =>
+let poolValue = (side: withProviderOrWallet) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
@@ -625,7 +569,7 @@ let getValue = (side: withProviderOrWallet) =>
     side->provider->marketSideValue(config, side->marketIndex->fromInt, side->isLong)
   )
 
-let getSyntheticTokenPrice = (side: withProviderOrWallet) =>
+let syntheticTokenPrice = (side: withProviderOrWallet) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
@@ -634,14 +578,14 @@ let getSyntheticTokenPrice = (side: withProviderOrWallet) =>
     side->provider->syntheticTokenPrice(config, side->marketIndex->fromInt, side->isLong)
   )
 
-let getExposure = (side: withProviderOrWallet) =>
+let exposure = (side: withProviderOrWallet) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
   ->getChainConfig
   ->then(config => side->provider->exposure(config, side->marketIndex->fromInt, side->isLong))
 
-let getUnconfirmedExposure = (side: withProviderOrWallet) =>
+let unconfirmedExposure = (side: withProviderOrWallet) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
@@ -650,14 +594,14 @@ let getUnconfirmedExposure = (side: withProviderOrWallet) =>
     side->provider->unconfirmedExposure(config, side->marketIndex->fromInt, side->isLong)
   )
 
-let getFundingRateApr = (side: withProviderOrWallet) =>
+let fundingRateApr = (side: withProviderOrWallet) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
   ->getChainConfig
   ->then(config => side->provider->fundingRateApr(config, side->marketIndex->fromInt, side->isLong))
 
-let getPositions = (side: withProviderOrWallet, ethAddress) =>
+let positions = (side: withProviderOrWallet, ethAddress) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
@@ -666,7 +610,7 @@ let getPositions = (side: withProviderOrWallet, ethAddress) =>
     side->provider->positions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
   )
 
-let getStakedPositions = (side: withProviderOrWallet, ethAddress) =>
+let stakedPositions = (side: withProviderOrWallet, ethAddress) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
@@ -675,11 +619,109 @@ let getStakedPositions = (side: withProviderOrWallet, ethAddress) =>
     side->provider->stakedPositions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
   )
 
-let getUnsettledPositions = (side: withProviderOrWallet, ethAddress) =>
+let unsettledPositions = (side: withProviderOrWallet, ethAddress) =>
   side
   ->provider
   ->FloatEthers.wrapProvider
   ->getChainConfig
   ->then(config =>
     side->provider->unsettledPositions(config, side->marketIndex->fromInt, side->isLong, ethAddress)
+  )
+
+let mint = (side: withWallet, amountPaymentToken, txOptions) =>
+  side.wallet
+  ->FloatEthers.wrapWallet
+  ->getChainConfig
+  ->then(config =>
+    side.wallet->mint(
+      config,
+      side->wrapSideW->marketIndex->fromInt,
+      side->wrapSideW->isLong,
+      amountPaymentToken,
+      txOptions,
+    )
+  )
+
+let mintAndStake = (side: withWallet, amountPaymentToken, txOptions) =>
+  side.wallet
+  ->FloatEthers.wrapWallet
+  ->getChainConfig
+  ->then(c =>
+    side.wallet->mintAndStake(
+      c,
+      side->wrapSideW->marketIndex->fromInt,
+      side->wrapSideW->isLong,
+      amountPaymentToken,
+      txOptions,
+    )
+  )
+
+let stake = (side: withWallet, amountSyntheticToken, txOptions) =>
+  side.wallet
+  ->FloatEthers.wrapWallet
+  ->getChainConfig
+  ->then(c =>
+    side.wallet->stake(
+      c,
+      side->wrapSideW->marketIndex->fromInt,
+      side->wrapSideW->isLong,
+      amountSyntheticToken,
+      txOptions,
+    )
+  )
+
+let unstake = (side: withWallet, amountSyntheticToken, txOptions) =>
+  side.wallet
+  ->FloatEthers.wrapWallet
+  ->getChainConfig
+  ->then(c =>
+    side.wallet->unstake(
+      c,
+      side->wrapSideW->marketIndex->fromInt,
+      side->wrapSideW->isLong,
+      amountSyntheticToken,
+      txOptions,
+    )
+  )
+
+let redeem = (side: withWallet, amountSyntheticToken, txOptions) =>
+  side.wallet
+  ->FloatEthers.wrapWallet
+  ->getChainConfig
+  ->then(c =>
+    side.wallet->redeem(
+      c,
+      side->wrapSideW->marketIndex->fromInt,
+      side->wrapSideW->isLong,
+      amountSyntheticToken,
+      txOptions,
+    )
+  )
+
+let shift = (side: withWallet, amountSyntheticToken, txOptions) =>
+  side.wallet
+  ->FloatEthers.wrapWallet
+  ->getChainConfig
+  ->then(c =>
+    side.wallet->shift(
+      c,
+      side->wrapSideW->marketIndex->fromInt,
+      side->wrapSideW->isLong,
+      amountSyntheticToken,
+      txOptions,
+    )
+  )
+
+let shiftStake = (side: withWallet, amountSyntheticToken, txOptions) =>
+  side.wallet
+  ->FloatEthers.wrapWallet
+  ->getChainConfig
+  ->then(c =>
+    side.wallet->shiftStake(
+      c,
+      side->wrapSideW->marketIndex->fromInt,
+      side->wrapSideW->isLong,
+      amountSyntheticToken,
+      txOptions,
+    )
   )
