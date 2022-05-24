@@ -6,6 +6,7 @@ var Ethers = require("ethers");
 var FloatClient = require("./FloatClient.js");
 var FloatConfig = require("@float-dao/config/src/FloatConfig.js");
 var FloatEthers = require("./FloatEthers.js");
+var FloatMarketSide = require("./FloatMarketSide.js");
 var SecretsManagerJs = require("../secretsManager.js");
 
 var env = process.env;
@@ -68,10 +69,6 @@ function run(param) {
         console.log("Funding rate APR for marketSide ".concat(sideName).concat(":"), a);
         
       });
-  Curry._1(marketSide.getValue, undefined).then(function (a) {
-        console.log("Value of marketSide ".concat(sideName).concat(":"), a.toString());
-        
-      });
   Curry._1(marketSide.getExposure, undefined).then(function (a) {
         console.log("Exposure of marketSide".concat(sideName).concat(":"), a.toString());
         
@@ -82,6 +79,16 @@ function run(param) {
       });
   Curry._1(marketSide.getPositions, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
         console.log("Synth token amount for 0x38.. in marketSide".concat(sideName).concat(":"), a.synthToken.toString());
+        
+      });
+  
+}
+
+function runDemo(param) {
+  var sideName = "long";
+  var marketSide = FloatMarketSide.WithProvider.makeWrap(provider, 1, true);
+  FloatMarketSide.getValue(marketSide).then(function (a) {
+        console.log("Value of marketSide ".concat(sideName).concat(":"), a.toString());
         
       });
   
@@ -103,4 +110,5 @@ exports.maxPriorityFeePerGas = maxPriorityFeePerGas;
 exports.gasLimit = gasLimit;
 exports.txOptions = txOptions;
 exports.run = run;
+exports.runDemo = runDemo;
 /* env Not a pure module */
