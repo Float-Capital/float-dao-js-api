@@ -63,24 +63,7 @@ function run(param) {
         console.log("Leverage for market ".concat((1).toString()).concat(":"), m);
         
       });
-  var sideName = "short";
-  var marketSide = Curry._1(market.getSide, false);
-  Curry._1(marketSide.getFundingRateApr, undefined).then(function (a) {
-        console.log("Funding rate APR for marketSide ".concat(sideName).concat(":"), a);
-        
-      });
-  Curry._1(marketSide.getExposure, undefined).then(function (a) {
-        console.log("Exposure of marketSide".concat(sideName).concat(":"), a.toString());
-        
-      });
-  Curry._1(marketSide.getUnconfirmedExposure, undefined).then(function (a) {
-        console.log("Unconfirmed exposure of marketSide".concat(sideName).concat(":"), a.toString());
-        
-      });
-  Curry._1(marketSide.getPositions, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
-        console.log("Synth token amount for 0x38.. in marketSide".concat(sideName).concat(":"), a.synthToken.toString());
-        
-      });
+  Curry._1(market.getSide, false);
   
 }
 
@@ -89,6 +72,22 @@ function runDemo(param) {
   var marketSide = FloatMarketSide.WithProvider.makeWrap(provider, 1, true);
   FloatMarketSide.getValue(marketSide).then(function (a) {
         console.log("Value of marketSide ".concat(sideName).concat(":"), a.toString());
+        
+      });
+  FloatMarketSide.getFundingRateApr(marketSide).then(function (a) {
+        console.log("Funding rate APR for marketSide ".concat(sideName).concat(":"), a);
+        
+      });
+  FloatMarketSide.getExposure(marketSide).then(function (a) {
+        console.log("Exposure of marketSide".concat(sideName).concat(":"), a.toString());
+        
+      });
+  FloatMarketSide.getUnconfirmedExposure(marketSide).then(function (a) {
+        console.log("Unconfirmed exposure of marketSide".concat(sideName).concat(":"), a.toString());
+        
+      });
+  FloatMarketSide.getPositions(marketSide, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
+        console.log("Synth token amount for 0x38.. in marketSide".concat(sideName).concat(":"), a.synthToken.toString());
         
       });
   

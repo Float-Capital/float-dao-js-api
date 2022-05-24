@@ -271,7 +271,7 @@ function makeWithProvider(p, marketIndex) {
                         });
             }),
           getSide: (function (isLong) {
-              return FloatMarketSide.makeWithProvider(p, marketIndex, isLong);
+              return FloatMarketSide.WithProvider.make(p, marketIndex, isLong);
             }),
           connect: (function (w) {
               return makeWithWallet(w, marketIndex);
