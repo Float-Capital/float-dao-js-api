@@ -4,8 +4,11 @@
 var Ethers = require("ethers");
 var FloatUtil = require("./FloatUtil.js");
 var FloatEthers = require("./FloatEthers.js");
-var FloatMarket = require("./FloatMarket.js");
 var FloatContracts = require("./FloatContracts.js");
+
+function fromInt(prim) {
+  return Ethers.BigNumber.from(prim);
+}
 
 function wrapSideP(side) {
   return {
@@ -84,9 +87,12 @@ function makeLongShortContract(p, c) {
 }
 
 function updateSystemStateMulti(wallet, config, marketIndexes) {
-  var partial_arg = makeLongShortContract(FloatEthers.wrapWallet(wallet), config);
+  var partial_arg = marketIndexes.map(function (i) {
+        return Ethers.BigNumber.from(i);
+      });
+  var partial_arg$1 = makeLongShortContract(FloatEthers.wrapWallet(wallet), config);
   return function (param) {
-    return partial_arg.updateSystemStateMulti(marketIndexes, param);
+    return partial_arg$1.updateSystemStateMulti(partial_arg, param);
   };
 }
 
@@ -98,27 +104,18 @@ function contracts(chain) {
             });
 }
 
-function market(chain, marketIndex) {
-  if (chain.TAG === /* P */0) {
-    return FloatMarket.WithProvider.makeWrap(chain._0.provider, marketIndex);
-  } else {
-    return FloatMarket.WithWallet.makeWrap(chain._0.wallet, marketIndex);
-  }
-}
-
-function updateSystemState(chain, marketIndexes, txOptions) {
+function updateSystemStateMulti$1(chain, marketIndexes, txOptions) {
   return FloatUtil.getChainConfig(FloatEthers.wrapWallet(chain.wallet)).then(function (config) {
               return updateSystemStateMulti(chain.wallet, config, marketIndexes)(txOptions);
             });
 }
 
+exports.fromInt = fromInt;
 exports.wrapSideP = wrapSideP;
 exports.wrapSideW = wrapSideW;
 exports.WithProvider = WithProvider;
 exports.WithWallet = WithWallet;
 exports.makeLongShortContract = makeLongShortContract;
-exports.updateSystemStateMulti = updateSystemStateMulti;
 exports.contracts = contracts;
-exports.market = market;
-exports.updateSystemState = updateSystemState;
+exports.updateSystemStateMulti = updateSystemStateMulti$1;
 /* ethers Not a pure module */

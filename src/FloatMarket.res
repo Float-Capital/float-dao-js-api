@@ -1,6 +1,7 @@
 open FloatContracts
 open Promise
 open FloatUtil
+open FloatMarketTypes
 
 // ====================================
 // Convenience
@@ -33,31 +34,28 @@ type contracts = {
   // TODO add oracleManager but wait for the change in FloatConfig first
 }
 
-type withProvider = {provider: FloatEthers.providerType, marketIndex: int}
-type withWallet = {wallet: FloatEthers.walletType, marketIndex: int}
-
-type withProviderOrWallet =
-  | P(withProvider)
-  | W(withWallet)
-
-let wrapSideP: withProvider => withProviderOrWallet = side => P(side)
-let wrapSideW: withWallet => withProviderOrWallet = side => W(side)
-
 // ====================================
 // Constructors
 
 module WithProvider = {
   type t = withProvider
+  // TODO change the following around so that wrap is default
   let make = (provider, marketIndex) => {provider: provider, marketIndex: marketIndex}
-  let makeWrap = (provider, marketIndex) => provider->make(marketIndex)->wrapSideP
-  let makeWrapReverseCurry = (marketIndex, provider) => provider->make(marketIndex)->wrapSideP
+  let makeWrap = (provider, marketIndex) => provider->make(marketIndex)->wrapMarketP
+  let makeWrapReverseCurry = (marketIndex, provider) => provider->make(marketIndex)->wrapMarketP
 }
 
 module WithWallet = {
   type t = withWallet
   let make = (w, marketIndex) => {wallet: w, marketIndex: marketIndex}
-  let makeWrap = (w, marketIndex) => make(w, marketIndex)->wrapSideW
+  let makeWrap = (w, marketIndex) => make(w, marketIndex)->wrapMarketW
 }
+
+let makeUsingChain = (chain, marketIndex) =>
+    switch chain {
+        | FloatChain.P(c) => c.provider->WithProvider.makeWrap(marketIndex)
+        | FloatChain.W(c) => c.wallet->WithWallet.makeWrap(marketIndex)
+    }
 
 // ====================================
 // Helper functions
@@ -250,42 +248,38 @@ let stakedPositions = (market: withProviderOrWallet, ethAddress) =>
 let unsettledPositions = (market: withProviderOrWallet, ethAddress) =>
   market->provider->unsettledPositions(market->marketIndex, ethAddress)
 
-let side = (market: withProviderOrWallet, isLong) =>
-  switch market {
-  | P(m) => m.provider->FloatMarketSide.WithProvider.makeWrap(market->marketIndex, isLong)
-  | W(m) => m.wallet->FloatMarketSide.WithWallet.makeWrap(market->marketIndex, isLong)
-  }
-
-let connect = (market: withProvider, wallet, isLong) =>
-  wallet->FloatMarketSide.WithWallet.make(market.marketIndex, isLong)
-
-let connectWrap = (market: withProviderOrWallet, wallet, isLong) =>
-  wallet->FloatMarketSide.WithWallet.make(market->marketIndex, isLong)
-
-let claimFloatCustomFor = (market: withWallet, ethAddress, txOptions) =>
+let claimFloatCustomFor = (market: withWallet, ~ethAddress=?, txOptions) =>
   market.wallet
   ->FloatEthers.wrapWallet
   ->getChainConfig
-  ->then(config =>
+  ->then(config => {
+    let address = switch ethAddress {
+    | Some(value) => value
+    | None => market.wallet.address
+    }
     market.wallet->claimFloatCustomFor(
       config,
       [market.marketIndex->FloatEthers.BigNumber.fromInt],
-      ethAddress,
+      address->FloatEthers.Utils.getAddressUnsafe,
       txOptions,
     )
-  )
-let settleOutstandingActions = (market: withWallet, ethAddress, txOptions) =>
+  })
+let settleOutstandingActions = (market: withWallet, ~ethAddress=?, txOptions) =>
   market.wallet
   ->FloatEthers.wrapWallet
   ->getChainConfig
-  ->then(config =>
+  ->then(config => {
+    let address = switch ethAddress {
+    | Some(value) => value
+    | None => market.wallet.address
+    }
     market.wallet->settleOutstandingActions(
       config,
       market.marketIndex->FloatEthers.BigNumber.fromInt,
-      ethAddress,
+      address->FloatEthers.Utils.getAddressUnsafe,
       txOptions,
     )
-  )
+  })
 let updateSystemState = (market: withWallet, txOptions) =>
   market.wallet
   ->FloatEthers.wrapWallet

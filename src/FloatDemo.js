@@ -47,7 +47,7 @@ var txOptions = {
   gasLimit: txOptions_gasLimit
 };
 
-function runDemo(param) {
+function demoReadyOnly(param) {
   wallet.getBalance().then(function (balance) {
         console.log("Account balance:", FloatEthers.Utils.formatEther(balance));
         
@@ -84,14 +84,28 @@ function runDemo(param) {
         console.log("Unconfirmed exposure of marketSide".concat(sideName).concat(":"), a.toString());
         
       });
-  FloatMarketSide.positions(marketSide, Ethers.utils.getAddress("0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3")).then(function (a) {
+  FloatMarketSide.positions(marketSide, "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3", undefined).then(function (a) {
         console.log("Synth token amount for 0x38.. in marketSide".concat(sideName).concat(":"), a.syntheticToken.toString());
         
       });
   
 }
 
-runDemo(undefined);
+function demoWrite(param) {
+  var chain = FloatChain.WithWallet.make(wallet);
+  FloatChain.updateSystemStateMulti(chain, [1], txOptions).then(function (tx) {
+        console.log(tx.hash);
+        
+      });
+  var market = FloatMarket.WithWallet.make(wallet, 1);
+  FloatMarket.settleOutstandingActions(market, undefined, txOptions).then(function (tx) {
+        console.log(tx.hash);
+        
+      });
+  
+}
+
+demoWrite(undefined);
 
 exports.env = env;
 exports.mnemonic = mnemonic;
@@ -106,5 +120,6 @@ exports.maxFeePerGas = maxFeePerGas;
 exports.maxPriorityFeePerGas = maxPriorityFeePerGas;
 exports.gasLimit = gasLimit;
 exports.txOptions = txOptions;
-exports.runDemo = runDemo;
+exports.demoReadyOnly = demoReadyOnly;
+exports.demoWrite = demoWrite;
 /* env Not a pure module */

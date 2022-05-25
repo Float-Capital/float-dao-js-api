@@ -121,6 +121,19 @@ var WithWallet = {
   makeWrap: makeWrap$1
 };
 
+function makeUsingMarket(market, isLong) {
+  if (market.TAG === /* P */0) {
+    var partial_arg = market._0.provider;
+    return function (param) {
+      return makeWrap(partial_arg, isLong, param);
+    };
+  }
+  var partial_arg$1 = market._0.wallet;
+  return function (param) {
+    return makeWrap$1(partial_arg$1, isLong, param);
+  };
+}
+
 function provider(side) {
   if (side.TAG === /* P */0) {
     return side._0.provider;
@@ -380,13 +393,23 @@ function fundingRateApr(side) {
             });
 }
 
-function positions(side, ethAddress) {
+function positions(side, ethAddress, param) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(side))).then(function (config) {
+              var address;
+              if (ethAddress !== undefined) {
+                address = ethAddress;
+              } else if (side.TAG === /* P */0) {
+                console.log("No address found");
+                address = "";
+              } else {
+                address = side._0.wallet._address;
+              }
               var provider$1 = provider(side);
               var marketIndex = Ethers.BigNumber.from(side._0.marketIndex);
               var isLong = side._0.isLong;
+              var address$1 = Ethers.utils.getAddress(address);
               return Promise.all([
-                            syntheticTokenBalance(provider$1, config, marketIndex, isLong, ethAddress),
+                            syntheticTokenBalance(provider$1, config, marketIndex, isLong, address$1),
                             syntheticTokenPrice(provider$1, config, marketIndex, isLong)
                           ]).then(function (param) {
                           var balance = param[0];
@@ -398,13 +421,23 @@ function positions(side, ethAddress) {
             });
 }
 
-function stakedPositions(side, ethAddress) {
+function stakedPositions(side, ethAddress, param) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(side))).then(function (config) {
+              var address;
+              if (ethAddress !== undefined) {
+                address = ethAddress;
+              } else if (side.TAG === /* P */0) {
+                console.log("No address found");
+                address = "";
+              } else {
+                address = side._0.wallet._address;
+              }
               var provider$1 = provider(side);
               var marketIndex = Ethers.BigNumber.from(side._0.marketIndex);
               var isLong = side._0.isLong;
+              var address$1 = Ethers.utils.getAddress(address);
               return Promise.all([
-                            stakedSyntheticTokenBalance(provider$1, config, marketIndex, isLong, ethAddress),
+                            stakedSyntheticTokenBalance(provider$1, config, marketIndex, isLong, address$1),
                             syntheticTokenPrice(provider$1, config, marketIndex, isLong)
                           ]).then(function (param) {
                           var balance = param[0];
@@ -418,13 +451,23 @@ function stakedPositions(side, ethAddress) {
 
 function unsettledPositions(side, ethAddress) {
   return FloatUtil.getChainConfig(FloatEthers.wrapProvider(provider(side))).then(function (config) {
+              var address;
+              if (ethAddress !== undefined) {
+                address = ethAddress;
+              } else if (side.TAG === /* P */0) {
+                console.log("No address found");
+                address = "";
+              } else {
+                address = side._0.wallet._address;
+              }
               var provider$1 = provider(side);
               var marketIndex = Ethers.BigNumber.from(side._0.marketIndex);
               var isLong = side._0.isLong;
-              return updateIndex(provider$1, config, marketIndex, ethAddress).then(function (index) {
+              var address$1 = Ethers.utils.getAddress(address);
+              return updateIndex(provider$1, config, marketIndex, address$1).then(function (index) {
                             return Promise.all([
                                         syntheticTokenPriceSnapshot(provider$1, config, marketIndex, isLong, index),
-                                        unsettledSynthBalance(provider$1, config, marketIndex, isLong, ethAddress)
+                                        unsettledSynthBalance(provider$1, config, marketIndex, isLong, address$1)
                                       ]);
                           }).then(function (param) {
                           var balance = param[1];
@@ -501,6 +544,7 @@ exports.wrapSideP = wrapSideP;
 exports.wrapSideW = wrapSideW;
 exports.WithProvider = WithProvider;
 exports.WithWallet = WithWallet;
+exports.makeUsingMarket = makeUsingMarket;
 exports.makeLongShortContract = makeLongShortContract;
 exports.makeStakerContract = makeStakerContract;
 exports.syntheticTokenAddress = syntheticTokenAddress;

@@ -27,7 +27,7 @@ let txOptions: FloatContracts.txOptions = {
   gasLimit: gasLimit->BigNumber.toString,
 }
 
-let runDemo = _ => {
+let demoReadyOnly = _ => {
   wallet
   ->Wallet.getBalance
   ->Promise.thenResolve(balance => {
@@ -114,7 +114,7 @@ let runDemo = _ => {
 
   let address = "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3"
   marketSide
-  ->FloatMarketSide.positions(address->Utils.getAddressUnsafe)
+  ->FloatMarketSide.positions(~ethAddress=address, ())
   ->Promise.thenResolve(a =>
     "Synth token amount for 0x38.. in marketSide"
     ->Js.String2.concat(sideName)
@@ -124,4 +124,27 @@ let runDemo = _ => {
   ->ignore
 }
 
-let _ = runDemo()
+let demoWrite = _ => {
+  let marketIndex = 1
+  let isLong = true
+  let sideName = switch isLong {
+  | true => "long"
+  | false => "short"
+  }
+
+  let chain = wallet->FloatChain.WithWallet.make
+
+  chain
+  ->FloatChain.updateSystemStateMulti([1], txOptions)
+  ->Promise.thenResolve(tx => tx.hash->Js.log)
+  ->ignore
+
+  let market = wallet->FloatMarket.WithWallet.make(marketIndex)
+
+  market
+  ->FloatMarket.settleOutstandingActions(txOptions)
+  ->Promise.thenResolve(tx => tx.hash->Js.log)
+  ->ignore
+}
+
+let _ = demoWrite()
