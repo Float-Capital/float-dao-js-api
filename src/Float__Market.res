@@ -15,7 +15,7 @@ type txOptions = Float__Contracts.txOptions
 // ====================================
 // Type definitions
 
-type bigNumbers = {
+type longshortbignumbers = {
   long: Float__Ethers.BigNumber.t,
   short: Float__Ethers.BigNumber.t,
 }
@@ -99,7 +99,7 @@ let syntheticTokenPrices = (provider, marketIndex) =>
   all2((
     longSide(marketIndex, provider)->Float__MarketSide.syntheticTokenPrice,
     shortSide(marketIndex, provider)->Float__MarketSide.syntheticTokenPrice,
-  ))->thenResolve(((priceLong, priceShort)): bigNumbers => {
+  ))->thenResolve(((priceLong, priceShort)): longshortbignumbers => {
     {
       long: priceLong,
       short: priceShort,
@@ -110,7 +110,7 @@ let exposures = (provider, marketIndex: int) =>
   all2((
     longSide(marketIndex, provider)->Float__MarketSide.exposure,
     shortSide(marketIndex, provider)->Float__MarketSide.exposure,
-  ))->thenResolve(((exposureLong, exposureShort)): bigNumbers => {
+  ))->thenResolve(((exposureLong, exposureShort)): longshortbignumbers => {
     {
       long: exposureLong,
       short: exposureShort,
@@ -121,7 +121,7 @@ let unconfirmedExposures = (provider, marketIndex) =>
   all2((
     longSide(marketIndex, provider)->Float__MarketSide.unconfirmedExposure,
     shortSide(marketIndex, provider)->Float__MarketSide.unconfirmedExposure,
-  ))->thenResolve(((exposureLong, exposureShort)): bigNumbers => {
+  ))->thenResolve(((exposureLong, exposureShort)): longshortbignumbers => {
     {
       long: exposureLong,
       short: exposureShort,
@@ -132,7 +132,7 @@ let fundingRateAprs = (provider, marketIndex) =>
   all2((
     longSide(marketIndex, provider)->Float__MarketSide.fundingRateApr,
     shortSide(marketIndex, provider)->Float__MarketSide.fundingRateApr,
-  ))->thenResolve(((rateLong, rateShort)): bigNumbers => {
+  ))->thenResolve(((rateLong, rateShort)): longshortbignumbers => {
     {
       long: rateLong,
       short: rateShort,

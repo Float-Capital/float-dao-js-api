@@ -342,10 +342,10 @@
     "@ethersproject/properties" "^5.5.0"
     "@ethersproject/strings" "^5.5.0"
 
-"@float-capital/config@^0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@float-capital/config/-/config-0.7.0.tgz#a75f4da4a597b2fa924f5fa6f34668bf2f7c8ab9"
-  integrity sha512-SIEpnyRU9/6ax46WG2Hu9jC0ol8kxYYs9mfZSBBPOgQ5kexDevsrP4hUNltpA0KuAxZSD3IrREGq3FNsuA4y6A==
+"@float-packages/config@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@float-packages/config/-/config-1.0.0.tgz#e5ddc553d26fb22815cf23288af2db8d3089a70b"
+  integrity sha512-Go7c398DEXERMhAlpqrLIgNm7kvA9QbR7A5/u631oLCdjsjZ/CgIlpYYhxH/ehc9JMLmQU9exHT+5uWR+51jMw==
   dependencies:
     rescript "^9.1.4"
 
