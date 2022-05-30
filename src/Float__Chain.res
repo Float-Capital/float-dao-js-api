@@ -33,7 +33,8 @@ module WithProvider = {
 
   // default provider can also be used
   let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
-  let makeDefaultUnwrapped = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
+  let makeDefaultUnwrapped = chainId =>
+    chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
 }
 
 module WithWallet = {

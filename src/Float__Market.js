@@ -155,7 +155,9 @@ function contracts(market) {
               return {
                       longToken: Caml_array.get(config.markets, market._0.marketIndex).longToken,
                       shortToken: Caml_array.get(config.markets, market._0.marketIndex).shortToken,
-                      yieldManager: Caml_array.get(config.markets, market._0.marketIndex).yieldManager
+                      yieldManager: Caml_array.get(config.markets, market._0.marketIndex).yieldManager,
+                      paymentToken: Caml_array.get(config.markets, market._0.marketIndex).paymentToken,
+                      oracleManager: Caml_array.get(config.markets, market._0.marketIndex).oracleManager
                     };
             });
 }

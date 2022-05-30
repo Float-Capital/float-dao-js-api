@@ -1,5 +1,5 @@
 {
-  "name": "@float-dao/js-client",
+  "name": "@float-capital/js-client",
   "sources": {
     "dir" : "src",
     "subdirs" : true
@@ -10,7 +10,7 @@
   },
   "bs-dependencies": [
     "@ryyppy/rescript-promise",
-    "@float-dao/config"
+    "@float-capital/config"
   ],
   "suffix": ".js"
 }

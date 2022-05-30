@@ -11,8 +11,8 @@ let {oneGweiInWei, fromInt} = module(Float__Ethers.BigNumber)
 let connectToNewWallet = (provider, ~mnemonic) =>
   Wallet.fromMnemonicWithPath(~mnemonic, ~path=`m/44'/60'/0'/0/0`)->Wallet.connect(provider)
 
-let providerUrl = FloatConfig.avalanche.rpcEndopint
-let chainId = FloatConfig.avalanche.networkId
+let providerUrl = FloatConfig.avalancheConfig.rpcEndpoint
+let chainId = FloatConfig.avalancheConfig.networkId
 
 let provider = providerUrl->Provider.JsonRpcProvider.make(~chainId)
 let wallet = providerUrl->Provider.JsonRpcProvider.make(~chainId)->connectToNewWallet(~mnemonic)
@@ -154,4 +154,4 @@ let demoWrite = _ => {
   //->ignore
 }
 
-let _ = demoWrite()
+let _ = demoReadyOnly()

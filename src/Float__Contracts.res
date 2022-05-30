@@ -122,16 +122,11 @@ module LongShort = {
     ~priceSnapshotIndex: bn,
   ) => Promise.t<bn> = "get_syntheticToken_priceSnapshot_side"
   @send
-  external syntheticTokens: (
-    t,
-    ~marketIndex: bn,
-    ~isLong: bool,
-  ) => Promise.t<address> = "syntheticTokens"
+  external syntheticTokens: (t, ~marketIndex: bn, ~isLong: bool) => Promise.t<address> =
+    "syntheticTokens"
   @send
-  external marketSideValueInPaymentToken: (
-    t,
-    ~marketIndex: bn,
-  ) => Promise.t<marketSideValue> = "marketSideValueInPaymentToken"
+  external marketSideValueInPaymentToken: (t, ~marketIndex: bn) => Promise.t<marketSideValue> =
+    "marketSideValueInPaymentToken"
   @send
   external batched_amountPaymentToken_deposit: (
     t,
@@ -149,8 +144,7 @@ module LongShort = {
     t,
     ~marketIndex: bn,
     ~isLong: bool,
-  ) => Promise.t<bn> =
-    "batched_amountSyntheticToken_toShiftAwayFrom_marketSide"
+  ) => Promise.t<bn> = "batched_amountSyntheticToken_toShiftAwayFrom_marketSide"
   @send
   external userNextPrice_currentUpdateIndex: (
     t,
@@ -172,15 +166,10 @@ module LongShort = {
     ~isLong: bool,
   ) => Promise.t<bn> = "getUsersConfirmedButNotSettledSynthBalance"
   @send
-  external fundingRateMultiplier_e18: (
-    t,
-    ~marketIndex: bn,
-  ) => Promise.t<bn> = "fundingRateMultiplier_e18"
+  external fundingRateMultiplier_e18: (t, ~marketIndex: bn) => Promise.t<bn> =
+    "fundingRateMultiplier_e18"
   @send
-  external marketLeverage_e18: (
-    t,
-    ~marketIndex: bn,
-  ) => Promise.t<bn> = "marketLeverage_e18"
+  external marketLeverage_e18: (t, ~marketIndex: bn) => Promise.t<bn> = "marketLeverage_e18"
 }
 
 module Staker = {
@@ -243,11 +232,8 @@ module Staker = {
     txOptions,
   ) => Promise.t<Float__Ethers.txSubmitted> = "shiftTokens"
   @send
-  external userAmountStaked: (
-    t,
-    ~token: address,
-    ~owner: address,
-  ) => Promise.t<bn> = "userAmountStaked"
+  external userAmountStaked: (t, ~token: address, ~owner: address) => Promise.t<bn> =
+    "userAmountStaked"
 }
 
 module Erc20 = {
@@ -273,24 +259,15 @@ module Erc20 = {
   ) => Promise.t<Float__Ethers.txSubmitted> = "approve"
 
   @send
-  external balanceOf: (
-    ~contract: t,
-    ~owner: address,
-  ) => Promise.t<bn> = "balanceOf"
+  external balanceOf: (~contract: t, ~owner: address) => Promise.t<bn> = "balanceOf"
 
   @send
-  external allowance: (
-    ~contract: t,
-    ~owner: address,
-    ~spender: address,
-  ) => Promise.t<bn> = "allowance"
+  external allowance: (~contract: t, ~owner: address, ~spender: address) => Promise.t<bn> =
+    "allowance"
 
   @send
-  external mint: (
-    ~contract: t,
-    ~amount: bn,
-    txOptions,
-  ) => Promise.t<Float__Ethers.txSubmitted> = "mint"
+  external mint: (~contract: t, ~amount: bn, txOptions) => Promise.t<Float__Ethers.txSubmitted> =
+    "mint"
 }
 
 module Synth = {
@@ -317,15 +294,11 @@ module Synth = {
   ) => Promise.t<Float__Ethers.txSubmitted> = "approve"
 
   @send
-  external balanceOf: (t, ~owner: address) => Promise.t<bn> =
-    "balanceOf"
+  external balanceOf: (t, ~owner: address) => Promise.t<bn> = "balanceOf"
 
   @send
-  external allowance: (
-    ~contract: t,
-    ~owner: address,
-    ~spender: address,
-  ) => Promise.t<bn> = "allowance"
+  external allowance: (~contract: t, ~owner: address, ~spender: address) => Promise.t<bn> =
+    "allowance"
 
   @send
   external stake: (
