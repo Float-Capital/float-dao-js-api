@@ -1,4 +1,8 @@
-// NOTE: since the type of all of these contracts is a generic `FloatEthers.Contract.t`, this code can runtime error if the wrong functions are called on the wrong contracts.
+// NOTE: since the type of all of these contracts is a generic `contract`, this code can runtime error if the wrong functions are called on the wrong contracts.
+
+type bn = Float__Ethers.BigNumber.t
+type address = Float__Ethers.ethAddress
+type contract = Float__Ethers.Contract.t
 
 type txOptions = {
   maxFeePerGas: string,
@@ -7,11 +11,11 @@ type txOptions = {
 }
 
 module LongShort = {
-  type t = FloatEthers.Contract.t
+  type t = contract
 
   type marketSideValue = {
-    long: FloatEthers.BigNumber.t,
-    short: FloatEthers.BigNumber.t,
+    long: bn,
+    short: bn,
   }
 
   let abi =
@@ -36,151 +40,151 @@ module LongShort = {
       "function getUsersConfirmedButNotSettledSynthBalance(address user, uint32 marketIndex, bool isLong) view returns (uint256 amount)",
       "function fundingRateMultiplier_e18(uint32 marketIndex) view returns (uint256 value)",
       "function marketLeverage_e18(uint32 marketIndex) view returns (uint256 leverage)",
-    ]->FloatEthers.makeAbi
+    ]->Float__Ethers.makeAbi
 
   let make = (~address, ~providerOrWallet): t =>
-    FloatEthers.Contract.make(address, abi, providerOrWallet)
+    Float__Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external mintLongNextPrice: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~amountPaymentToken: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
+    ~amountPaymentToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "mintLongNextPrice"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "mintLongNextPrice"
   @send
   external mintShortNextPrice: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~amountPaymentToken: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
+    ~amountPaymentToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "mintShortNextPrice"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "mintShortNextPrice"
   @send
   external mintAndStakeNextPrice: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~amountPaymentToken: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
+    ~amountPaymentToken: bn,
     ~isLong: bool,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "mintAndStakeNextPrice"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "mintAndStakeNextPrice"
   @send
   external redeemLongNextPrice: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~amountSyntheticToken: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
+    ~amountSyntheticToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "redeemLongNextPrice"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "redeemLongNextPrice"
   @send
   external redeemShortNextPrice: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~amountSyntheticToken: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
+    ~amountSyntheticToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "redeemShortNextPrice"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "redeemShortNextPrice"
   @send
   external executeOutstandingNextPriceSettlementsUser: (
     t,
-    ~user: FloatEthers.ethAddress,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~user: address,
+    ~marketIndex: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "executeOutstandingNextPriceSettlementsUser"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "executeOutstandingNextPriceSettlementsUser"
   @send
   external updateSystemState: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "updateSystemState"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "updateSystemState"
   @send
   external updateSystemStateMulti: (
     t,
-    ~marketIndexes: array<FloatEthers.BigNumber.t>,
+    ~marketIndexes: array<bn>,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "updateSystemStateMulti"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "updateSystemStateMulti"
   @send
   external shiftPositionFromLongNextPrice: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~amountSyntheticToken: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
+    ~amountSyntheticToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "shiftPositionFromLongNextPrice"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "shiftPositionFromLongNextPrice"
   @send
   external shiftPositionFromShortNextPrice: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~amountSyntheticToken: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
+    ~amountSyntheticToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "shiftPositionFromShortNextPrice"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "shiftPositionFromShortNextPrice"
   @send
   external get_syntheticToken_priceSnapshot_side: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     ~isLong: bool,
-    ~priceSnapshotIndex: FloatEthers.BigNumber.t,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "get_syntheticToken_priceSnapshot_side"
+    ~priceSnapshotIndex: bn,
+  ) => Promise.t<bn> = "get_syntheticToken_priceSnapshot_side"
   @send
   external syntheticTokens: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     ~isLong: bool,
-  ) => Promise.t<FloatEthers.ethAddress> = "syntheticTokens"
+  ) => Promise.t<address> = "syntheticTokens"
   @send
   external marketSideValueInPaymentToken: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
   ) => Promise.t<marketSideValue> = "marketSideValueInPaymentToken"
   @send
   external batched_amountPaymentToken_deposit: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     ~isLong: bool,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "batched_amountPaymentToken_deposit"
+  ) => Promise.t<bn> = "batched_amountPaymentToken_deposit"
   @send
   external batched_amountSyntheticToken_redeem: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     ~isLong: bool,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "batched_amountSyntheticToken_redeem"
+  ) => Promise.t<bn> = "batched_amountSyntheticToken_redeem"
   @send
   external batched_amountSyntheticToken_toShiftAwayFrom_marketSide: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     ~isLong: bool,
-  ) => Promise.t<FloatEthers.BigNumber.t> =
+  ) => Promise.t<bn> =
     "batched_amountSyntheticToken_toShiftAwayFrom_marketSide"
   @send
   external userNextPrice_currentUpdateIndex: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-    ~user: FloatEthers.ethAddress,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "userNextPrice_currentUpdateIndex"
+    ~marketIndex: bn,
+    ~user: address,
+  ) => Promise.t<bn> = "userNextPrice_currentUpdateIndex"
   @send
   external userNextPrice_paymentToken_depositAmount: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     ~isLong: bool,
-    ~user: FloatEthers.ethAddress,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "userNextPrice_paymentToken_depositAmount"
+    ~user: address,
+  ) => Promise.t<bn> = "userNextPrice_paymentToken_depositAmount"
   @send
   external getUsersConfirmedButNotSettledSynthBalance: (
     t,
-    ~user: FloatEthers.ethAddress,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~user: address,
+    ~marketIndex: bn,
     ~isLong: bool,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "getUsersConfirmedButNotSettledSynthBalance"
+  ) => Promise.t<bn> = "getUsersConfirmedButNotSettledSynthBalance"
   @send
   external fundingRateMultiplier_e18: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "fundingRateMultiplier_e18"
+    ~marketIndex: bn,
+  ) => Promise.t<bn> = "fundingRateMultiplier_e18"
   @send
   external marketLeverage_e18: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "marketLeverage_e18"
+    ~marketIndex: bn,
+  ) => Promise.t<bn> = "marketLeverage_e18"
 }
 
 module Staker = {
-  type t = FloatEthers.Contract.t
+  type t = contract
 
   let abi =
     [
@@ -190,64 +194,64 @@ module Staker = {
       "function withdrawWithVoucher(uint32 marketIndex, bool isWithdrawFromLong, uint256 withdrawAmount, uint256 expiry, uint256 nonce, uint256 discountWithdrawFee, uint8 v, bytes32 r, bytes32 s)",
       "function shiftTokens(uint256 amountSyntheticToken, uint32 marketIndex, bool isShiftFromLong)",
       "function userAmountStaked(address, address) public view returns (uint256)",
-    ]->FloatEthers.makeAbi
+    ]->Float__Ethers.makeAbi
 
   let make = (~address, ~providerOrWallet): t =>
-    FloatEthers.Contract.make(address, abi, providerOrWallet)
+    Float__Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external withdraw: (
     t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~marketIndex: bn,
     ~isWithdrawFromLong: bool,
-    ~amountSyntheticToken: FloatEthers.BigNumber.t,
+    ~amountSyntheticToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "withdraw"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "withdraw"
   @send
   external withdrawWithVoucher: (
     ~contract: t,
     ~marketIndex: int,
     ~isWithdrawFromLong: bool,
-    ~amount: FloatEthers.BigNumber.t,
-    ~expiry: FloatEthers.BigNumber.t,
-    ~nonce: FloatEthers.BigNumber.t,
-    ~discountWithdrawFee: FloatEthers.BigNumber.t,
+    ~amount: bn,
+    ~expiry: bn,
+    ~nonce: bn,
+    ~discountWithdrawFee: bn,
     ~v: int,
     ~r: string,
     ~s: string,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "withdrawWithVoucher"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "withdrawWithVoucher"
   @send
   external claimFloatCustom: (
     t,
     ~marketIndexes: array<int>,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "claimFloatCustom"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "claimFloatCustom"
   @send
   external claimFloatCustomFor: (
     t,
-    ~marketIndexes: array<FloatEthers.BigNumber.t>,
-    ~user: FloatEthers.ethAddress,
+    ~marketIndexes: array<bn>,
+    ~user: address,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "claimFloatCustomFor"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "claimFloatCustomFor"
   @send
   external shiftTokens: (
     t,
-    ~amountSyntheticToken: FloatEthers.BigNumber.t,
-    ~marketIndex: FloatEthers.BigNumber.t,
+    ~amountSyntheticToken: bn,
+    ~marketIndex: bn,
     ~isShiftFromLong: bool,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "shiftTokens"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "shiftTokens"
   @send
   external userAmountStaked: (
     t,
-    ~token: FloatEthers.ethAddress,
-    ~owner: FloatEthers.ethAddress,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "userAmountStaked"
+    ~token: address,
+    ~owner: address,
+  ) => Promise.t<bn> = "userAmountStaked"
 }
 
 module Erc20 = {
-  type t = FloatEthers.Contract.t
+  type t = contract
 
   let abi =
     [
@@ -255,42 +259,42 @@ module Erc20 = {
       "function balanceOf(address owner) public view returns (uint256 balance)",
       "function allowance(address owner, address spender) public view returns (uint256 remaining)",
       "function mint(uint256 value) public returns (bool)",
-    ]->FloatEthers.makeAbi
+    ]->Float__Ethers.makeAbi
 
   let make = (~address, ~providerOrWallet): t =>
-    FloatEthers.Contract.make(address, abi, providerOrWallet)
+    Float__Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external approve: (
     ~contract: t,
-    ~spender: FloatEthers.ethAddress,
-    ~amount: FloatEthers.BigNumber.t,
+    ~spender: address,
+    ~amount: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "approve"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "approve"
 
   @send
   external balanceOf: (
     ~contract: t,
-    ~owner: FloatEthers.ethAddress,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "balanceOf"
+    ~owner: address,
+  ) => Promise.t<bn> = "balanceOf"
 
   @send
   external allowance: (
     ~contract: t,
-    ~owner: FloatEthers.ethAddress,
-    ~spender: FloatEthers.ethAddress,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "allowance"
+    ~owner: address,
+    ~spender: address,
+  ) => Promise.t<bn> = "allowance"
 
   @send
   external mint: (
     ~contract: t,
-    ~amount: FloatEthers.BigNumber.t,
+    ~amount: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "mint"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "mint"
 }
 
 module Synth = {
-  type t = FloatEthers.Contract.t
+  type t = contract
 
   let abi =
     [
@@ -299,54 +303,54 @@ module Synth = {
       "function allowance(address owner, address spender) public view returns (uint256 remaining)",
       "function stake(uint256 amountSyntheticToken) external",
       "function totalSupply() external view returns (uint256 total)",
-    ]->FloatEthers.makeAbi
+    ]->Float__Ethers.makeAbi
 
   let make = (address, ~providerOrWallet): t =>
-    FloatEthers.Contract.make(address, abi, providerOrWallet)
+    Float__Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external approve: (
     ~contract: t,
-    ~spender: FloatEthers.ethAddress,
-    ~amount: FloatEthers.BigNumber.t,
+    ~spender: address,
+    ~amount: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "approve"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "approve"
 
   @send
-  external balanceOf: (t, ~owner: FloatEthers.ethAddress) => Promise.t<FloatEthers.BigNumber.t> =
+  external balanceOf: (t, ~owner: address) => Promise.t<bn> =
     "balanceOf"
 
   @send
   external allowance: (
     ~contract: t,
-    ~owner: FloatEthers.ethAddress,
-    ~spender: FloatEthers.ethAddress,
-  ) => Promise.t<FloatEthers.BigNumber.t> = "allowance"
+    ~owner: address,
+    ~spender: address,
+  ) => Promise.t<bn> = "allowance"
 
   @send
   external stake: (
     t,
-    ~amountSyntheticToken: FloatEthers.BigNumber.t,
+    ~amountSyntheticToken: bn,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "stake"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "stake"
 
   @send
-  external totalSupply: t => Promise.t<FloatEthers.BigNumber.t> = "totalSupply"
+  external totalSupply: t => Promise.t<bn> = "totalSupply"
 }
 
 module GemCollectorNFT = {
-  type t = FloatEthers.Contract.t
+  type t = contract
 
-  let abi = ["function mintNFT(uint256 levelId, address receiver) external"]->FloatEthers.makeAbi
+  let abi = ["function mintNFT(uint256 levelId, address receiver) external"]->Float__Ethers.makeAbi
 
   let make = (~address, ~providerOrWallet): t =>
-    FloatEthers.Contract.make(address, abi, providerOrWallet)
+    Float__Ethers.Contract.make(address, abi, providerOrWallet)
 
   @send
   external mintNFT: (
     ~contract: t,
-    ~levelId: FloatEthers.BigNumber.t,
-    ~receiver: FloatEthers.ethAddress,
+    ~levelId: bn,
+    ~receiver: address,
     txOptions,
-  ) => Promise.t<FloatEthers.txSubmitted> = "mintNFT"
+  ) => Promise.t<Float__Ethers.txSubmitted> = "mintNFT"
 }

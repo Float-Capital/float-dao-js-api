@@ -1,19 +1,19 @@
-open FloatContracts
+open Float__Contracts
 open Promise
-open FloatUtil
-open FloatMarketTypes
+open Float__Util
+open Float__Market__shared
 
 // ====================================
 // Convenience
 
-let {div, fromInt, toNumber, tenToThe18} = module(FloatEthers.BigNumber)
+let {div, fromInt, toNumber, tenToThe18} = module(Float__Ethers.BigNumber)
 
 // ====================================
 // Type definitions
 
 type bigNumbers = {
-  long: FloatEthers.BigNumber.t,
-  short: FloatEthers.BigNumber.t,
+  long: Float__Ethers.BigNumber.t,
+  short: Float__Ethers.BigNumber.t,
 }
 
 type longshortfloats = {
@@ -22,8 +22,8 @@ type longshortfloats = {
 }
 
 type longshortpositions = {
-  long: FloatMarketSide.positions,
-  short: FloatMarketSide.positions,
+  long: Float__MarketSide.positions,
+  short: Float__MarketSide.positions,
 }
 
 type contracts = {
@@ -62,8 +62,8 @@ module WithWallet = {
 
 let makeUsingChain = (chain, marketIndex) =>
   switch chain {
-  | FloatChain.P(c) => c.provider->WithProvider.make(marketIndex)
-  | FloatChain.W(c) => c.wallet->WithWallet.make(marketIndex)
+  | Float__Chain.P(c) => c.provider->WithProvider.make(marketIndex)
+  | Float__Chain.W(c) => c.wallet->WithWallet.make(marketIndex)
   }
 
 // ====================================
@@ -85,32 +85,32 @@ let makeUsingChain = (chain, marketIndex) =>
     }
 )
 
-%%private(let longSide = FloatMarketSide.WithProvider.makeReverseCurry(true))
-%%private(let shortSide = FloatMarketSide.WithProvider.makeReverseCurry(false))
+%%private(let longSide = Float__MarketSide.WithProvider.makeReverseCurry(true))
+%%private(let shortSide = Float__MarketSide.WithProvider.makeReverseCurry(false))
 
-let makeLongShortContract = (p: FloatEthers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
+let makeLongShortContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
   LongShort.make(
-    ~address=c.contracts.longShort.address->FloatEthers.Utils.getAddressUnsafe,
+    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
 
-let makeStakerContract = (p: FloatEthers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
+let makeStakerContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
   Staker.make(
-    ~address=c.contracts.longShort.address->FloatEthers.Utils.getAddressUnsafe,
+    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
 
 let leverage = (provider, config, marketIndex): Promise.t<int> =>
   provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->makeLongShortContract(config)
   ->LongShort.marketLeverage_e18(~marketIndex)
   ->thenResolve(m => m->div(tenToThe18)->toNumber)
 
 let syntheticTokenPrices = (provider, marketIndex) =>
   all2((
-    longSide(marketIndex, provider)->FloatMarketSide.syntheticTokenPrice,
-    shortSide(marketIndex, provider)->FloatMarketSide.syntheticTokenPrice,
+    longSide(marketIndex, provider)->Float__MarketSide.syntheticTokenPrice,
+    shortSide(marketIndex, provider)->Float__MarketSide.syntheticTokenPrice,
   ))->thenResolve(((priceLong, priceShort)): bigNumbers => {
     {
       long: priceLong,
@@ -120,8 +120,8 @@ let syntheticTokenPrices = (provider, marketIndex) =>
 
 let exposures = (provider, marketIndex: int) =>
   all2((
-    longSide(marketIndex, provider)->FloatMarketSide.exposure,
-    shortSide(marketIndex, provider)->FloatMarketSide.exposure,
+    longSide(marketIndex, provider)->Float__MarketSide.exposure,
+    shortSide(marketIndex, provider)->Float__MarketSide.exposure,
   ))->thenResolve(((exposureLong, exposureShort)): bigNumbers => {
     {
       long: exposureLong,
@@ -131,8 +131,8 @@ let exposures = (provider, marketIndex: int) =>
 
 let unconfirmedExposures = (provider, marketIndex) =>
   all2((
-    longSide(marketIndex, provider)->FloatMarketSide.unconfirmedExposure,
-    shortSide(marketIndex, provider)->FloatMarketSide.unconfirmedExposure,
+    longSide(marketIndex, provider)->Float__MarketSide.unconfirmedExposure,
+    shortSide(marketIndex, provider)->Float__MarketSide.unconfirmedExposure,
   ))->thenResolve(((exposureLong, exposureShort)): bigNumbers => {
     {
       long: exposureLong,
@@ -142,8 +142,8 @@ let unconfirmedExposures = (provider, marketIndex) =>
 
 let fundingRateAprs = (provider, marketIndex) =>
   all2((
-    longSide(marketIndex, provider)->FloatMarketSide.fundingRateApr,
-    shortSide(marketIndex, provider)->FloatMarketSide.fundingRateApr,
+    longSide(marketIndex, provider)->Float__MarketSide.fundingRateApr,
+    shortSide(marketIndex, provider)->Float__MarketSide.fundingRateApr,
   ))->thenResolve(((rateLong, rateShort)): longshortfloats => {
     {
       long: rateLong,
@@ -153,8 +153,8 @@ let fundingRateAprs = (provider, marketIndex) =>
 
 let positions = (provider, marketIndex, address) =>
   all2((
-    longSide(marketIndex, provider)->FloatMarketSide.positions(address),
-    shortSide(marketIndex, provider)->FloatMarketSide.positions(address),
+    longSide(marketIndex, provider)->Float__MarketSide.positions(address),
+    shortSide(marketIndex, provider)->Float__MarketSide.positions(address),
   ))->thenResolve(((positionLong, positionShort)) => {
     long: positionLong,
     short: positionShort,
@@ -162,8 +162,8 @@ let positions = (provider, marketIndex, address) =>
 
 let stakedPositions = (provider, marketIndex, address) =>
   all2((
-    longSide(marketIndex, provider)->FloatMarketSide.stakedPositions(address),
-    shortSide(marketIndex, provider)->FloatMarketSide.stakedPositions(address),
+    longSide(marketIndex, provider)->Float__MarketSide.stakedPositions(address),
+    shortSide(marketIndex, provider)->Float__MarketSide.stakedPositions(address),
   ))->thenResolve(((positionLong, positionShort)) => {
     long: positionLong,
     short: positionShort,
@@ -171,8 +171,8 @@ let stakedPositions = (provider, marketIndex, address) =>
 
 let unsettledPositions = (provider, marketIndex, address) =>
   all2((
-    longSide(marketIndex, provider)->FloatMarketSide.unsettledPositions(address),
-    shortSide(marketIndex, provider)->FloatMarketSide.unsettledPositions(address),
+    longSide(marketIndex, provider)->Float__MarketSide.unsettledPositions(address),
+    shortSide(marketIndex, provider)->Float__MarketSide.unsettledPositions(address),
   ))->thenResolve(((positionLong, positionShort)) => {
     long: positionLong,
     short: positionShort,
@@ -180,19 +180,19 @@ let unsettledPositions = (provider, marketIndex, address) =>
 
 let claimFloatCustomFor = (wallet, config, marketIndexes, address) =>
   wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->makeStakerContract(config)
   ->Staker.claimFloatCustomFor(~marketIndexes, ~user=address)
 
 let settleOutstandingActions = (wallet, config, marketIndex, address) =>
   wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->makeLongShortContract(config)
   ->LongShort.executeOutstandingNextPriceSettlementsUser(~user=address, ~marketIndex)
 
 let updateSystemState = (wallet, config, marketIndex) =>
   wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->makeLongShortContract(config)
   ->LongShort.updateSystemState(~marketIndex)
 
@@ -202,7 +202,7 @@ let updateSystemState = (wallet, config, marketIndex) =>
 let contracts = (market: withProviderOrWallet) =>
   market
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->thenResolve(config => {
     longToken: config.markets[market->marketIndex].longToken,
@@ -213,23 +213,23 @@ let contracts = (market: withProviderOrWallet) =>
 let leverage = (market: withProviderOrWallet) =>
   market
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config =>
-    market->provider->leverage(config, market->marketIndex->FloatEthers.BigNumber.fromInt)
+    market->provider->leverage(config, market->marketIndex->Float__Ethers.BigNumber.fromInt)
   )
 
 let fundingRateMultiplier = (market: withProviderOrWallet) =>
   market
   ->provider
-  ->FloatEthers.wrapProvider
+  ->Float__Ethers.wrapProvider
   ->getChainConfig
   ->then(config =>
     market
     ->provider
-    ->FloatMarketSide.fundingRateMultiplier(
+    ->Float__MarketSide.fundingRateMultiplier(
       config,
-      market->marketIndex->FloatEthers.BigNumber.fromInt,
+      market->marketIndex->Float__Ethers.BigNumber.fromInt,
     )
   )
 
@@ -255,7 +255,7 @@ let unsettledPositions = (market: withProviderOrWallet, ethAddress) =>
 
 let claimFloatCustom = (market: withWallet, ~ethAddress=?, txOptions) =>
   market.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(config => {
     let address = switch ethAddress {
@@ -264,14 +264,14 @@ let claimFloatCustom = (market: withWallet, ~ethAddress=?, txOptions) =>
     }
     market.wallet->claimFloatCustomFor(
       config,
-      [market.marketIndex->FloatEthers.BigNumber.fromInt],
-      address->FloatEthers.Utils.getAddressUnsafe,
+      [market.marketIndex->Float__Ethers.BigNumber.fromInt],
+      address->Float__Ethers.Utils.getAddressUnsafe,
       txOptions,
     )
   })
 let settleOutstandingActions = (market: withWallet, ~ethAddress=?, txOptions) =>
   market.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(config => {
     let address = switch ethAddress {
@@ -280,19 +280,19 @@ let settleOutstandingActions = (market: withWallet, ~ethAddress=?, txOptions) =>
     }
     market.wallet->settleOutstandingActions(
       config,
-      market.marketIndex->FloatEthers.BigNumber.fromInt,
-      address->FloatEthers.Utils.getAddressUnsafe,
+      market.marketIndex->Float__Ethers.BigNumber.fromInt,
+      address->Float__Ethers.Utils.getAddressUnsafe,
       txOptions,
     )
   })
 let updateSystemState = (market: withWallet, txOptions) =>
   market.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(config =>
     market.wallet->updateSystemState(
       config,
-      market.marketIndex->FloatEthers.BigNumber.fromInt,
+      market.marketIndex->Float__Ethers.BigNumber.fromInt,
       txOptions,
     )
   )

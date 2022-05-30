@@ -1,17 +1,17 @@
-open FloatContracts
+open Float__Contracts
 open Promise
-open FloatUtil
+open Float__Util
 
 // ====================================
 // Convenience
 
-let {fromInt} = module(FloatEthers.BigNumber)
+let {fromInt} = module(Float__Ethers.BigNumber)
 
 // ====================================
 // Type definitions
 
-type withProvider = {provider: FloatEthers.providerType}
-type withWallet = {wallet: FloatEthers.walletType}
+type withProvider = {provider: Float__Ethers.providerType}
+type withWallet = {wallet: Float__Ethers.walletType}
 
 type withProviderOrWalletOrId =
   | P(withProvider)
@@ -46,17 +46,17 @@ module WithWallet = {
 // Helper functions
 
 let makeLongShortContract = (
-  p: FloatEthers.providerOrWallet,
+  p: Float__Ethers.providerOrWallet,
   c: FloatConfig.chainConfigShape,
-): FloatEthers.Contract.t =>
+): Float__Ethers.Contract.t =>
   LongShort.make(
-    ~address=c.contracts.longShort.address->FloatEthers.Utils.getAddressUnsafe,
+    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
     ~providerOrWallet=p,
   )
 
 let updateSystemStateMulti = (wallet, config, marketIndexes: array<int>) =>
   wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->makeLongShortContract(config)
   ->LongShort.updateSystemStateMulti(~marketIndexes=marketIndexes->Js.Array2.map(i => i->fromInt))
 
@@ -71,12 +71,12 @@ let updateSystemStateMulti = (wallet, config, marketIndexes: array<int>) =>
 
 let contracts = (chain: withProviderOrWalletOrId) =>
   switch chain {
-  | P(c) => c.provider->FloatEthers.wrapProvider->getChainConfig
-  | W(c) => c.wallet.provider->FloatEthers.wrapProvider->getChainConfig
+  | P(c) => c.provider->Float__Ethers.wrapProvider->getChainConfig
+  | W(c) => c.wallet.provider->Float__Ethers.wrapProvider->getChainConfig
   }->thenResolve(c => c.contracts)
 
 let updateSystemStateMulti = (chain: withWallet, marketIndexes, txOptions) =>
   chain.wallet
-  ->FloatEthers.wrapWallet
+  ->Float__Ethers.wrapWallet
   ->getChainConfig
   ->then(config => chain.wallet->updateSystemStateMulti(config, marketIndexes, txOptions))

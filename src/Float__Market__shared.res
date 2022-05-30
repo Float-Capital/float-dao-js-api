@@ -1,5 +1,5 @@
-type withProvider = {provider: FloatEthers.providerType, marketIndex: int}
-type withWallet = {wallet: FloatEthers.walletType, marketIndex: int}
+type withProvider = {provider: Float__Ethers.providerType, marketIndex: int}
+type withWallet = {wallet: Float__Ethers.walletType, marketIndex: int}
 
 type withProviderOrWallet =
   | P(withProvider)

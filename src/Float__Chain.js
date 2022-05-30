@@ -2,9 +2,9 @@
 'use strict';
 
 var Ethers = require("ethers");
-var FloatUtil = require("./FloatUtil.js");
-var FloatEthers = require("./FloatEthers.js");
-var FloatContracts = require("./FloatContracts.js");
+var Float__Util = require("./Float__Util.js");
+var Float__Ethers = require("./Float__Ethers.js");
+var Float__Contracts = require("./Float__Contracts.js");
 
 function fromInt(prim) {
   return Ethers.BigNumber.from(prim);
@@ -40,7 +40,7 @@ function make(p) {
 }
 
 function makeDefault(chainId) {
-  var p = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
+  var p = Float__Util.makeDefaultProvider(Float__Util.getChainConfigUsingId(chainId));
   return {
           TAG: /* P */0,
           _0: {
@@ -51,7 +51,7 @@ function makeDefault(chainId) {
 
 function makeDefaultUnwrapped(chainId) {
   return {
-          provider: FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId))
+          provider: Float__Util.makeDefaultProvider(Float__Util.getChainConfigUsingId(chainId))
         };
 }
 
@@ -83,14 +83,14 @@ var WithWallet = {
 };
 
 function makeLongShortContract(p, c) {
-  return FloatContracts.LongShort.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
+  return Float__Contracts.LongShort.make(Ethers.utils.getAddress(c.contracts.longShort.address), p);
 }
 
 function updateSystemStateMulti(wallet, config, marketIndexes) {
   var partial_arg = marketIndexes.map(function (i) {
         return Ethers.BigNumber.from(i);
       });
-  var partial_arg$1 = makeLongShortContract(FloatEthers.wrapWallet(wallet), config);
+  var partial_arg$1 = makeLongShortContract(Float__Ethers.wrapWallet(wallet), config);
   return function (param) {
     return partial_arg$1.updateSystemStateMulti(partial_arg, param);
   };
@@ -98,14 +98,14 @@ function updateSystemStateMulti(wallet, config, marketIndexes) {
 
 function contracts(chain) {
   var tmp;
-  tmp = chain.TAG === /* P */0 ? FloatUtil.getChainConfig(FloatEthers.wrapProvider(chain._0.provider)) : FloatUtil.getChainConfig(FloatEthers.wrapProvider(chain._0.wallet.provider));
+  tmp = chain.TAG === /* P */0 ? Float__Util.getChainConfig(Float__Ethers.wrapProvider(chain._0.provider)) : Float__Util.getChainConfig(Float__Ethers.wrapProvider(chain._0.wallet.provider));
   return tmp.then(function (c) {
               return c.contracts;
             });
 }
 
 function updateSystemStateMulti$1(chain, marketIndexes, txOptions) {
-  return FloatUtil.getChainConfig(FloatEthers.wrapWallet(chain.wallet)).then(function (config) {
+  return Float__Util.getChainConfig(Float__Ethers.wrapWallet(chain.wallet)).then(function (config) {
               return updateSystemStateMulti(chain.wallet, config, marketIndexes)(txOptions);
             });
 }

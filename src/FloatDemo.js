@@ -2,11 +2,11 @@
 'use strict';
 
 var Ethers = require("ethers");
-var FloatChain = require("./FloatChain.js");
 var FloatConfig = require("@float-dao/config/src/FloatConfig.js");
-var FloatEthers = require("./FloatEthers.js");
-var FloatMarket = require("./FloatMarket.js");
-var FloatMarketSide = require("./FloatMarketSide.js");
+var Float__Chain = require("./Float__Chain.js");
+var Float__Ethers = require("./Float__Ethers.js");
+var Float__Market = require("./Float__Market.js");
+var Float__MarketSide = require("./Float__MarketSide.js");
 var SecretsManagerJs = require("../secretsManager.js");
 
 var env = process.env;
@@ -15,7 +15,7 @@ var mnemonic = SecretsManagerJs.mnemonic;
 
 var providerUrlOther = SecretsManagerJs.providerUrl;
 
-var oneGweiInWei = FloatEthers.BigNumber.oneGweiInWei;
+var oneGweiInWei = Float__Ethers.BigNumber.oneGweiInWei;
 
 function fromInt(prim) {
   return Ethers.BigNumber.from(prim);
@@ -53,42 +53,42 @@ var txOptions = {
 
 function demoReadyOnly(param) {
   wallet.getBalance().then(function (balance) {
-        console.log("Account balance:", FloatEthers.Utils.formatEther(balance));
+        console.log("Account balance:", Float__Ethers.Utils.formatEther(balance));
         
       });
   var sideName = "long";
-  var chain = FloatChain.WithProvider.makeDefault(chainId);
-  FloatChain.contracts(chain).then(function (c) {
+  var chain = Float__Chain.WithProvider.makeDefault(chainId);
+  Float__Chain.contracts(chain).then(function (c) {
         console.log("LongShort address:", c.longShort.address);
         
       });
-  var market = FloatMarket.WithProvider.make(provider, 1);
-  FloatMarket.fundingRateMultiplier(market).then(function (a) {
+  var market = Float__Market.WithProvider.make(provider, 1);
+  Float__Market.fundingRateMultiplier(market).then(function (a) {
         console.log("Funding rate multiplier for market ".concat((1).toString()).concat(":"), a);
         
       });
-  FloatMarket.leverage(market).then(function (m) {
+  Float__Market.leverage(market).then(function (m) {
         console.log("Leverage for market ".concat((1).toString()).concat(":"), m);
         
       });
-  var marketSide = FloatMarketSide.makeUsingMarket(market, true);
-  FloatMarketSide.poolValue(marketSide).then(function (a) {
+  var marketSide = Float__MarketSide.makeUsingMarket(market, true);
+  Float__MarketSide.poolValue(marketSide).then(function (a) {
         console.log("Value of marketSide ".concat(sideName).concat(":"), a.toString());
         
       });
-  FloatMarketSide.fundingRateApr(marketSide).then(function (a) {
+  Float__MarketSide.fundingRateApr(marketSide).then(function (a) {
         console.log("Funding rate APR for marketSide ".concat(sideName).concat(":"), a);
         
       });
-  FloatMarketSide.exposure(marketSide).then(function (a) {
+  Float__MarketSide.exposure(marketSide).then(function (a) {
         console.log("Exposure of marketSide".concat(sideName).concat(":"), a.toString());
         
       });
-  FloatMarketSide.unconfirmedExposure(marketSide).then(function (a) {
+  Float__MarketSide.unconfirmedExposure(marketSide).then(function (a) {
         console.log("Unconfirmed exposure of marketSide".concat(sideName).concat(":"), a.toString());
         
       });
-  FloatMarketSide.positions(marketSide, "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3", undefined).then(function (a) {
+  Float__MarketSide.positions(marketSide, "0x380d3d688fd65ef6858f0e094a1a9bba03ad76a3", undefined).then(function (a) {
         console.log("Synth token amount for 0x38.. in marketSide".concat(sideName).concat(":"), a.syntheticToken.toString());
         
       });
@@ -96,9 +96,9 @@ function demoReadyOnly(param) {
 }
 
 function demoWrite(param) {
-  FloatChain.WithWallet.make(wallet);
-  var market = FloatMarket.WithWallet.makeUnwrapped(wallet, 1);
-  FloatMarket.settleOutstandingActions(market, undefined, txOptions).then(function (tx) {
+  Float__Chain.WithWallet.make(wallet);
+  var market = Float__Market.WithWallet.makeUnwrapped(wallet, 1);
+  Float__Market.settleOutstandingActions(market, undefined, txOptions).then(function (tx) {
         console.log(tx.hash);
         
       });
