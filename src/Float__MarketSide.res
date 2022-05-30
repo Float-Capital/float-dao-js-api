@@ -20,6 +20,10 @@ let {
   tenToThe14,
 } = module(Float__Ethers.BigNumber)
 
+let convert = Float__Contracts.convertTxOptions
+
+type txOptions = Float__Contracts.txOptions
+
 // ====================================
 // Type definitions
 
@@ -123,24 +127,8 @@ let makeUsingMarket = (market, isLong) =>
     }
 )
 
-%%private(let divFloat = (a: float, b: float) => a /. b)
-
 // ====================================
 // Base functions
-
-// TODO we should not be using getAddressUnsafe
-//   rather we should do error handling properly
-let makeLongShortContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
-  LongShort.make(
-    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
-    ~providerOrWallet=p,
-  )
-
-let makeStakerContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
-  Staker.make(
-    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
-    ~providerOrWallet=p,
-  )
 
 let syntheticTokenAddress = (provider, config, marketIndex, isLong) =>
   provider
@@ -296,16 +284,8 @@ let unconfirmedExposure = (provider, config, marketIndex, isLong) =>
     }
   })
 
-// This should really be in the Market.res file but the compiler complains about a dependency cycle
-let fundingRateMultiplier = (provider, config, marketIndex): Promise.t<float> =>
-  provider
-  ->Float__Ethers.wrapProvider
-  ->makeLongShortContract(config)
-  ->LongShort.fundingRateMultiplier_e18(~marketIndex)
-  ->thenResolve(m => m->div(tenToThe18)->toNumberFloat)
-
 /*
-Returns percentage APR.
+Returns APR which is in decimal form e18 i.e. 1e18 is 100%
 
 +ve when
 - isLong AND long < short
@@ -315,20 +295,16 @@ Returns percentage APR.
 - !isLong AND long < short
 - isLong AND long > short
 */
-let fundingRateApr = (provider, config, marketIndex, isLong): Promise.t<float> =>
+let fundingRateApr = (provider, config, marketIndex, isLong): Promise.t<bn> =>
   all2((
-    fundingRateMultiplier(provider, config, marketIndex),
+    Float__Market__shared.fundingRateMultiplier(provider, config, marketIndex),
     marketSideValues(provider, config, marketIndex),
   ))->thenResolve(((m, {long, short})) =>
     short
     ->sub(long)
     ->mul(isLong->toSign->fromInt)
-    ->mul(m->fromFloat)
-    ->mul(tenToThe18)
+    ->mul(m)
     ->div(longOrShort(long, short, isLong))
-    ->div(tenToThe14)
-    ->toNumberFloat
-    ->divFloat(100.0)
   )
 
 let positions = (provider, config, marketIndex, isLong, address) =>
@@ -597,7 +573,7 @@ let unsettledPositions = (side: withProviderOrWallet, ethAddress) =>
     )
   })
 
-let mint = (side: withWallet, amountPaymentToken, txOptions) =>
+let mint = (side: withWallet, amountPaymentToken, txOptions: txOptions) =>
   side.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -607,11 +583,11 @@ let mint = (side: withWallet, amountPaymentToken, txOptions) =>
       side->wrapSideW->marketIndex->fromInt,
       side->wrapSideW->isLong,
       amountPaymentToken,
-      txOptions,
+      txOptions->convert,
     )
   )
 
-let mintAndStake = (side: withWallet, amountPaymentToken, txOptions) =>
+let mintAndStake = (side: withWallet, amountPaymentToken, txOptions: txOptions) =>
   side.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -621,11 +597,11 @@ let mintAndStake = (side: withWallet, amountPaymentToken, txOptions) =>
       side->wrapSideW->marketIndex->fromInt,
       side->wrapSideW->isLong,
       amountPaymentToken,
-      txOptions,
+      txOptions->convert,
     )
   )
 
-let stake = (side: withWallet, amountSyntheticToken, txOptions) =>
+let stake = (side: withWallet, amountSyntheticToken, txOptions: txOptions) =>
   side.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -635,11 +611,11 @@ let stake = (side: withWallet, amountSyntheticToken, txOptions) =>
       side->wrapSideW->marketIndex->fromInt,
       side->wrapSideW->isLong,
       amountSyntheticToken,
-      txOptions,
+      txOptions->convert,
     )
   )
 
-let unstake = (side: withWallet, amountSyntheticToken, txOptions) =>
+let unstake = (side: withWallet, amountSyntheticToken, txOptions: txOptions) =>
   side.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -649,11 +625,11 @@ let unstake = (side: withWallet, amountSyntheticToken, txOptions) =>
       side->wrapSideW->marketIndex->fromInt,
       side->wrapSideW->isLong,
       amountSyntheticToken,
-      txOptions,
+      txOptions->convert,
     )
   )
 
-let redeem = (side: withWallet, amountSyntheticToken, txOptions) =>
+let redeem = (side: withWallet, amountSyntheticToken, txOptions: txOptions) =>
   side.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -663,11 +639,11 @@ let redeem = (side: withWallet, amountSyntheticToken, txOptions) =>
       side->wrapSideW->marketIndex->fromInt,
       side->wrapSideW->isLong,
       amountSyntheticToken,
-      txOptions,
+      txOptions->convert,
     )
   )
 
-let shift = (side: withWallet, amountSyntheticToken, txOptions) =>
+let shift = (side: withWallet, amountSyntheticToken, txOptions: txOptions) =>
   side.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -677,11 +653,11 @@ let shift = (side: withWallet, amountSyntheticToken, txOptions) =>
       side->wrapSideW->marketIndex->fromInt,
       side->wrapSideW->isLong,
       amountSyntheticToken,
-      txOptions,
+      txOptions->convert,
     )
   )
 
-let shiftStake = (side: withWallet, amountSyntheticToken, txOptions) =>
+let shiftStake = (side: withWallet, amountSyntheticToken, txOptions: txOptions) =>
   side.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
@@ -691,6 +667,6 @@ let shiftStake = (side: withWallet, amountSyntheticToken, txOptions) =>
       side->wrapSideW->marketIndex->fromInt,
       side->wrapSideW->isLong,
       amountSyntheticToken,
-      txOptions,
+      txOptions->convert,
     )
   )

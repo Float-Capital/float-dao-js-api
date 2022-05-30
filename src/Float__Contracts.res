@@ -1,13 +1,27 @@
 // NOTE: since the type of all of these contracts is a generic `contract`, this code can runtime error if the wrong functions are called on the wrong contracts.
 
+let {mul, fromInt, oneGweiInWei, toString} = module(Float__Ethers.BigNumber)
+
 type bn = Float__Ethers.BigNumber.t
 type address = Float__Ethers.ethAddress
 type contract = Float__Ethers.Contract.t
 
-type txOptions = {
+type txOptionsString = {
   maxFeePerGas: string,
   maxPriorityFeePerGas: string,
   gasLimit: string,
+}
+
+type txOptions = {
+  maxFeePerGas: int,
+  maxPriorityFeePerGas: int,
+  gasLimit: int,
+}
+
+let convertTxOptions = (input: txOptions): txOptionsString => {
+  maxFeePerGas: input.maxFeePerGas->fromInt->mul(oneGweiInWei)->toString,
+  maxPriorityFeePerGas: input.maxPriorityFeePerGas->fromInt->mul(oneGweiInWei)->toString,
+  gasLimit: input.gasLimit->fromInt->mul(oneGweiInWei)->toString,
 }
 
 module LongShort = {
@@ -50,14 +64,14 @@ module LongShort = {
     t,
     ~marketIndex: bn,
     ~amountPaymentToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "mintLongNextPrice"
   @send
   external mintShortNextPrice: (
     t,
     ~marketIndex: bn,
     ~amountPaymentToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "mintShortNextPrice"
   @send
   external mintAndStakeNextPrice: (
@@ -65,54 +79,54 @@ module LongShort = {
     ~marketIndex: bn,
     ~amountPaymentToken: bn,
     ~isLong: bool,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "mintAndStakeNextPrice"
   @send
   external redeemLongNextPrice: (
     t,
     ~marketIndex: bn,
     ~amountSyntheticToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "redeemLongNextPrice"
   @send
   external redeemShortNextPrice: (
     t,
     ~marketIndex: bn,
     ~amountSyntheticToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "redeemShortNextPrice"
   @send
   external executeOutstandingNextPriceSettlementsUser: (
     t,
     ~user: address,
     ~marketIndex: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "executeOutstandingNextPriceSettlementsUser"
   @send
   external updateSystemState: (
     t,
     ~marketIndex: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "updateSystemState"
   @send
   external updateSystemStateMulti: (
     t,
     ~marketIndexes: array<bn>,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "updateSystemStateMulti"
   @send
   external shiftPositionFromLongNextPrice: (
     t,
     ~marketIndex: bn,
     ~amountSyntheticToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "shiftPositionFromLongNextPrice"
   @send
   external shiftPositionFromShortNextPrice: (
     t,
     ~marketIndex: bn,
     ~amountSyntheticToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "shiftPositionFromShortNextPrice"
   @send
   external get_syntheticToken_priceSnapshot_side: (
@@ -194,7 +208,7 @@ module Staker = {
     ~marketIndex: bn,
     ~isWithdrawFromLong: bool,
     ~amountSyntheticToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "withdraw"
   @send
   external withdrawWithVoucher: (
@@ -208,20 +222,20 @@ module Staker = {
     ~v: int,
     ~r: string,
     ~s: string,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "withdrawWithVoucher"
   @send
   external claimFloatCustom: (
     t,
     ~marketIndexes: array<int>,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "claimFloatCustom"
   @send
   external claimFloatCustomFor: (
     t,
     ~marketIndexes: array<bn>,
     ~user: address,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "claimFloatCustomFor"
   @send
   external shiftTokens: (
@@ -229,7 +243,7 @@ module Staker = {
     ~amountSyntheticToken: bn,
     ~marketIndex: bn,
     ~isShiftFromLong: bool,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "shiftTokens"
   @send
   external userAmountStaked: (t, ~token: address, ~owner: address) => Promise.t<bn> =
@@ -255,7 +269,7 @@ module Erc20 = {
     ~contract: t,
     ~spender: address,
     ~amount: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "approve"
 
   @send
@@ -266,8 +280,11 @@ module Erc20 = {
     "allowance"
 
   @send
-  external mint: (~contract: t, ~amount: bn, txOptions) => Promise.t<Float__Ethers.txSubmitted> =
-    "mint"
+  external mint: (
+    ~contract: t,
+    ~amount: bn,
+    txOptionsString,
+  ) => Promise.t<Float__Ethers.txSubmitted> = "mint"
 }
 
 module Synth = {
@@ -290,7 +307,7 @@ module Synth = {
     ~contract: t,
     ~spender: address,
     ~amount: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "approve"
 
   @send
@@ -304,7 +321,7 @@ module Synth = {
   external stake: (
     t,
     ~amountSyntheticToken: bn,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "stake"
 
   @send
@@ -324,6 +341,6 @@ module GemCollectorNFT = {
     ~contract: t,
     ~levelId: bn,
     ~receiver: address,
-    txOptions,
+    txOptionsString,
   ) => Promise.t<Float__Ethers.txSubmitted> = "mintNFT"
 }

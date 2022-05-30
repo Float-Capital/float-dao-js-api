@@ -1,5 +1,4 @@
 open Float__Ethers
-open FloatConfig
 
 let getChainConfigUsingId = chainId =>
   switch FloatConfig.getChainConfig(chainId) {
@@ -18,5 +17,19 @@ let getChainConfig = (pw: providerOrWallet) =>
   ->Provider.getNetwork
   ->Promise.thenResolve(network => network.chainId->getChainConfigUsingId)
 
-let makeDefaultProvider = config =>
+let makeDefaultProvider = (config: FloatConfig.chainConfigShape) =>
   config.rpcEndpoint->Provider.JsonRpcProvider.make(~chainId=config.networkId)
+
+let makeLongShortContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
+    Float__Contracts.LongShort.make(
+      ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
+      ~providerOrWallet=p,
+    )
+
+let makeStakerContract = (p: Float__Ethers.providerOrWallet, c: FloatConfig.chainConfigShape) =>
+    Float__Contracts.Staker.make(
+      ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
+      ~providerOrWallet=p,
+    )
+
+

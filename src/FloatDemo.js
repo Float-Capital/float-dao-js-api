@@ -33,22 +33,10 @@ var provider = new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId);
 
 var wallet = connectToNewWallet(new (Ethers.providers.JsonRpcProvider)(providerUrl, chainId), mnemonic);
 
-var maxFeePerGas = Ethers.BigNumber.from(62).mul(oneGweiInWei);
-
-var maxPriorityFeePerGas = Ethers.BigNumber.from(34).mul(oneGweiInWei);
-
-var gasLimit = Ethers.BigNumber.from(1000000);
-
-var txOptions_maxFeePerGas = maxFeePerGas.toString();
-
-var txOptions_maxPriorityFeePerGas = maxPriorityFeePerGas.toString();
-
-var txOptions_gasLimit = gasLimit.toString();
-
 var txOptions = {
-  maxFeePerGas: txOptions_maxFeePerGas,
-  maxPriorityFeePerGas: txOptions_maxPriorityFeePerGas,
-  gasLimit: txOptions_gasLimit
+  maxFeePerGas: 62,
+  maxPriorityFeePerGas: 34,
+  gasLimit: 1000000
 };
 
 function demoReadyOnly(param) {
@@ -64,7 +52,7 @@ function demoReadyOnly(param) {
       });
   var market = Float__Market.WithProvider.make(provider, 1);
   Float__Market.fundingRateMultiplier(market).then(function (a) {
-        console.log("Funding rate multiplier for market ".concat((1).toString()).concat(":"), a);
+        console.log("Funding rate multiplier for market " + 1 + ":", a);
         
       });
   Float__Market.leverage(market).then(function (m) {
@@ -117,9 +105,6 @@ exports.providerUrl = providerUrl;
 exports.chainId = chainId;
 exports.provider = provider;
 exports.wallet = wallet;
-exports.maxFeePerGas = maxFeePerGas;
-exports.maxPriorityFeePerGas = maxPriorityFeePerGas;
-exports.gasLimit = gasLimit;
 exports.txOptions = txOptions;
 exports.demoReadyOnly = demoReadyOnly;
 exports.demoWrite = demoWrite;

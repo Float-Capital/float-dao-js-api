@@ -46,15 +46,6 @@ module WithWallet = {
 // ====================================
 // Helper functions
 
-let makeLongShortContract = (
-  p: Float__Ethers.providerOrWallet,
-  c: FloatConfig.chainConfigShape,
-): Float__Ethers.Contract.t =>
-  LongShort.make(
-    ~address=c.contracts.longShort.address->Float__Ethers.Utils.getAddressUnsafe,
-    ~providerOrWallet=p,
-  )
-
 let updateSystemStateMulti = (wallet, config, marketIndexes: array<int>) =>
   wallet
   ->Float__Ethers.wrapWallet
@@ -76,8 +67,18 @@ let contracts = (chain: withProviderOrWalletOrId) =>
   | W(c) => c.wallet.provider->Float__Ethers.wrapProvider->getChainConfig
   }->thenResolve(c => c.contracts)
 
-let updateSystemStateMulti = (chain: withWallet, marketIndexes, txOptions) =>
+let updateSystemStateMulti = (
+  chain: withWallet,
+  marketIndexes,
+  txOptions: Float__Contracts.txOptions,
+) =>
   chain.wallet
   ->Float__Ethers.wrapWallet
   ->getChainConfig
-  ->then(config => chain.wallet->updateSystemStateMulti(config, marketIndexes, txOptions))
+  ->then(config =>
+    chain.wallet->updateSystemStateMulti(
+      config,
+      marketIndexes,
+      txOptions->Float__Contracts.convertTxOptions,
+    )
+  )
