@@ -55,10 +55,10 @@ module WithWallet = {
 }
 
 let makeUsingMarket = (market, isLong) =>
-    switch market {
-        | FloatMarketTypes.P(c) => c.provider->WithProvider.makeWrap(isLong)
-        | FloatMarketTypes.W(c) => c.wallet->WithWallet.makeWrap(isLong)
-    }
+  switch market {
+  | FloatMarketTypes.P(m) => m.provider->WithProvider.makeWrap(m.marketIndex, isLong)
+  | FloatMarketTypes.W(m) => m.wallet->WithWallet.makeWrap(m.marketIndex, isLong)
+  }
 
 // ====================================
 // Helper functions

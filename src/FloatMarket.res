@@ -52,10 +52,10 @@ module WithWallet = {
 }
 
 let makeUsingChain = (chain, marketIndex) =>
-    switch chain {
-        | FloatChain.P(c) => c.provider->WithProvider.makeWrap(marketIndex)
-        | FloatChain.W(c) => c.wallet->WithWallet.makeWrap(marketIndex)
-    }
+  switch chain {
+  | FloatChain.P(c) => c.provider->WithProvider.makeWrap(marketIndex)
+  | FloatChain.W(c) => c.wallet->WithWallet.makeWrap(marketIndex)
+  }
 
 // ====================================
 // Helper functions
@@ -91,14 +91,14 @@ let makeStakerContract = (p: FloatEthers.providerOrWallet, c: FloatConfig.chainC
     ~providerOrWallet=p,
   )
 
-let leverage = (provider, c, marketIndex): Promise.t<int> =>
+let leverage = (provider, config, marketIndex): Promise.t<int> =>
   provider
   ->FloatEthers.wrapProvider
-  ->makeLongShortContract(c)
+  ->makeLongShortContract(config)
   ->LongShort.marketLeverage_e18(~marketIndex)
   ->thenResolve(m => m->div(tenToThe18)->toNumber)
 
-let syntheticTokenPrices = (provider, _, marketIndex) =>
+let syntheticTokenPrices = (provider, marketIndex) =>
   all2((
     longSide(marketIndex, provider)->FloatMarketSide.syntheticTokenPrice,
     shortSide(marketIndex, provider)->FloatMarketSide.syntheticTokenPrice,
@@ -225,11 +225,7 @@ let fundingRateMultiplier = (market: withProviderOrWallet) =>
   )
 
 let syntheticTokenPrices = (market: withProviderOrWallet) =>
-  market
-  ->provider
-  ->FloatEthers.wrapProvider
-  ->getChainConfig
-  ->then(config => market->provider->syntheticTokenPrices(config, market->marketIndex))
+  market->provider->syntheticTokenPrices(market->marketIndex)
 
 let exposures = (market: withProviderOrWallet) => market->provider->exposures(market->marketIndex)
 
@@ -248,7 +244,7 @@ let stakedPositions = (market: withProviderOrWallet, ethAddress) =>
 let unsettledPositions = (market: withProviderOrWallet, ethAddress) =>
   market->provider->unsettledPositions(market->marketIndex, ethAddress)
 
-let claimFloatCustomFor = (market: withWallet, ~ethAddress=?, txOptions) =>
+let claimFloatCustom = (market: withWallet, ~ethAddress=?, txOptions) =>
   market.wallet
   ->FloatEthers.wrapWallet
   ->getChainConfig

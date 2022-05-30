@@ -17,6 +17,10 @@ var providerUrlOther = SecretsManagerJs.providerUrl;
 
 var oneGweiInWei = FloatEthers.BigNumber.oneGweiInWei;
 
+function fromInt(prim) {
+  return Ethers.BigNumber.from(prim);
+}
+
 function connectToNewWallet(provider, mnemonic) {
   return new (Ethers.Wallet.fromMnemonic)(mnemonic, "m/44'/60'/0'/0/0").connect(provider);
 }
@@ -67,7 +71,7 @@ function demoReadyOnly(param) {
         console.log("Leverage for market ".concat((1).toString()).concat(":"), m);
         
       });
-  var marketSide = FloatMarketSide.WithProvider.makeWrap(provider, 1, true);
+  var marketSide = FloatMarketSide.makeUsingMarket(market, true);
   FloatMarketSide.poolValue(marketSide).then(function (a) {
         console.log("Value of marketSide ".concat(sideName).concat(":"), a.toString());
         
@@ -92,11 +96,7 @@ function demoReadyOnly(param) {
 }
 
 function demoWrite(param) {
-  var chain = FloatChain.WithWallet.make(wallet);
-  FloatChain.updateSystemStateMulti(chain, [1], txOptions).then(function (tx) {
-        console.log(tx.hash);
-        
-      });
+  FloatChain.WithWallet.make(wallet);
   var market = FloatMarket.WithWallet.make(wallet, 1);
   FloatMarket.settleOutstandingActions(market, undefined, txOptions).then(function (tx) {
         console.log(tx.hash);
@@ -111,6 +111,7 @@ exports.env = env;
 exports.mnemonic = mnemonic;
 exports.providerUrlOther = providerUrlOther;
 exports.oneGweiInWei = oneGweiInWei;
+exports.fromInt = fromInt;
 exports.connectToNewWallet = connectToNewWallet;
 exports.providerUrl = providerUrl;
 exports.chainId = chainId;

@@ -17,8 +17,8 @@ type withProviderOrWalletOrId =
   | P(withProvider)
   | W(withWallet)
 
-let wrapSideP: withProvider => withProviderOrWalletOrId = side => P(side)
-let wrapSideW: withWallet => withProviderOrWalletOrId = side => W(side)
+let wrapChainP: withProvider => withProviderOrWalletOrId = side => P(side)
+let wrapChainW: withWallet => withProviderOrWalletOrId = side => W(side)
 
 // ====================================
 // Constructors
@@ -26,7 +26,7 @@ let wrapSideW: withWallet => withProviderOrWalletOrId = side => W(side)
 module WithProvider = {
   type t = withProvider
   let make = p => {provider: p}
-  let makeWrap = p => p->make->wrapSideP
+  let makeWrap = p => p->make->wrapChainP
 
   // TODO repeat this pattern in Market & Side files
   let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
@@ -36,7 +36,7 @@ module WithProvider = {
 module WithWallet = {
   type t = withWallet
   let make = w => {wallet: w}
-  let makeWrap = w => w->make->wrapSideW
+  let makeWrap = w => w->make->wrapChainW
 }
 
 // ====================================

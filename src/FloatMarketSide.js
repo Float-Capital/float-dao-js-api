@@ -123,15 +123,11 @@ var WithWallet = {
 
 function makeUsingMarket(market, isLong) {
   if (market.TAG === /* P */0) {
-    var partial_arg = market._0.provider;
-    return function (param) {
-      return makeWrap(partial_arg, isLong, param);
-    };
+    var m = market._0;
+    return makeWrap(m.provider, m.marketIndex, isLong);
   }
-  var partial_arg$1 = market._0.wallet;
-  return function (param) {
-    return makeWrap$1(partial_arg$1, isLong, param);
-  };
+  var m$1 = market._0;
+  return makeWrap$1(m$1.wallet, m$1.marketIndex, isLong);
 }
 
 function provider(side) {
@@ -402,7 +398,7 @@ function positions(side, ethAddress, param) {
                 console.log("No address found");
                 address = "";
               } else {
-                address = side._0.wallet._address;
+                address = side._0.wallet.address;
               }
               var provider$1 = provider(side);
               var marketIndex = Ethers.BigNumber.from(side._0.marketIndex);
@@ -430,7 +426,7 @@ function stakedPositions(side, ethAddress, param) {
                 console.log("No address found");
                 address = "";
               } else {
-                address = side._0.wallet._address;
+                address = side._0.wallet.address;
               }
               var provider$1 = provider(side);
               var marketIndex = Ethers.BigNumber.from(side._0.marketIndex);
@@ -458,7 +454,7 @@ function unsettledPositions(side, ethAddress) {
                 console.log("No address found");
                 address = "";
               } else {
-                address = side._0.wallet._address;
+                address = side._0.wallet.address;
               }
               var provider$1 = provider(side);
               var marketIndex = Ethers.BigNumber.from(side._0.marketIndex);
