@@ -1,6 +1,6 @@
 {
-  "name": "@float-capital/rescript-client",
-  "version": "0.7.0",
+  "name": "@float-packages/rescript-client",
+  "version": "1.0.0",
   "scripts": {
     "res:build": "rescript build -with-deps",
     "res:start": "rescript build -w -with-deps",
@@ -23,7 +23,7 @@
     "rescript"
   ],
   "dependencies": {
-    "@float-capital/config": "^0.7.0",
+    "@float-packages/config": "^1.0.0",
     "@ryyppy/rescript-promise": "^2.1.0",
     "ethers": "^5.5.4"
   },

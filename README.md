@@ -68,14 +68,25 @@ side
 
 ### Javascript
 
-*This section needs some work*
+Since the JS is generated from the rescript it is not as idiomatic as one would like. This will be improved on in subsequent versions but for now this is how it works:
 
 ```javascript
-var Market = require("@float-capital/rescript-client/src/Float__Market.js");
+// initialization
+var Market = require("@float-packages/rescript-client/src/Float__Market.js");
 var marketIndex = 1
 var market = Market.WithProvider.make(provider, marketIndex);
+
+// read only function call
 Market.fundingRateMultiplier(market).then(function (multiplier) {
   console.log("Funding rate multiplier for market " + marketIndex + ":", multiplier);
+});
+
+// write function call
+var Chain = require("@float-packages/rescript-client/src/Float__Chain.js");
+Chain.WithWallet.make(wallet);
+var market = Market.WithWallet.makeUnwrapped(wallet, marketIndex);
+Market.settleOutstandingActions(market, undefined, txOptions).then(function (tx) {
+  console.log(tx.hash);
 });
 ```
 

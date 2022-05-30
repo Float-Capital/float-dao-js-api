@@ -2,7 +2,7 @@
 'use strict';
 
 var Ethers = require("ethers");
-var FloatConfig = require("@float-capital/config/src/FloatConfig.js");
+var FloatConfig = require("@float-packages/config/src/FloatConfig.js");
 var Float__Contracts = require("./Float__Contracts.js");
 
 function getChainConfigUsingId(chainId) {
