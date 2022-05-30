@@ -24,13 +24,13 @@ function wrapChainW(side) {
         };
 }
 
-function make(p) {
+function makeUnwrapped(p) {
   return {
           provider: p
         };
 }
 
-function makeWrap(p) {
+function make(p) {
   return {
           TAG: /* P */0,
           _0: {
@@ -40,12 +40,6 @@ function makeWrap(p) {
 }
 
 function makeDefault(chainId) {
-  return {
-          provider: FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId))
-        };
-}
-
-function makeDefaultWrap(chainId) {
   var p = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
   return {
           TAG: /* P */0,
@@ -55,20 +49,26 @@ function makeDefaultWrap(chainId) {
         };
 }
 
+function makeDefaultUnwrapped(chainId) {
+  return {
+          provider: FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId))
+        };
+}
+
 var WithProvider = {
+  makeUnwrapped: makeUnwrapped,
   make: make,
-  makeWrap: makeWrap,
   makeDefault: makeDefault,
-  makeDefaultWrap: makeDefaultWrap
+  makeDefaultUnwrapped: makeDefaultUnwrapped
 };
 
-function make$1(w) {
+function makeUnwrapped$1(w) {
   return {
           wallet: w
         };
 }
 
-function makeWrap$1(w) {
+function make$1(w) {
   return {
           TAG: /* W */1,
           _0: {
@@ -78,8 +78,8 @@ function makeWrap$1(w) {
 }
 
 var WithWallet = {
-  make: make$1,
-  makeWrap: makeWrap$1
+  makeUnwrapped: makeUnwrapped$1,
+  make: make$1
 };
 
 function makeLongShortContract(p, c) {

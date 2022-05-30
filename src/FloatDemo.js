@@ -57,12 +57,12 @@ function demoReadyOnly(param) {
         
       });
   var sideName = "long";
-  var chain = FloatChain.WithProvider.makeDefaultWrap(chainId);
+  var chain = FloatChain.WithProvider.makeDefault(chainId);
   FloatChain.contracts(chain).then(function (c) {
         console.log("LongShort address:", c.longShort.address);
         
       });
-  var market = FloatMarket.WithProvider.makeWrap(provider, 1);
+  var market = FloatMarket.WithProvider.make(provider, 1);
   FloatMarket.fundingRateMultiplier(market).then(function (a) {
         console.log("Funding rate multiplier for market ".concat((1).toString()).concat(":"), a);
         
@@ -97,7 +97,7 @@ function demoReadyOnly(param) {
 
 function demoWrite(param) {
   FloatChain.WithWallet.make(wallet);
-  var market = FloatMarket.WithWallet.make(wallet, 1);
+  var market = FloatMarket.WithWallet.makeUnwrapped(wallet, 1);
   FloatMarket.settleOutstandingActions(market, undefined, txOptions).then(function (tx) {
         console.log(tx.hash);
         

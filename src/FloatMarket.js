@@ -23,41 +23,63 @@ function toNumber(prim) {
 
 var tenToThe18 = FloatEthers.BigNumber.tenToThe18;
 
-function make(provider, marketIndex) {
+function makeUnwrapped(provider, marketIndex) {
   return {
           provider: provider,
           marketIndex: marketIndex
         };
 }
 
-function makeWrap(provider, marketIndex) {
+function make(provider, marketIndex) {
   return FloatMarketTypes.wrapMarketP({
               provider: provider,
               marketIndex: marketIndex
             });
 }
 
-function makeWrapReverseCurry(marketIndex, provider) {
+function makeReverseCurry(marketIndex, provider) {
   return FloatMarketTypes.wrapMarketP({
               provider: provider,
               marketIndex: marketIndex
             });
+}
+
+function makeDefault(chainId) {
+  var partial_arg = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
+  return function (param) {
+    return FloatMarketTypes.wrapMarketP({
+                provider: partial_arg,
+                marketIndex: param
+              });
+  };
+}
+
+function makeDefaultUnwrapped(chainId) {
+  var partial_arg = FloatUtil.makeDefaultProvider(FloatUtil.getChainConfigUsingId(chainId));
+  return function (param) {
+    return {
+            provider: partial_arg,
+            marketIndex: param
+          };
+  };
 }
 
 var WithProvider = {
+  makeUnwrapped: makeUnwrapped,
   make: make,
-  makeWrap: makeWrap,
-  makeWrapReverseCurry: makeWrapReverseCurry
+  makeReverseCurry: makeReverseCurry,
+  makeDefault: makeDefault,
+  makeDefaultUnwrapped: makeDefaultUnwrapped
 };
 
-function make$1(w, marketIndex) {
+function makeUnwrapped$1(w, marketIndex) {
   return {
           wallet: w,
           marketIndex: marketIndex
         };
 }
 
-function makeWrap$1(w, marketIndex) {
+function make$1(w, marketIndex) {
   return FloatMarketTypes.wrapMarketW({
               wallet: w,
               marketIndex: marketIndex
@@ -65,8 +87,8 @@ function makeWrap$1(w, marketIndex) {
 }
 
 var WithWallet = {
-  make: make$1,
-  makeWrap: makeWrap$1
+  makeUnwrapped: makeUnwrapped$1,
+  make: make$1
 };
 
 function makeUsingChain(chain, marketIndex) {
@@ -92,11 +114,11 @@ function provider(side) {
 }
 
 function longSide(param, param$1) {
-  return FloatMarketSide.WithProvider.makeWrapReverseCurry(true, param, param$1);
+  return FloatMarketSide.WithProvider.makeReverseCurry(true, param, param$1);
 }
 
 function shortSide(param, param$1) {
-  return FloatMarketSide.WithProvider.makeWrapReverseCurry(false, param, param$1);
+  return FloatMarketSide.WithProvider.makeReverseCurry(false, param, param$1);
 }
 
 function makeLongShortContract(p, c) {

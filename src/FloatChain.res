@@ -25,18 +25,21 @@ let wrapChainW: withWallet => withProviderOrWalletOrId = side => W(side)
 
 module WithProvider = {
   type t = withProvider
-  let make = p => {provider: p}
-  let makeWrap = p => p->make->wrapChainP
 
-  // TODO repeat this pattern in Market & Side files
+  // the unwrapped version is not the default but may be useful for rescript consumers
+  //   that don't want to have to do a switch statement
+  let makeUnwrapped = p => {provider: p}
+  let make = p => p->makeUnwrapped->wrapChainP
+
+  // default provider can also be used
   let makeDefault = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->make
-  let makeDefaultWrap = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeWrap
+  let makeDefaultUnwrapped = chainId => chainId->getChainConfigUsingId->makeDefaultProvider->makeUnwrapped
 }
 
 module WithWallet = {
   type t = withWallet
-  let make = w => {wallet: w}
-  let makeWrap = w => w->make->wrapChainW
+  let makeUnwrapped = w => {wallet: w}
+  let make = w => w->makeUnwrapped->wrapChainW
 }
 
 // ====================================
