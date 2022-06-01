@@ -1,6 +1,6 @@
 {
   "name": "@float-packages/rescript-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "res:build": "rescript build -with-deps",
     "res:start": "rescript build -w -with-deps",
