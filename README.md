@@ -14,7 +14,7 @@ All numeric parameters and return values are in BigNumber form (18 decimals) exc
 
 ### Rescript
 
-To install run `yarn add @float-capital/rescript-client` or `npm install @float-capital/rescript-client` and then add the following to your bsconfig.json:
+To install run `yarn add @float-packages/rescript-client` or `npm install @float-packages/rescript-client` and then add the following to your bsconfig.json:
 ```
   "bs-dependencies": [
     "@float-capital/js-client",
